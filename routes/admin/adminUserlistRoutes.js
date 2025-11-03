@@ -18,6 +18,7 @@ router.put('/updateadminstatus/:adminid', adminUserController.updateadminusersta
 
 // Delete Admin User
 router.delete('/deleteadminuser/:adminid', adminUserController.deleteadminuser);
+router.delete('/deleteSelectedadminuser', adminUserController.deleteSelectedadminuser);
 
 // Get Adminuser By Id
 router.get('/getadminuserbyid/:adminid', adminUserController.getadminuserbyid);

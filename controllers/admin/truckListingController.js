@@ -14,7 +14,7 @@ exports.getalltrucks = async (req, res) => {
           filter.status = status;
         }
     }
-     if (owner !== "all") {
+     if (owner && owner !== "all") {
       filter.carrierId = owner;
     }
     const trucks = await Truck.find(filter)
@@ -28,7 +28,7 @@ exports.getalltrucks = async (req, res) => {
       })
       .populate("createdBy", "firstName lastName email")
       .populate("updatedBy", "firstName lastName email")
-      .populate("truckType", "subcategoryName");
+      .populate("truckType");
 
 
     if (!trucks.length) {

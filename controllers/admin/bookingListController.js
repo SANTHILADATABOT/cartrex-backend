@@ -7,7 +7,7 @@ const User = require("../../models/User");
 
 exports.getallbookings = async (req, res) => {
   try {
-    const {status,trucker,carrier,shipper} = req.query;
+    const {status,carrier,shipper} = req.query;
      const filter = {deletstatus: 0};
       if (status) {
         if (status === "all") {
@@ -37,10 +37,6 @@ exports.getallbookings = async (req, res) => {
           path: "userId",
           select: "firstName lastName email"
         }
-      })
-      .populate({
-        path: "truckId",
-        select: "nickname registrationNumber"
       })
       .sort({ createdAt: -1 });
 
@@ -90,11 +86,6 @@ exports.getbookingbyId = async (req, res) => {
           model: 'User',
           select: 'firstName lastName email phone'
         }
-      })
-      .populate({
-        path: 'truckId',
-        model: 'Truck',
-        select: 'nickname truckNumber location capacity type'
       });
 
     if (!booking) {
@@ -261,6 +252,7 @@ exports.updatebooking = async (req, res) => {
     }
     booking.carrierId = updateData.carrierId;
     booking.shipperId = updateData.shipperId;
+    booking.truckId = updateData.truckId;
     
     // ✅ Optional: track who updated and when
     booking.updatedAt = new Date();
