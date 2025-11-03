@@ -205,6 +205,8 @@ app.use('/auth', authLimiter, authRoutes); // Authentication routes
 
 // Admin routes (with admin rate limiting)
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use('/admin',adminLimiter, adminRoutes);           // → /admin/api/*
 app.use('/masters', masterRoutes);
 app.use('/spacelisting', spaceListRoutes);
