@@ -316,6 +316,55 @@ exports.deletetruck = async (req, res) => {
   }
 };
 
+//  DELETE Admin User 
+exports.deleteselectedTruck = async (req, res) => {
+  try {
+    const { TruckId } = req.body; // receive array of admin IDs
+    console.log("Received truck IDs =>", TruckId);
+
+    if (!TruckId || !Array.isArray(TruckId) || TruckId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Truck IDs provided to delete",
+      });
+    }
+
+    // Find all matching admin users that are not already deleted
+    const truckData = await Truck.find({
+      _id: { $in: TruckId },
+       deletstatus: 0 
+    });
+
+    if (!truckData.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching truck found or already deleted",
+      });
+    }
+
+    // Loop through and soft delete each user
+    const now = new Date();
+    for (const truckinfo of truckData) {
+      truckinfo.deletstatus = 1;
+      truckinfo.deletedAt = new Date();
+      truckinfo.deletedBy = null;
+      await truckinfo.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Selected truck deleted successfully",
+      count: truckData.length,
+      data: truckData,
+    });
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Internal server error",
+    });
+  }
+};
 exports.createTruck = async (req, res) => {
   try {
     const {

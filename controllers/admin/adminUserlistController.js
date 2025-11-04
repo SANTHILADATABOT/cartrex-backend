@@ -171,6 +171,60 @@ exports.deleteadminuser = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+//  DELETE Admin User 
+exports.deleteSelectedadminuser = async (req, res) => {
+  try {
+    const { adminid } = req.body; // receive array of admin IDs
+    console.log("Received admin IDs =>", adminid);
+
+    if (!adminid || !Array.isArray(adminid) || adminid.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No admin IDs provided to delete",
+      });
+    }
+
+    // Find all matching admin users that are not already deleted
+    const adminUsers = await AdminUser.find({
+      _id: { $in: adminid },
+      "audit.deletstatus": 0,
+    });
+
+    if (!adminUsers.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching admin users found or already deleted",
+      });
+    }
+
+    // Loop through and soft delete each user
+    const now = new Date();
+    for (const adminUser of adminUsers) {
+      adminUser.isActive = "inactive";
+      if (adminUser.audit) {
+        adminUser.audit.deletstatus = 1;
+        adminUser.audit.deletedAt = now;
+      } else {
+        adminUser.audit = { deletstatus: 1, deletedAt: now };
+      }
+      await adminUser.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Selected admin users deleted successfully",
+      count: adminUsers.length,
+      data: adminUsers,
+    });
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Internal server error",
+    });
+  }
+};
+
 
 // Get Admin User by Id 
 exports.getadminuserbyid = async (req, res) => {
