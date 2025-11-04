@@ -292,6 +292,53 @@ exports.deletecarrier = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+exports.deleteSelectedcarrier = async (req, res) => {
+  try {
+    const { userId } = req.body; 
+    if (!userId || !Array.isArray(userId) || userId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Truck IDs provided to delete",
+      });
+    }
+    const userData = await User.find({
+          _id: { $in: userId },
+           deletstatus: 0 
+    });
+    if (!userData.length) {
+      return res.status(404).json({ success: false, message: "User not found or already deleted" });
+    }
+    const carrierData = await Carrier.find({
+          userId: { $in: userId },
+           deletstatus: 0 
+    });
+    if (!carrierData) {
+      return res.status(404).json({ success: false, message: "Carrier not found or already deleted" });
+    }
+    for (const carrierinfo of carrierData) {
+      carrierinfo.deletstatus = 1;
+      carrierinfo.deletedAt = new Date();
+      carrierinfo.deletedBy = req.user?._id || null;
+      await carrierinfo.save();
+    }
+    for (const userinfo of userData) {
+      userinfo.deletstatus = 1;
+      userinfo.deletedAt = new Date();
+      userinfo.deletedBy = req.user?._id || null;
+      await userinfo.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Carrier and linked user deleted successfully",
+      data: { carrierData, userData }
+    });
+
+  } catch (error) {
+    console.error("Error deleting carrier:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 
 

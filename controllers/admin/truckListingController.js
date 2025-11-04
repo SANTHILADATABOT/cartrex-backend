@@ -319,10 +319,10 @@ exports.deletetruck = async (req, res) => {
 //  DELETE Admin User 
 exports.deleteselectedTruck = async (req, res) => {
   try {
-    const { TruckId } = req.body; // receive array of admin IDs
-    console.log("Received truck IDs =>", TruckId);
+    const { truckId } = req.body; // receive array of admin IDs
+    console.log("Received truck IDs =>", truckId);
 
-    if (!TruckId || !Array.isArray(TruckId) || TruckId.length === 0) {
+    if (!truckId || !Array.isArray(truckId) || truckId.length === 0) {
       return res.status(400).json({
         success: false,
         message: "No Truck IDs provided to delete",
@@ -331,7 +331,7 @@ exports.deleteselectedTruck = async (req, res) => {
 
     // Find all matching admin users that are not already deleted
     const truckData = await Truck.find({
-      _id: { $in: TruckId },
+      _id: { $in: truckId },
        deletstatus: 0 
     });
 
