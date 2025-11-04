@@ -159,8 +159,6 @@ exports.getshipperbyId = async (req, res) => {
   }
 };
 
-
-
 exports.deleteshipper = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -191,6 +189,52 @@ exports.deleteshipper = async (req, res) => {
       success: true,
       message: "Shipper and linked user deleted successfully",
       data: { shipper, user }
+    });
+
+  } catch (error) {
+    console.error("Error deleting shipper:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+exports.deleteSelectedshipper = async (req, res) => {
+  try {
+    const { userId } = req.body; 
+    if (!userId || !Array.isArray(userId) || userId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Truck IDs provided to delete",
+      });
+    }
+    const userData = await User.find({
+          _id: { $in: userId },
+            deletstatus: 0 
+    });
+    if (!userData.length) {
+      return res.status(404).json({ success: false, message: "User not found or already deleted" });
+    }
+    const shipperData = await Shipper.find({
+      userId: { $in: userId },
+      deletstatus: 0 
+    });
+    if (!shipperData) {
+      return res.status(404).json({ success: false, message: "Shipper not found or already deleted" });
+    }
+    for (const shipperinfo of shipperData) {
+      shipperinfo.deletstatus = 1;
+      shipperinfo.deletedAt = new Date();
+      shipperinfo.deletedBy = req.user?._id || null;
+      await shipperinfo.save();
+    }
+    for (const userinfo of userData) {
+      userinfo.deletstatus = 1;
+      userinfo.deletedAt = new Date();
+      userinfo.deletedBy = req.user?._id || null;
+      await userinfo.save();
+    }
+    res.status(200).json({
+      success: true,
+      message: "Shipper and linked user deleted successfully",
+      data: { shipperData, userData }
     });
 
   } catch (error) {
