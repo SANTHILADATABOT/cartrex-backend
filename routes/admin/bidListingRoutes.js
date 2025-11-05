@@ -14,5 +14,6 @@ router.put('/updatebidstatusbyId/:bidId', bidController.updatebidstatusbyId);
 
 // DELETE bid
 router.delete('/deletebid/:bidId', bidController.deletebid);
+router.delete('/deleteSelectedBid', bidController.deleteSelectedBid);
 
 module.exports = router;

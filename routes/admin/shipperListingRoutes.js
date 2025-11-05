@@ -16,6 +16,7 @@ router.get('/getshipperbyId/:shipperId',shipperController.getshipperbyId);
 
 // Delete shipper 
 router.delete('/deleteshipper/:userId', shipperController.deleteshipper);
+router.delete('/deleteSelectedshipper', shipperController.deleteSelectedshipper);
 
 router.get('/getshipperbyId/:shipperId',shipperController.getshipperbyId);
 

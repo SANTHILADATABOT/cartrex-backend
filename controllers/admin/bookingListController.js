@@ -133,6 +133,43 @@ exports.deletebooking = async (req, res) => {
   }
 };
 
+// ✅ SOFT DELETE booking (set deletstatus = 1)
+exports.deleteSelectedBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    if (!bookingId || !Array.isArray(bookingId) || bookingId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Booking IDs provided to delete",
+      });
+    }
+    const bookingData = await Booking.find({
+        _id: { $in: bookingId },
+          deletstatus: 0 
+    });
+    if (!bookingData.length) {
+      return res.status(404).json({ success: false, message: "Booking not found or already deleted" });
+    }
+    for (const bookinginfo of bookingData) {
+      bookinginfo.deletstatus = 1;
+      bookinginfo.deletedAt = new Date();
+      bookinginfo.deletedBy = null;
+      bookinginfo.deletedipAddress = req.ip;
+      await bookinginfo.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Booking deleted successfully",
+      data: bookingData
+    });
+
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 exports.updatebookingold = async (req, res) => {
   try {

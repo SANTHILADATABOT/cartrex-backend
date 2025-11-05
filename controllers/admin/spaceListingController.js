@@ -237,20 +237,12 @@ exports.updatespace = async (req, res) => {
 exports.DeleteSpace = async (req, res) => {
   try {
     const { id } = req.params;
-    // const { deletedBy } = req.body; // take from body
-
-    // if (!deletedBy) {
-    //   return res.status(400).json({ message: "deletedBy is required" });
-    // }
-
     const auditFields = {
       deletstatus: 1,
       deletedAt: new Date(),
-      //deletedBy,//req.ip || req.connection.remoteAddress,
       deleted_ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.get('User-Agent'),
       updatedAt: new Date(),
-      //updatedBy: deletedBy,
     };
 
     const deletedSpace = await Space.findByIdAndUpdate(id, auditFields, {
@@ -264,6 +256,59 @@ exports.DeleteSpace = async (req, res) => {
     res.status(200).json({
       message: "Space deleted successfully",
       deletedSpace,
+    });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({
+      message: "Error deleting space",
+      error: error.message,
+    });
+  }
+};
+exports.deleteSelectedSpace = async (req, res) => {
+  try {
+    const { spaceId } = req.body;
+    console.log("Received space IDs =>", spaceId);
+
+    if (!spaceId || !Array.isArray(spaceId) || spaceId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Space IDs provided to delete",
+      });
+    }
+    const auditFields = {
+      deletstatus: 1,
+      deletedAt: new Date(),
+      deleted_ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent'),
+      updatedAt: new Date(),
+    };
+    const spaceData = await Space.find({
+          _id: { $in: spaceId },
+           deletstatus: 0 
+    });
+    if (!spaceData.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching space found or already deleted",
+      });
+    }
+    for (const spaceinfo of spaceData) {
+      spaceinfo.new = true;
+      spaceinfo.runValidators = true;
+      spaceinfo.deletstatus = 1;
+      spaceinfo.deletedAt = new Date();
+      spaceinfo.deletedipAddress = req.ip || req.connection.remoteAddress;
+      spaceinfo.userAgent = req.get('User-Agent');
+      spaceinfo.updatedAt = new Date();
+      await spaceinfo.save();
+    }
+    if (!spaceData)
+      return res.status(404).json({ message: "Space not found" });
+
+    res.status(200).json({
+      message: "Space deleted successfully",
+      spaceData,
     });
   } catch (error) {
     console.error("Delete error:", error);
