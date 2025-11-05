@@ -200,10 +200,10 @@ exports.getspacedetails = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
-exports.addoriginanddestinationdetails = async (req, res) => {
+exports.addSpacesDetails = async (req, res) => {
   try {
     const { carrierId } = req.params;
-    const { origin, destination } = req.body;
+    const data = req.body;
 
     console.log("Received carrierId:", carrierId);
 
@@ -211,48 +211,51 @@ exports.addoriginanddestinationdetails = async (req, res) => {
     const carrier = await Carrier.findById(carrierId);
     console.log(carrier);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
+   const spaceData = {
+      carrierId: carrierId,
+      truckId: data?.selectedTruck,
+      availableSpaces: data?.availablespace,
+      message: data?.message,
+      rateCard: data?.rateCard,
+      createdAt: new Date(),
+      createdBy: carrier.userId,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+    };
 
-    const space = await Space.findOne({ carrierId: carrier._id, deletstatus: 0 }).sort({ createdAt: -1 });
-    console.log(space)
-
-    if (!space) return res.status(404).json({ message: "No active space found for this carrier" });
-    if (origin) {
-      space.origin = {
-        location: origin.location,
-        city: origin.city,
-        state: origin.state,
-        pickupDate: origin.pickupDate,
-        pickupWindow: origin.pickupWindow,
-         pickupRadius: origin.pickupRadius,
+    // Add origin info if available
+    if (data?.originLocation) {
+      spaceData.origin = {
+        location: data.originLocation,
+        city: "",
+        state: "",
+        pickupDate: data.pick_up_date,
+        pickupWindow: data.pick_up_window,
+        pickupRadius: data.pickup_radius,
         coordinates: {
-          type: 'Point',
-          coordinates: origin.coordinates || [0, 0]
-        }
+          type: "Point",
+          coordinates: [0, 0],
+        },
       };
     }
 
-    if (destination) {
-      space.destination = {
-        location: destination.location,
-        city: destination.city,
-        state: destination.state,
-        deliveryDate: destination.deliveryDate,
-        deliveryWindow: destination.deliveryWindow,
-        deliveryRadius: destination.deliveryRadius,
+    // Add destination info if available
+    if (data?.destinationLocation) {
+      spaceData.destination = {
+        location: data.destinationLocation,
+        city: "",
+        state: "",
+        deliveryDate: data.deliveryDate,
+        deliveryWindow: data.delivery_window,
+        deliveryRadius: data.delivery_radius,
         coordinates: {
-          type: 'Point',
-          coordinates: destination.coordinates || [0, 0]
-        }
+          type: "Point",
+          coordinates: [0, 0],
+        },
       };
     }
 
-
-    space.updatedAt = new Date();
-    space.updatedBy = carrier.userId; 
-    space.updated_ipAddress = req.ip;
-    space.userAgent = req.get('User-Agent');
-
-    await space.save();
+    const space = await Space.create(spaceData);
 
     res.status(200).json({
       sucess:"true",

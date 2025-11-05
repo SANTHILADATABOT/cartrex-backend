@@ -47,7 +47,9 @@ const io = new Server(server, {
         process.env.WEB_FRONTEND_URL, 
         process.env.MOBILE_FRONTEND_URL,
         'http://localhost:5173',
+        'http://localhost:5174',
         'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
         'http://localhost:3000'
       ];
       
@@ -75,7 +77,9 @@ const allowedOrigins = [
   process.env.MOBILE_FRONTEND_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
 ];
 
 app.use(cors({
