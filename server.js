@@ -114,7 +114,6 @@ app.use('/auth/', authLimiter);
 
 // Database connection
 const MONGO_URI = process.env.MONGODB_URI;
-console.log("Mongo URI:", MONGO_URI);
 
 mongoose.connect(MONGO_URI, { 
   useNewUrlParser: true, 
@@ -128,8 +127,6 @@ const setupWebSocketNamespaces = () => {
   // Admin namespace
   const adminNamespace = io.of('/admin');
   adminNamespace.on('connection', (socket) => {
-    console.log('Admin connected:', socket.id);
-    
     socket.on('join_admin', (adminId) => {
       socket.join(`admin:${adminId}`);
     });
