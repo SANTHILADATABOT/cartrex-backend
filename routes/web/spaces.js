@@ -13,4 +13,9 @@ router.put('/:id', protect, authorize('carrier'), spaceController.updateSpace);
 
 router.delete('/:id', protect, authorize('carrier'), spaceController.deleteSpace);
 
+// Already written post a space routes's
+router.get('/getspacedetails/:userId', spaceController.getspacedetails);
+
+router.post('/addoriginanddestinationdetails/:carrierId',spaceController.addoriginanddestinationdetails);
+
 module.exports = router;

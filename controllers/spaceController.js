@@ -1,3 +1,10 @@
+
+const Truck = require('../models/Truck');
+const Route = require('../models/Route');
+const User = require('../models/User');
+
+
+
 const Space = require('../models/Space');
 const Carrier = require('../models/Carrier');
 
@@ -154,5 +161,111 @@ exports.deleteSpace = async (req, res) => {
   } catch (error) {
     console.error('Delete space error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Already written post a space api's
+
+exports.getspacedetails = async (req, res) => {
+  try {
+    const { userId } =  req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ message: "Carrier not found for this user" });
+    }
+    const trucks = await Truck.find({ carrierId: carrier._id });
+    const truckIds = trucks.map(t => t._id);
+    const routes = await Route.find({ truckId: { $in: truckIds } });
+    const availableSpaces = Array.from({ length: 9 }, (_, i) => i + 1);
+    const result = {
+      carrierId: carrier._id,
+      companyName: carrier.companyName,
+      trucks: trucks.map(truck => ({
+      _id: truck._id,
+      nickname: truck.nickname,
+      truckType: truck.truckType,
+      routes: routes.filter(r => r.truckId.toString() === truck._id.toString())
+      })),
+      availableSpaces
+    };
+
+    return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
+
+  } catch (error) {
+    console.error("Error fetching space details:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+exports.addoriginanddestinationdetails = async (req, res) => {
+  try {
+    const { carrierId } = req.params;
+    const { origin, destination } = req.body;
+
+    console.log("Received carrierId:", carrierId);
+
+
+    const carrier = await Carrier.findById(carrierId);
+    console.log(carrier);
+    if (!carrier) return res.status(404).json({ message: "Carrier not found" });
+
+    const space = await Space.findOne({ carrierId: carrier._id, deletstatus: 0 }).sort({ createdAt: -1 });
+    console.log(space)
+
+    if (!space) return res.status(404).json({ message: "No active space found for this carrier" });
+    if (origin) {
+      space.origin = {
+        location: origin.location,
+        city: origin.city,
+        state: origin.state,
+        pickupDate: origin.pickupDate,
+        pickupWindow: origin.pickupWindow,
+         pickupRadius: origin.pickupRadius,
+        coordinates: {
+          type: 'Point',
+          coordinates: origin.coordinates || [0, 0]
+        }
+      };
+    }
+
+    if (destination) {
+      space.destination = {
+        location: destination.location,
+        city: destination.city,
+        state: destination.state,
+        deliveryDate: destination.deliveryDate,
+        deliveryWindow: destination.deliveryWindow,
+        deliveryRadius: destination.deliveryRadius,
+        coordinates: {
+          type: 'Point',
+          coordinates: destination.coordinates || [0, 0]
+        }
+      };
+    }
+
+
+    space.updatedAt = new Date();
+    space.updatedBy = carrier.userId; 
+    space.updated_ipAddress = req.ip;
+    space.userAgent = req.get('User-Agent');
+
+    await space.save();
+
+    res.status(200).json({
+      sucess:"true",
+      message: "Origin and destination details saved successfully",
+      //carrier: { id: carrier._id, companyName: carrier.companyName },
+      //spaceId: space._id,
+      data:space,
+    });
+  } catch (error) {
+    console.error("Error saving origin and destination:", error);
+    res.status(500).json({
+      message: "Error saving origin and destination details",
+      error: error.message,
+    });
   }
 };

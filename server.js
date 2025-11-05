@@ -197,6 +197,7 @@ const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 const webRoutes = require('./routes/web');
+const spaceRoutes = require('./routes/web/spaces')
 // const mobileRoutes = require('./routes/mobile');
 // const sharedRoutes = require('./routes/shared');
 
@@ -222,6 +223,9 @@ app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use("/uploads", uploadRoutes);
 // Web application routes
 app.use('/api/web', webRoutes);
+app.use('/space',spaceRoutes);
+
+
 
 // Mobile API routes
 // app.use('/api/v1/mobile', mobileRoutes);
