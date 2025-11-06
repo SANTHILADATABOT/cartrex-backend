@@ -1,5 +1,6 @@
 // server.js
 const express = require('express');
+const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -31,6 +32,7 @@ const space=require('./models/Space');
 const truck=require('./models/Truck');
 const user=require('./models/User');
 const usernotifications=require('./models/UsernotificationSettings');
+const MongoStore = require('connect-mongo');
 
 // Load environment variables
 
@@ -47,6 +49,7 @@ const io = new Server(server, {
         process.env.WEB_FRONTEND_URL, 
         process.env.MOBILE_FRONTEND_URL,
         'http://localhost:5173',
+        'http://localhost:5000',
         'http://127.0.0.1:5173',
         'http://localhost:3000'
       ];
@@ -75,6 +78,7 @@ const allowedOrigins = [
   process.env.MOBILE_FRONTEND_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:5000',
   'http://localhost:3000'
 ];
 
@@ -89,6 +93,24 @@ app.use(cors({
   credentials: true
 }));
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'supersecretkey', // keep this in .env
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions',
+    ttl: 14 * 24 * 60 * 60 // session expires in 14 days
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: false, // change to true if you use HTTPS
+    sameSite: 'lax',
+    maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
+  }
+}));
+
 // Rate Limiting - Different limits for different clients
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -98,7 +120,7 @@ const generalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Lower for auth endpoints
+  max: 50, // Lower for auth endpoints
   message: 'Too many authentication attempts, please try again later.'
 });
 
@@ -192,6 +214,7 @@ const bidListRoutes = require('./routes/admin/bidListingRoutes');
 const adminUserlistRoutes = require('./routes/admin/adminUserlistRoutes');
 const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const dashboardRoutes = require('./routes/dashboard');
 
 const webRoutes = require('./routes/web');
 // const mobileRoutes = require('./routes/mobile');
@@ -217,6 +240,7 @@ app.use('/adminuserlist',adminUserlistRoutes);
 app.use('/masterRoleRoutes',masterRoleRoutes);
 
 app.use("/uploads", uploadRoutes);
+app.use("/dashboard", dashboardRoutes);
 // Web application routes
 app.use('/api/web', webRoutes);
 
