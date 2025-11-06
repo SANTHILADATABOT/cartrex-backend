@@ -212,6 +212,46 @@ exports.deleteroute = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+exports.deleteSelectedRoute = async (req, res) => {
+  try {
+    const { routeId } = req.body;
+    console.log("Received Route IDs =>", routeId);
+
+    if (!routeId || !Array.isArray(routeId) || routeId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Route IDs provided to delete",
+      });
+    } 
+
+    // Find all matching admin users that are not already deleted
+    const routeData = await Route.find({
+        _id: { $in: routeId },
+          deletstatus: 0 
+    });
+    if (!routeData.length) {
+      return res.status(404).json({ success: false, message: "Route not found or already deleted" });
+    }
+    for (const routeinfo of routeData) {
+      routeinfo.deletstatus = 1;
+      routeinfo.deletedAt = new Date();
+      routeinfo.deletedBy = null;
+      routeinfo.deletedipAddress = req.ip;
+      await routeinfo.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Route deleted successfully",
+      data: routeData
+    });
+
+  } catch (error) {
+    console.error("Error deleting route:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 exports.updateStatusRoute = async (req, res) => {
   try {
     const { routeId } = req.params;

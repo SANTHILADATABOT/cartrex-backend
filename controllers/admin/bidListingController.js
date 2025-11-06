@@ -364,3 +364,40 @@ exports.getBidsByCarrierUserId = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+exports.deleteSelectedBid = async (req, res) => {
+  try {
+    const { bidId } = req.body;
+
+    if (!bidId || !Array.isArray(bidId) || bidId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Booking IDs provided to delete",
+      });
+    }
+    const bidData = await Bid.find({
+            _id: { $in: bidId },
+              deletstatus: 0 
+    });
+    if (!bidData.length) {
+      return res.status(404).json({ success: false, message: "Bid not found or already deleted" });
+    }
+    for (const bidinfo of bidData) {
+      bidinfo.deletstatus = 1;
+      bidinfo.deletedAt = new Date();
+      bidinfo.deletedBy = null;
+      bidinfo.deletedipAddress = req.ip;
+      await bidinfo.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Bid deleted successfully",
+      data: bidData
+    });
+
+  } catch (error) {
+    console.error("Error deleting bid:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+

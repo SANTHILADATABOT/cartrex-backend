@@ -18,6 +18,7 @@ router.get('/getcarrierbyId/:carrierId', carrierController.getcarrierbyId);
 
 // DELETE (soft delete) carrier
 router.delete('/deletecarrier/:userId', carrierController.deletecarrier);
+router.delete('/deleteSelectedcarrier', carrierController.deleteSelectedcarrier);
 
 
 

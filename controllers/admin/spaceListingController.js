@@ -237,20 +237,12 @@ exports.updatespace = async (req, res) => {
 exports.DeleteSpace = async (req, res) => {
   try {
     const { id } = req.params;
-    // const { deletedBy } = req.body; // take from body
-
-    // if (!deletedBy) {
-    //   return res.status(400).json({ message: "deletedBy is required" });
-    // }
-
     const auditFields = {
       deletstatus: 1,
       deletedAt: new Date(),
-      //deletedBy,//req.ip || req.connection.remoteAddress,
       deleted_ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.get('User-Agent'),
       updatedAt: new Date(),
-      //updatedBy: deletedBy,
     };
 
     const deletedSpace = await Space.findByIdAndUpdate(id, auditFields, {
@@ -273,62 +265,56 @@ exports.DeleteSpace = async (req, res) => {
     });
   }
 };
-
-
-
-exports.getSpacesByCarrierUserId = async (req, res) => {
+exports.deleteSelectedSpace = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { spaceId } = req.body;
+    console.log("Received space IDs =>", spaceId);
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
-
-  
-    const carrier = await Carrier.findOne({ userId: userId, deletstatus: 0 });
-    if (!carrier) return res.status(404).json({ success: false, message: 'Carrier not found' });
-
-  
-    const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
-    const truckIds = trucks.map(t => t._id);
-
-    if (!truckIds.length) {
-      return res.status(200).json({ success: true, message: 'No trucks found for this carrier', data: [] });
+    if (!spaceId || !Array.isArray(spaceId) || spaceId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Space IDs provided to delete",
+      });
     }
-
-    const routes = await Route.find({
-      truckId: { $in: truckIds },
-      carrierId: carrier._id,
-      deletstatus: 0
-    }).select('_id');
-    const routeIds = routes.map(r => r._id);
-   
-
-    if (!routeIds.length) {
-      return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
-    }
-  
-    const spaces = await Space.find({
-      carrierId: carrier._id,
-      truckId: { $in: truckIds },
-      routeId: { $in: routeIds },
-      deletstatus: 0
-    })
-       .populate('userId', 'firstName lastName')
-      .populate('carrierId', 'companyName')
-      .populate('truckId', 'nickname registrationNumber')
-      .populate('routeId', 'origin destination status')                
-      .lean();
-       
-    return res.status(200).json({
-      success: true,
-      count: spaces.length, 
-      message: spaces.length ? 'Spaces found' : 'No spaces found for this carrier',
-      data: spaces
+    const auditFields = {
+      deletstatus: 1,
+      deletedAt: new Date(),
+      deleted_ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent'),
+      updatedAt: new Date(),
+    };
+    const spaceData = await Space.find({
+          _id: { $in: spaceId },
+           deletstatus: 0 
     });
+    if (!spaceData.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No matching space found or already deleted",
+      });
+    }
+    for (const spaceinfo of spaceData) {
+      spaceinfo.new = true;
+      spaceinfo.runValidators = true;
+      spaceinfo.deletstatus = 1;
+      spaceinfo.deletedAt = new Date();
+      spaceinfo.deletedipAddress = req.ip || req.connection.remoteAddress;
+      spaceinfo.userAgent = req.get('User-Agent');
+      spaceinfo.updatedAt = new Date();
+      await spaceinfo.save();
+    }
+    if (!spaceData)
+      return res.status(404).json({ message: "Space not found" });
 
+    res.status(200).json({
+      message: "Space deleted successfully",
+      spaceData,
+    });
   } catch (error) {
-    console.error(' Error fetching spaces:', error);
-    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    console.error("Delete error:", error);
+    res.status(500).json({
+      message: "Error deleting space",
+      error: error.message,
+    });
   }
 };

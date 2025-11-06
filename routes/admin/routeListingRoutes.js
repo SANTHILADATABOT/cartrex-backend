@@ -12,6 +12,7 @@ router.put('/updateroute/:routeId', routeController.updateroute);
 
 //delete
 router.delete('/deleteroute/:routeId', routeController.deleteroute);
+router.delete('/deleteSelectedRoute', routeController.deleteSelectedRoute);
 
 router.put('/updateStatusRoute/:routeId',routeController.updateStatusRoute);
 
