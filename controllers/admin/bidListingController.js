@@ -90,6 +90,10 @@ exports.getallbids = async (req, res) => {
 // };
 
 // ✅ GET bid by ID
+
+
+
+
 exports.getbidbyId = async (req, res) => {
   try {
     const { bidId } = req.params;
@@ -300,3 +304,63 @@ exports.deletebid = async (req, res) => {
   }
 };
 
+
+exports.getBidsByCarrierUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // 1️⃣ Check if user exists
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
+
+    // 2️⃣ Find carrier details
+    const carrier = await Carrier.findOne({ userId, deletstatus: 0 });
+    if (!carrier) return res.status(404).json({ success: false, message: 'Carrier not found' });
+
+    // 3️⃣ Find all trucks for the carrier
+    const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
+    const truckIds = trucks.map(t => t._id);
+
+    if (!truckIds.length) {
+      return res.status(200).json({ success: true, message: 'No trucks found for this carrier', data: [] });
+    }
+
+    // 4️⃣ Find all routes for the carrier
+    const routes = await Route.find({
+      carrierId: carrier._id,
+      truckId: { $in: truckIds },
+      deletstatus: 0
+    }).select('_id');
+    const routeIds = routes.map(r => r._id);
+
+    if (!routeIds.length) {
+      return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
+    }
+
+    // 5️⃣ Fetch bids for this carrier (based on carrierId, truckId, routeId)
+    const bids = await Bid.find({
+      carrierId: carrier._id,
+      truckId: { $in: truckIds },
+      routeId: { $in: routeIds },
+      deletstatus: 0
+    })
+      .populate('userId', 'firstName lastName email')
+      .populate('carrierId', 'companyName')
+      .populate('truckId', 'nickname registrationNumber')
+      .populate('routeId', 'origin destination status')
+      .lean();
+
+    // 6️⃣ Response
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: bids.length ? 'Bids found' : 'No bids found for this carrier',
+      data: bids
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching bids:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};

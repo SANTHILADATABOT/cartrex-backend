@@ -273,3 +273,62 @@ exports.DeleteSpace = async (req, res) => {
     });
   }
 };
+
+
+
+exports.getSpacesByCarrierUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
+
+  
+    const carrier = await Carrier.findOne({ userId: userId, deletstatus: 0 });
+    if (!carrier) return res.status(404).json({ success: false, message: 'Carrier not found' });
+
+  
+    const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
+    const truckIds = trucks.map(t => t._id);
+
+    if (!truckIds.length) {
+      return res.status(200).json({ success: true, message: 'No trucks found for this carrier', data: [] });
+    }
+
+    const routes = await Route.find({
+      truckId: { $in: truckIds },
+      carrierId: carrier._id,
+      deletstatus: 0
+    }).select('_id');
+    const routeIds = routes.map(r => r._id);
+   
+
+    if (!routeIds.length) {
+      return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
+    }
+  
+    const spaces = await Space.find({
+      carrierId: carrier._id,
+      truckId: { $in: truckIds },
+      routeId: { $in: routeIds },
+      deletstatus: 0
+    })
+       .populate('userId', 'firstName lastName')
+      .populate('carrierId', 'companyName')
+      .populate('truckId', 'nickname registrationNumber')
+      .populate('routeId', 'origin destination status')                
+      .lean();
+       
+    return res.status(200).json({
+      success: true,
+      count: spaces.length, 
+      message: spaces.length ? 'Spaces found' : 'No spaces found for this carrier',
+      data: spaces
+    });
+
+  } catch (error) {
+    console.error(' Error fetching spaces:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};

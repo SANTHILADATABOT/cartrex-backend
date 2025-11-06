@@ -5,7 +5,8 @@ const {
   getspacebyId,
   updateSpaceStatus,
   DeleteSpace,
-  updatespace
+  updatespace,
+  getSpacesByCarrierUserId
 } = require('../../controllers/admin/spaceListingController');
 
 router.get('/getallspaces', getAllSpaces);
@@ -14,4 +15,5 @@ router.put('/updatespacestatus/:id', updateSpaceStatus);
 router.put('/updatespace/:spaceid', updatespace);
 router.delete('/deletespace/:id', DeleteSpace);
 
+router.get('/getSpacesByCarrierUserId/:userId', getSpacesByCarrierUserId);
 module.exports = router;
