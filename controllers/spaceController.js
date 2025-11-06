@@ -229,9 +229,9 @@ exports.addSpacesDetails = async (req, res) => {
         location: data.originLocation,
         city: "",
         state: "",
-        pickupDate: data.pick_up_date,
-        pickupWindow: data.pick_up_window,
-        pickupRadius: data.pickup_radius,
+        pickupDate: data.pickupdate,
+        pickupWindow: data.pickupwindow,
+        pickupRadius: data.pickupradius,
         coordinates: {
           type: "Point",
           coordinates: [0, 0],
@@ -246,8 +246,8 @@ exports.addSpacesDetails = async (req, res) => {
         city: "",
         state: "",
         deliveryDate: data.deliveryDate,
-        deliveryWindow: data.delivery_window,
-        deliveryRadius: data.delivery_radius,
+        deliveryWindow: data.deliverywindow,
+        deliveryRadius: data.deliveryradius,
         coordinates: {
           type: "Point",
           coordinates: [0, 0],
