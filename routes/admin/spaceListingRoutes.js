@@ -16,5 +16,5 @@ router.put('/updatespace/:spaceid', updatespace);
 router.delete('/deletespace/:id', DeleteSpace);
 router.delete('/deleteSelectedSpace', deleteSelectedSpace);
 
-router.get('/getSpacesByCarrierUserId/:userId', getSpacesByCarrierUserId);
+
 module.exports = router;
