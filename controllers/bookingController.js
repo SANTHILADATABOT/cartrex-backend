@@ -10,13 +10,13 @@ exports.createBooking = async (req, res) => {
   try {
     const {
       spaceId,
-      vehicle,
+      vehicleDetails,
       pickup,
       delivery,
-      pricing
+      shippingInfo
     } = req.body;
 
-    const shipper = await Shipper.findOne({ userId: req.user._id });
+    const shipper = await Shipper.findOne({ userId: '690c7566d3da8329aedbb41e' });
 
     const space = await Space.findById(spaceId);
     if (!space) {
@@ -35,11 +35,12 @@ exports.createBooking = async (req, res) => {
       carrierId: space.carrierId,
       truckId: space.truckId,
       spaceId: space._id,
-      vehicle,
+      vehicleDetails,
       pickup,
       delivery,
-      pricing,
+      shippingInfo,
       status: 'pending',
+      createdBy: "690afffdc5696493cf8a937a",
       timeline: [{
         status: 'pending',
         timestamp: new Date(),
