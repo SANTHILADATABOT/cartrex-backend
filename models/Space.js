@@ -5,8 +5,8 @@ const spaceSchema = new mongoose.Schema({
   routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
   origin: {
     location: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
+    city: { type: String },
+    state: { type: String },
     pickupDate: { type: Date, required: true },
     pickupWindow: { type: String, required: true },
     pickupRadius: { type: Number, required: true },
@@ -17,8 +17,8 @@ const spaceSchema = new mongoose.Schema({
   },
   destination: {
     location: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
+    city: { type: String },
+    state: { type: String },
     deliveryDate: { type: Date, required: true },
     deliveryWindow: { type: String, required: true },
     deliveryRadius: { type: Number, required: true },
@@ -43,7 +43,7 @@ const spaceSchema = new mongoose.Schema({
   expiryDate: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     deletstatus: {
     type: Number,

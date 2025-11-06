@@ -47,7 +47,9 @@ const io = new Server(server, {
         process.env.WEB_FRONTEND_URL, 
         process.env.MOBILE_FRONTEND_URL,
         'http://localhost:5173',
+        'http://localhost:5174',
         'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
         'http://localhost:3000'
       ];
       
@@ -75,7 +77,9 @@ const allowedOrigins = [
   process.env.MOBILE_FRONTEND_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
 ];
 
 app.use(cors({
@@ -114,7 +118,6 @@ app.use('/auth/', authLimiter);
 
 // Database connection
 const MONGO_URI = process.env.MONGODB_URI;
-console.log("Mongo URI:", MONGO_URI);
 
 mongoose.connect(MONGO_URI, { 
   useNewUrlParser: true, 
@@ -128,8 +131,6 @@ const setupWebSocketNamespaces = () => {
   // Admin namespace
   const adminNamespace = io.of('/admin');
   adminNamespace.on('connection', (socket) => {
-    console.log('Admin connected:', socket.id);
-    
     socket.on('join_admin', (adminId) => {
       socket.join(`admin:${adminId}`);
     });
@@ -197,6 +198,7 @@ const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 const webRoutes = require('./routes/web');
+const spaceRoutes = require('./routes/web/spaces')
 // const mobileRoutes = require('./routes/mobile');
 // const sharedRoutes = require('./routes/shared');
 
@@ -222,6 +224,9 @@ app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use("/uploads", uploadRoutes);
 // Web application routes
 app.use('/api/web', webRoutes);
+app.use('/space',spaceRoutes);
+
+
 
 // Mobile API routes
 // app.use('/api/v1/mobile', mobileRoutes);
