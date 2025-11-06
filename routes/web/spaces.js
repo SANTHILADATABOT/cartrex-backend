@@ -11,11 +11,13 @@ router.get('/', protect, authorize('carrier'), spaceController.getSpaces);
 
 router.put('/:id', protect, authorize('carrier'), spaceController.updateSpace);
 
-router.delete('/:id', protect, authorize('carrier'), spaceController.deleteSpace);
+// router.delete('/deleteSpace/:spaceId', protect, authorize('carrier'), spaceController.deleteSpace);
+router.delete('/deleteSpace/:spaceId', spaceController.deleteSpace);
 
 // Already written post a space routes's
 router.get('/getspacedetails/:userId', spaceController.getspacedetails);
 
 router.post('/addSpacesDetails/:carrierId',spaceController.addSpacesDetails);
 
+router.get('/getSpacesByCarrierUserId/:userId', spaceController.getSpacesByCarrierUserId);
 module.exports = router;

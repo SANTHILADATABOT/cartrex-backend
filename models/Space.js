@@ -2,11 +2,13 @@ const mongoose = require('mongoose');
 const spaceSchema = new mongoose.Schema({
   carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier', required: true },
   truckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', },
   routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
   origin: {
     location: { type: String, required: true },
     city: { type: String },
     state: { type: String },
+      stateCode: { type: String },
     pickupDate: { type: Date, required: true },
     pickupWindow: { type: String, required: true },
     pickupRadius: { type: Number, required: true },
@@ -19,6 +21,7 @@ const spaceSchema = new mongoose.Schema({
     location: { type: String, required: true },
     city: { type: String },
     state: { type: String },
+      stateCode: { type: String },
     deliveryDate: { type: Date, required: true },
     deliveryWindow: { type: String, required: true },
     deliveryRadius: { type: Number, required: true },

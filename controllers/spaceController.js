@@ -139,33 +139,62 @@ exports.updateSpace = async (req, res) => {
   }
 };
 
+// exports.deleteSpace = async (req, res) => {
+//   try {
+//     const space = await Space.findById(req.params.id);
+
+//     if (!space) {
+//       return res.status(404).json({ success: false, message: 'Space not found' });
+//     }
+
+//     // const carrier = await Carrier.findOne({ userId: req.user._id });
+//     // if (space.carrierId.toString() !== carrier._id.toString()) {
+//     //   return res.status(403).json({ success: false, message: 'Not authorized' });
+//     // }
+
+//     await space.deleteOne();
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Space listing deleted successfully'
+//     });
+//   } catch (error) {
+//     console.error('Delete space error:', error);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
+
+// Already written post a space api's
+
 exports.deleteSpace = async (req, res) => {
   try {
-    const space = await Space.findById(req.params.id);
+    const { spaceId } = req.params;
+    const userId = req.user?._id; // if you're using authentication middleware
 
+    const space = await Space.findById(spaceId);
     if (!space) {
       return res.status(404).json({ success: false, message: 'Space not found' });
     }
 
-    const carrier = await Carrier.findOne({ userId: req.user._id });
-    if (space.carrierId.toString() !== carrier._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
-    }
-
-    await space.deleteOne();
-
-    res.status(200).json({
+    // Soft delete instead of removing document
+    space.deletstatus = 1;
+    space.deletedBy = "68e4aa373e31aa48741bd932";
+    space.deletedAt = new Date();
+    space.deletedipAddress = req.ip;
+    space.userAgent = req.headers['user-agent'];
+    
+    await space.save();
+console.log("deleteed")
+    return res.status(200).json({
       success: true,
-      message: 'Space listing deleted successfully'
+      message: 'Space listing marked as deleted successfully',
     });
+
   } catch (error) {
     console.error('Delete space error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
-
-// Already written post a space api's
-
 exports.getspacedetails = async (req, res) => {
   try {
     const { userId } =  req.params;
@@ -270,5 +299,62 @@ exports.addSpacesDetails = async (req, res) => {
       message: "Error saving origin and destination details",
       error: error.message,
     });
+  }
+};
+
+exports.getSpacesByCarrierUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+console.log("userId",userId)
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    // if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
+
+  
+    const carrier = await Carrier.findOne({ userId: userId, deletstatus: 0 });
+    if (!carrier) return res.status(404).json({ success: false, message: 'Carrier not found' });
+
+  
+    const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
+    const truckIds = trucks.map(t => t._id);
+
+    if (!truckIds.length) {
+      return res.status(200).json({ success: true, message: 'No trucks found for this carrier', data: [] });
+    }
+
+    const routes = await Route.find({
+      truckId: { $in: truckIds },
+      carrierId: carrier._id,
+      deletstatus: 0
+    }).select('_id');
+    const routeIds = routes.map(r => r._id);
+   
+
+    if (!routeIds.length) {
+      return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
+    }
+  
+    const spaces = await Space.find({
+      carrierId: carrier._id,
+      truckId: { $in: truckIds },
+      routeId: { $in: routeIds },
+      deletstatus: 0
+    })
+       .populate('userId', 'firstName lastName')
+      .populate('carrierId', 'companyName')
+      .populate('truckId', 'nickname registrationNumber')
+      .populate('routeId', 'origin destination status')                
+      .lean();
+       
+    return res.status(200).json({
+      success: true,
+      count: spaces.length, 
+      message: spaces.length ? 'Spaces found' : 'No spaces found for this carrier',
+      data: spaces
+    });
+
+  } catch (error) {
+    console.error(' Error fetching spaces:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
