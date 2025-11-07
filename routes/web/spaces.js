@@ -15,6 +15,7 @@ router.delete('/:id', protect, authorize('carrier'), spaceController.deleteSpace
 
 // Already written post a space routes's
 router.get('/getspacedetails/:userId', spaceController.getspacedetails);
+router.get('/getSpaceResult', spaceController.getSpaceResult);
 
 router.post('/addSpacesDetails/:carrierId',spaceController.addSpacesDetails);
 

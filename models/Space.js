@@ -35,7 +35,7 @@ const spaceSchema = new mongoose.Schema({
     basePrice: { type: Number, required: true },
     variants: [{
       name: { type: String },
-      price: { type: Number }
+      price: { type: Number },
     }]
   }],
   status: { type: String, enum: ['active', 'booked', 'expired'], default: 'active' },
