@@ -8,6 +8,15 @@ router.post('/', bookingController.createBooking);
 
 // Get bookings filtered by role
 router.get('/', protect, bookingController.getBookings);
+//router.get('/', bookingController.getBookings);
+
+
+// Get booking by user ID
+router.get('/getBookingsByUserId/:userId', bookingController.getBookingsByUserId);
+
+//update booking status for carrier 
+router.put('/updatebookingstatus/:userId/:bookingId',bookingController.updatebookingstatus);
+
 
 // Get booking by ID
 router.get('/:id', protect, bookingController.getBookingById);

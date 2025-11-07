@@ -70,3 +70,61 @@ exports.getBidById = async (req, res) => {
 
 //     bid.status = 'approved'; bid.approvedBy = carrier._id; bid.updatedAt = Date.now();
 //     await
+
+//update status by user id 
+const mongoose = require('mongoose');
+const Bid = require('../../models/Bid');
+const Shipper = require('../../models/Shipper');
+const User = require('../../models/User');
+
+exports.updateBidStatusByUserId = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+    const user = await User.findById(userId).populate('role');
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.role.name.toLowerCase() !== 'shipper') {
+      return res.status(403).json({ success: false, message: "Only shippers can cancel bids" });
+    }
+
+    const shipper = await Shipper.findOne({ userId });
+    if (!shipper) {
+      return res.status(404).json({ success: false, message: "No shipper found for this user" });
+    }
+
+    const bid = await Bid.findOne({ _id: bidId, shipperId: shipper._id, deletstatus: 0 });
+    if (!bid) {
+      return res.status(404).json({ success: false, message: "Bid not found or not owned by this shipper" });
+    }
+
+    bid.status = "cancelled";
+    bid.updatedAt = new Date();
+    bid.updatedBy = userId;
+    await bid.save();
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Bid status updated to cancelled successfully",
+      role: user.role.name,
+      data: {
+        bidId: bid._id,
+        status: bid.status
+      }
+    });
+
+  } catch (error) {
+    console.error("Error updating bid status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating bid status",
+      error: error.message
+    });
+  }
+};
