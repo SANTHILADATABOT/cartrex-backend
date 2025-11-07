@@ -427,3 +427,90 @@ console.log("userId",userId)
     return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+exports.editSpacesDetails = async (req, res) => {
+  try {
+    const { spaceId } = req.params; // ✅ space ID to edit
+    const data = req.body;
+
+    console.log("🟢 Received spaceId for edit:", spaceId);
+
+    // Check if space exists
+    const existingSpace = await Space.findById(spaceId);
+    if (!existingSpace) {
+      return res.status(404).json({ success: false, message: "Space not found" });
+    }
+
+    // If carrier ID is sent, validate carrier
+    if (data.carrierId) {
+      const carrier = await Carrier.findById(data.carrierId);
+      if (!carrier) {
+        return res.status(404).json({ success: false, message: "Carrier not found" });
+      }
+    }
+
+    // Prepare update data
+    const updatedData = {
+      carrierId: data.carrierId ?? existingSpace.carrierId,
+      truckId: data.selectedTruck ?? existingSpace.truckId,
+      availableSpaces: data.availablespace ?? existingSpace.availableSpaces,
+      message: data.message ?? existingSpace.message,
+      rateCard: data.rateCard ?? existingSpace.rateCard,
+      updatedAt: new Date(),
+      updatedBy: data.updatedBy || existingSpace.updatedBy,
+      ipAddress: req.ip,
+      userAgent: req.get("User-Agent"),
+    };
+
+    // Update origin if provided
+    if (data.originLocation) {
+      updatedData.origin = {
+        location: data.originLocation,
+        city: "",
+        state: "",
+        pickupDate: data.pickupdate,
+        pickupWindow: data.pickupwindow,
+        pickupRadius: data.pickupradius,
+        coordinates: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      };
+    }
+
+    // Update destination if provided
+    if (data.destinationLocation) {
+      updatedData.destination = {
+        location: data.destinationLocation,
+        city: "",
+        state: "",
+        deliveryDate: data.deliveryDate,
+        deliveryWindow: data.deliverywindow,
+        deliveryRadius: data.deliveryradius,
+        coordinates: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+      };
+    }
+
+    // Perform the update
+    const updatedSpace = await Space.findByIdAndUpdate(spaceId, updatedData, {
+      new: true, // returns the updated document
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Space details updated successfully",
+      data: updatedSpace,
+    });
+  } catch (error) {
+    console.error("❌ Error updating space:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating space details",
+      error: error.message,
+    });
+  }
+};

@@ -19,6 +19,7 @@ router.get('/getspacedetails/:userId', spaceController.getspacedetails);
 router.get('/getSpaceResult', spaceController.getSpaceResult);
 
 router.post('/addSpacesDetails/:carrierId',spaceController.addSpacesDetails);
+router.post('/editSpacesDetails/:spaceId',spaceController.editSpacesDetails);
 
 router.get('/getSpacesByCarrierUserId/:userId', spaceController.getSpacesByCarrierUserId);
 module.exports = router;
