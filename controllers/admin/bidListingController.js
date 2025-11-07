@@ -444,12 +444,12 @@ exports.getBidsByCarrierUserId = async (req, res) => {
     const bids = await Bid.find(finalFilter)
       .populate({
         path: "shipperId",
-        select: "companyName userId",
+        select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
       .populate({
         path: "carrierId",
-        select: "companyName userId",
+        select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
       .lean();
@@ -474,15 +474,6 @@ exports.getBidsByCarrierUserId = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
 
 
 
@@ -518,12 +509,12 @@ exports.getBidsByShipperUserId = async (req, res) => {
     })
       .populate({
         path: 'shipperId',
-        select: 'companyName userId',
+        select: 'companyName userId address',
         populate: { path: 'userId', select: 'firstName lastName' }
       })
       .populate({
         path: 'carrierId',
-        select: 'companyName userId',
+        select: 'companyName userId address',
         populate: { path: 'userId', select: 'firstName lastName' }
       })
       .populate('routeId', 'origin destination status')

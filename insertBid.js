@@ -11,42 +11,42 @@ async function insertSampleBid() {
     console.log('✅ Connected to MongoDB');
 
     const newBid = await Bid.create({
-      shipperId: '690d936622d1aff410ad1863',  // Replace with actual Shipper ID
-      carrierId: '690d8ef022d1aff410ad1828',  // Replace with actual Carrier ID
-      routeId: '690d916aa2bcebb6aae914df',    // Replace with actual Route ID
+      shipperId: '690dcb3722d1aff410ad189a',  // Replace with actual Shipper ID
+      carrierId: '690d8e9322d1aff410ad1820',  // Replace with actual Carrier ID
+      routeId: '690dccfe122b6f51f1d1d9b3',    // Replace with actual Route ID
 
-      bidValue: 1500,
+      bidValue: 1800,
 
       vehicleDetails: {
-        licenseNumber: 'FL-6290',
-        brand: 'Tata',
-        vehicleType: 'Flatbed Truck',
-        yearMade: 2017,
-        features: ['Hydraulic Lift', 'GPS', 'Side Rails'],
-        condition: 'fair',
-        quantity: 1,
-        photos: [
-          'https://example.com/uploads/vehicles/tata1.jpg',
-          'https://example.com/uploads/vehicles/tata2.jpg'
-        ],
-        contains100lbs: true
-      },
-      shippingDescription: 'Heavy machinery components for factory installation',
-      transportType: 'road',
-      vinNumber: '5NPDH4AE1DH123987',
-      lotNumber: 'LOT-5823',
-      pickup: {
-        city: 'Orlando',
-        state: 'Florida',
-        zipcode: '32801',
-        pickupDate: new Date('2025-11-15T10:00:00Z'),
-        pickupLocationType: 'construction site'
-      },
-      delivery: {
-        city: 'Tampa',
-        state: 'Florida',
-        zipcode: '33602'
-      },
+    licenseNumber: 'TX-8841',
+    brand: 'Mercedes-Benz',
+    vehicleType: 'Flatbed Truck',
+    yearMade: 2018,
+    features: ['GPS', 'Air Suspension', 'Toolbox'],
+    condition: 'excellent',
+    quantity: 2,
+    photos: [
+      'https://example.com/uploads/vehicles/mercedes_flatbed1.jpg',
+      'https://example.com/uploads/vehicles/mercedes_flatbed2.jpg'
+    ],
+    contains100lbs: true
+  },
+  shippingDescription: 'Heavy machinery delivery to construction site',
+  transportType: 'road',
+  vinNumber: 'WDDZF4JB3HA251942',
+  lotNumber: 'LOT-7824',
+  pickup: {
+    city: 'Dallas',
+    state: 'Texas',
+    zipcode: '75201',
+    pickupDate: new Date('2025-11-12T08:30:00Z'),
+    pickupLocationType: 'industrial park'
+  },
+  delivery: {
+    city: 'Houston',
+    state: 'Texas',
+    zipcode: '77002'
+  },
 
       additionalComments: 'Please ensure the load is secured and covered properly.',
       timing: '1_week',

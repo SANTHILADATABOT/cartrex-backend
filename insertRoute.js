@@ -15,11 +15,11 @@ async function insertRoutes() {
     // Example routes for the two carriers
     const routes = [
       {
-        carrierId: '690d8ef022d1aff410ad1828', // Priya Logistics LLC
-        truckId: '690d8fff22d1aff410ad1846', // replace with an actual Truck ObjectId
+        carrierId: '690d8e9322d1aff410ad1820', // Priya Logistics LLC
+        truckId: '690dcc8022d1aff410ad189e', // replace with an actual Truck ObjectId
         origin: {
           state: 'New York',
-          city: 'Buffalo',
+          city: 'California',
           pickupWindow: '08:00-14:00',
           pickupRadius: 18
         },
