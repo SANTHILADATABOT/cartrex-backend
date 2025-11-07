@@ -15,26 +15,26 @@ async function insertRoutes() {
     // Example routes for the two carriers
     const routes = [
       {
-        carrierId: '690c6bf47e8ffea31089230e', // nivetha Logistics LLC
-        truckId: '690c6c417e8ffea310892337', // nivetha_trcuk
+        carrierId: '690d8e9322d1aff410ad1820', // Priya Logistics LLC
+        truckId: '690dcc8022d1aff410ad189e', // replace with an actual Truck ObjectId
         origin: {
-          state: 'Georgia',
-          city: 'Atlanta',
-          pickupWindow: '08:00-12:00',  
-          pickupRadius: 20
+          state: 'New York',
+          city: 'California',
+          pickupWindow: '08:00-14:00',
+          pickupRadius: 18
         },
         destination: {
-          state: 'Florida',
-          city: 'Miami',
+          state: 'Pennsylvania',
+          city: 'Pittsburgh',
           deliveryWindow: '09:00-17:00',
-          deliveryRadius: 30
+          deliveryRadius: 25
         },
         status: 'active',
         createdBy: '68e73aebda9fdad99d4d53ea', // admin user
         ipAddress: '34.123.56.30',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       },
-     
+
     ];
 
     const result = await Route.insertMany(routes);

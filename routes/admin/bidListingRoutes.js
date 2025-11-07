@@ -16,4 +16,11 @@ router.put('/updatebidstatusbyId/:bidId', bidController.updatebidstatusbyId);
 router.delete('/deletebid/:bidId', bidController.deletebid);
 router.delete('/deleteSelectedBid', bidController.deleteSelectedBid);
 
+
+router.get('/getBidsByCarrierUserId/:userId',bidController.getBidsByCarrierUserId);
+
+router.get('/getBidsByShipperUserId/:userId',bidController.getBidsByShipperUserId);
+
+
+
 module.exports = router;

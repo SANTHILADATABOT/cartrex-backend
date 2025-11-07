@@ -15,4 +15,6 @@ router.delete('/deleteSelectedBooking', bookingController.deleteSelectedBooking)
 
 router.put('/updateStatus/:bookingId', bookingController.updateStatus);
 
+
+
 module.exports = router;

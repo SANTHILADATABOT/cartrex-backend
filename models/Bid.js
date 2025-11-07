@@ -4,6 +4,7 @@ const bidSchema = new mongoose.Schema({
   shipperId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shipper', required: true },
   carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier' },
   routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
+  userId:{type: mongoose.Schema.Types.ObjectId, ref: 'User'},
 
   bidValue: { type: Number, required: true },
   bidValuetaxinc: {
