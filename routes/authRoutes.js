@@ -10,6 +10,7 @@ router.post('/login', authController.login);
 router.post('/verify-otp', authController.verifyOTP);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
+router.post('/logout', authController.logout);
 
 // Google SSO example
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -21,5 +22,13 @@ router.get(
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
   }
 );
+
+// Session check route
+router.get('/me', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, message: 'Not logged in' });
+  }
+  res.json({ success: true, user: req.session.user });
+});
 
 module.exports = router;
