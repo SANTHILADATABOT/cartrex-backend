@@ -60,7 +60,7 @@ exports.createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('Create booking error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server errorkk', test: error });
   }
 };
 
