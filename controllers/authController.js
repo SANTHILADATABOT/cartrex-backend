@@ -1,5 +1,6 @@
 
 const User = require('../models/User');
+const AdminRole = require('../models/AdminRoles');
 const Carrier = require('../models/Carrier');
 const Shipper = require('../models/Shipper');
 const AdminUser = require('../models/AdminUsers');
@@ -170,9 +171,38 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Fetch role info from AdminRole collection
+    const roleInfo = await AdminRole.findOne({
+      _id: account.role,      // assuming user.role stores AdminRole id
+      isActive: "active"
+    });
+
+    if (!roleInfo) {
+      return res.status(403).json({
+        success: false,
+        message: 'Role is inactive or not found'
+      });
+    }
+
     // Update last login
     account.lastLogin = new Date();
     await account.save();
+
+    // Create session
+    req.session.users = {
+      id: account._id,
+      email: role === 'admin' ? account.personalInfo?.email : account.email,
+      roleId: roleInfo._id,
+      roleName: roleInfo.roleName,
+      roleType: roleInfo.roleType,
+      firstName: account.firstName,
+      lastName: account.lastName,
+      isApproved: account.isApproved,
+      profileCompleted: account.profileCompleted
+    };
+    await req.session.save();
+
+    console.log("Session created:", req.session.users);
 
     // Generate JWT
     const token = generateToken(account._id);
@@ -180,12 +210,13 @@ exports.login = async (req, res) => {
     res.status(200).json({
       success: true,
       token,
+      data2: req.session.users,
       data: {
         id: account._id,
         email: account.email,
         firstName: account.firstName,
         lastName: account.lastName,
-        role: role,
+        role: roleInfo.roleName,
         isApproved: account.isApproved,
         profileCompleted: account.profileCompleted
       }
@@ -195,6 +226,35 @@ exports.login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during login'
+    });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    // Destroy the session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destroy error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error logging out'
+        });
+      }
+
+      // Clear cookie if using cookie-based sessions
+      res.clearCookie('connect.sid'); // default cookie name, change if different
+
+      res.status(200).json({
+        success: true,
+        message: 'Logged out successfully'
+      });
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during logout'
     });
   }
 };

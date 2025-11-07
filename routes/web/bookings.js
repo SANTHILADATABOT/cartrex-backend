@@ -4,7 +4,7 @@ const bookingController = require('../../controllers/bookingController');
 const { protect, authorize, requireProfileComplete } = require('../../middleware/auth');
 
 // Create new booking - Shipper only
-router.post('/', protect, authorize('shipper'), requireProfileComplete, bookingController.createBooking);
+router.post('/', bookingController.createBooking);
 
 // Get bookings filtered by role
 router.get('/', protect, bookingController.getBookings);

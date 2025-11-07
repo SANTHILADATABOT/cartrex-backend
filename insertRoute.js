@@ -20,7 +20,7 @@ async function insertRoutes() {
         origin: {
           state: 'Georgia',
           city: 'Atlanta',
-          pickupWindow: '08:00-12:00',
+          pickupWindow: '08:00-12:00',  
           pickupRadius: 20
         },
         destination: {
