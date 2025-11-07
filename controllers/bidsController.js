@@ -2,6 +2,8 @@ const Bid = require('../models/Bid');
 const Shipper = require('../models/Shipper');
 const Carrier = require('../models/Carrier');
 const Booking = require('../models/Booking');
+const mongoose = require('mongoose');
+const User = require('../models/User');
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -162,10 +164,7 @@ exports.getBidById = async (req, res) => {
 //     await
 
 //update status by user id 
-const mongoose = require('mongoose');
-const Bid = require('../../models/Bid');
-const Shipper = require('../../models/Shipper');
-const User = require('../../models/User');
+
 
 exports.updateBidStatusByUserId = async (req, res) => {
   try {
