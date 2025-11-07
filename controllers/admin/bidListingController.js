@@ -312,21 +312,30 @@ exports.deletebid = async (req, res) => {
 };
 
 
+
 // exports.getBidsByCarrierUserId = async (req, res) => {
 //   try {
 //     const { userId } = req.params;
 
 //     // 1️⃣ Check if user exists
 //     const user = await User.findById(userId);
-//     console.log("user",user)
-//     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-//     if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
 
-//     // 2️⃣ Find carrier details
+//     if (!user)
+//       return res.status(404).json({ success: false, message: 'User not found' });
+
+//     // Carrier role ObjectId (replace with your actual carrier role ID)
+//     const CARRIER_ROLE_ID = '68ff5689aa5d489915b8caa8';
+
+//     // 2️⃣ Check if the user has a carrier role
+//     if (String(user.role) !== String(CARRIER_ROLE_ID))
+//       return res.status(400).json({ success: false, message: 'User is not a carrier' });
+
+//     // 3️⃣ Find carrier details
 //     const carrier = await Carrier.findOne({ userId, deletstatus: 0 });
-//     if (!carrier) return res.status(404).json({ success: false, message: 'Carrier not found' });
+//     if (!carrier)
+//       return res.status(404).json({ success: false, message: 'Carrier not found' });
 
-//     // 3️⃣ Find all trucks for the carrier
+//     // 4️⃣ Find all trucks for the carrier
 //     const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
 //     const truckIds = trucks.map(t => t._id);
 
@@ -334,7 +343,8 @@ exports.deletebid = async (req, res) => {
 //       return res.status(200).json({ success: true, message: 'No trucks found for this carrier', data: [] });
 //     }
 
-//     // 4️⃣ Find all routes for the carrier
+
+//     // 5️⃣ Find all routes for the carrier
 //     const routes = await Route.find({
 //       carrierId: carrier._id,
 //       truckId: { $in: truckIds },
@@ -346,20 +356,25 @@ exports.deletebid = async (req, res) => {
 //       return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
 //     }
 
-//     // 5️⃣ Fetch bids for this carrier (based on carrierId, truckId, routeId)
 //     const bids = await Bid.find({
 //       carrierId: carrier._id,
-//       truckId: { $in: truckIds },
 //       routeId: { $in: routeIds },
 //       deletstatus: 0
 //     })
-//       .populate('userId', 'firstName lastName email')
-//       .populate('carrierId', 'companyName')
-//       .populate('truckId', 'nickname registrationNumber')
+//       .populate({
+//         path: 'shipperId',
+//         select: 'companyName userId',
+//         populate: { path: 'userId', select: 'firstName lastName' }
+//       })
+//       .populate({
+//         path: 'carrierId',
+//         select: 'companyName userId',
+//         populate: { path: 'userId', select: 'firstName lastName' }
+//       })
 //       .populate('routeId', 'origin destination status')
 //       .lean();
-
-//     // 6️⃣ Response
+//     console.log("bids", bids)
+//     // 7️⃣ Response
 //     return res.status(200).json({
 //       success: true,
 //       count: bids.length,
@@ -376,93 +391,158 @@ exports.deletebid = async (req, res) => {
 exports.getBidsByCarrierUserId = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { pickupLocation, deliveryLocation, pickupDate } = req.body || {};
 
     // 1️⃣ Check if user exists
     const user = await User.findById(userId);
-    console.log("user", user);
     if (!user)
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: "User not found" });
 
-    // Carrier role ObjectId (replace with your actual carrier role ID)
-    const CARRIER_ROLE_ID = '68ff5689aa5d489915b8caa8';
+    const CARRIER_ROLE_ID = "68ff5689aa5d489915b8caa8";
 
-    // 2️⃣ Check if the user has a carrier role
     if (String(user.role) !== String(CARRIER_ROLE_ID))
-      return res.status(400).json({ success: false, message: 'User is not a carrier' });
+      return res.status(400).json({ success: false, message: "User is not a carrier" });
 
-    // 3️⃣ Find carrier details
+    // 2️⃣ Get carrier details
     const carrier = await Carrier.findOne({ userId, deletstatus: 0 });
     if (!carrier)
-      return res.status(404).json({ success: false, message: 'Carrier not found' });
+      return res.status(404).json({ success: false, message: "Carrier not found" });
 
-    // 4️⃣ Find all trucks for the carrier
-    const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
-    const truckIds = trucks.map(t => t._id);
-
-    if (!truckIds.length) {
-      return res.status(200).json({ success: true, message: 'No trucks found for this carrier', data: [] });
-    }
-    console.log(truckIds)
-    //     const shipper = await Shipper.findOne({ userId, deletstatus: 0 });
-    // if (!shipper)
-    //   return res.status(404).json({ success: false, message: 'Carrier not found' });
-
-    // 5️⃣ Find all routes for the carrier
-    const routes = await Route.find({
+    // 3️⃣ Build filter for bids
+    const baseFilter = {
       carrierId: carrier._id,
-      truckId: { $in: truckIds },
-      deletstatus: 0
-    }).select('_id');
-    const routeIds = routes.map(r => r._id);
+      deletstatus: 0,
+    };
 
-    if (!routeIds.length) {
-      return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
+    const orConditions = [];
+
+    if (pickupLocation) {
+      orConditions.push({ "pickup.city": { $regex: new RegExp(pickupLocation, "i") } });
     }
-    console.log("routeIds", routeIds)
- 
 
+    if (deliveryLocation) {
+      orConditions.push({ "delivery.city": { $regex: new RegExp(deliveryLocation, "i") } });
+    }
 
-    // const bids = await Bid.find({
-    //   carrierId: carrier._id,
-    //   routeId: { $in: routeIds },
-    //   deletstatus: 0
-    // })
-    //   .populate('shipperId', 'companyName')
-    //   .populate('carrierId', 'companyName')
-    //   .populate('routeId', 'origin destination status')
-    //   .lean();
+    if (pickupDate) {
+      const date = new Date(pickupDate);
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      orConditions.push({
+        "pickup.pickupDate": { $gte: startOfDay, $lte: endOfDay },
+      });
+    }
 
-const bids = await Bid.find({
-  carrierId: carrier._id,
-  routeId: { $in: routeIds },
-  deletstatus: 0
-})
-.populate({
-  path: 'shipperId',
-  select: 'companyName userId',
-  populate: { path: 'userId', select: 'firstName lastName' }
-})
-.populate({
-  path: 'carrierId',
-  select: 'companyName userId',
-  populate: { path: 'userId', select: 'firstName lastName' }
-})
-.populate('routeId', 'origin destination status')
-.lean();
-    console.log("bids", bids)
-    // 7️⃣ Response
+    // ✅ Combine filters
+    const finalFilter = orConditions.length
+      ? { ...baseFilter, $or: orConditions }
+      : baseFilter;
+
+    console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
+
+    // 4️⃣ Fetch bids
+    const bids = await Bid.find(finalFilter)
+      .populate({
+        path: "shipperId",
+        select: "companyName userId",
+        populate: { path: "userId", select: "firstName lastName" },
+      })
+      .populate({
+        path: "carrierId",
+        select: "companyName userId",
+        populate: { path: "userId", select: "firstName lastName" },
+      })
+      .lean();
+
+    console.log("📦 Bids Found:", bids.length);
+    bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
+
+    // 5️⃣ Respond
     return res.status(200).json({
       success: true,
       count: bids.length,
-      message: bids.length ? 'Bids found' : 'No bids found for this carrier',
+      message: bids.length ? "Bids found" : "No bids found",
+      data: bids,
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching bids:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getBidsByShipperUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // 1️⃣ Check if user exists
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Shipper role ObjectId (replace with your actual shipper role ID)
+    const SHIPPER_ROLE_ID = '68ff5689aa5d489915b8caaa'; 
+
+    // 2️⃣ Check if the user has a shipper role
+    if (String(user.role) !== String(SHIPPER_ROLE_ID))
+      return res.status(400).json({ success: false, message: 'User is not a shipper' });
+
+    // 3️⃣ Find shipper details
+    const shipper = await Shipper.findOne({ userId, deletstatus: 0 });
+    if (!shipper)
+      return res.status(404).json({ success: false, message: 'Shipper not found' });
+
+    // 4️⃣ Find all bids created by this shipper
+    const bids = await Bid.find({
+      shipperId: shipper._id,
+      deletstatus: 0
+    })
+      .populate({
+        path: 'shipperId',
+        select: 'companyName userId',
+        populate: { path: 'userId', select: 'firstName lastName' }
+      })
+      .populate({
+        path: 'carrierId',
+        select: 'companyName userId',
+        populate: { path: 'userId', select: 'firstName lastName' }
+      })
+      .populate('routeId', 'origin destination status')
+      .lean();
+
+    // 5️⃣ Response
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: bids.length ? 'Bids found' : 'No bids found for this shipper',
       data: bids
     });
 
   } catch (error) {
-    console.error('❌ Error fetching bids:', error);
+    console.error('❌ Error fetching bids by shipper:', error);
     return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
 
 
 

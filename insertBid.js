@@ -11,44 +11,41 @@ async function insertSampleBid() {
     console.log('✅ Connected to MongoDB');
 
     const newBid = await Bid.create({
-      shipperId: '690c8d4322d1aff410ad175c',  // Replace with actual Shipper ID
-      carrierId: '690c8cac22d1aff410ad174f',  // Replace with actual Carrier ID
-      routeId: '690c90418c0c2af03abee750',    // Replace with actual Route ID
+      shipperId: '690d936622d1aff410ad1863',  // Replace with actual Shipper ID
+      carrierId: '690d8ef022d1aff410ad1828',  // Replace with actual Carrier ID
+      routeId: '690d916aa2bcebb6aae914df',    // Replace with actual Route ID
 
       bidValue: 1500,
 
       vehicleDetails: {
-        licenseNumber: 'TX-9087',
-        brand: 'Volvo',
+        licenseNumber: 'FL-6290',
+        brand: 'Tata',
         vehicleType: 'Flatbed Truck',
-        yearMade: 2018,
-        features: ['GPS', 'Air Suspension', 'Covered Bed'],
-        condition: 'good',
-        quantity: 2,
+        yearMade: 2017,
+        features: ['Hydraulic Lift', 'GPS', 'Side Rails'],
+        condition: 'fair',
+        quantity: 1,
         photos: [
-          'https://example.com/uploads/vehicles/volvo1.jpg',
-          'https://example.com/uploads/vehicles/volvo2.jpg'
+          'https://example.com/uploads/vehicles/tata1.jpg',
+          'https://example.com/uploads/vehicles/tata2.jpg'
         ],
         contains100lbs: true
       },
-
-      shippingDescription: 'Transporting heavy construction equipment',
+      shippingDescription: 'Heavy machinery components for factory installation',
       transportType: 'road',
-      vinNumber: '1HGCM82633A123456',
-      lotNumber: 'LOT-2398',
-
+      vinNumber: '5NPDH4AE1DH123987',
+      lotNumber: 'LOT-5823',
       pickup: {
-        city: 'Dallas',
-        state: 'Texas',
-        zipcode: '75201',
-        pickupDate: new Date('2025-11-10T09:00:00Z'),
-        pickupLocationType: 'warehouse'
+        city: 'Orlando',
+        state: 'Florida',
+        zipcode: '32801',
+        pickupDate: new Date('2025-11-15T10:00:00Z'),
+        pickupLocationType: 'construction site'
       },
-
       delivery: {
-        city: 'Houston',
-        state: 'Texas',
-        zipcode: '77001'
+        city: 'Tampa',
+        state: 'Florida',
+        zipcode: '33602'
       },
 
       additionalComments: 'Please ensure the load is secured and covered properly.',
