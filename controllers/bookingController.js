@@ -3,7 +3,8 @@ const Booking = require('../models/Booking');
 const Space = require('../models/Space');
 const Shipper = require('../models/Shipper');
 const Carrier = require('../models/Carrier');
-const User = require('../models/User')
+const User = require('../models/User');
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
 exports.createBooking = async (req, res) => {
@@ -66,6 +67,8 @@ exports.createBooking = async (req, res) => {
 
 exports.getBookings = async (req, res) => {
   try {
+
+    req.user = { _id: '69036837bd5648fb37fa6e27', role: 'carrier' };
     const { status, page = 1, limit = 10 } = req.query;
     
     let query = {};
@@ -102,6 +105,132 @@ exports.getBookings = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+//get booking by user Id 
+exports.getBookingsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(userId).populate('role');
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const shipper = await Shipper.findOne({ userId });
+    const carrier = await Carrier.findOne({ userId });
+
+    let bookings = [];
+
+    if (shipper) {
+      const shipperBookings = await Booking.find({ shipperId: shipper._id, deletstatus: 0 })
+        .populate([
+          { path: 'spaceId' },
+          { path: 'truckId' },
+          { 
+            path: 'carrierId',
+            populate: { path: 'userId', select: 'firstName lastName email phone role' }
+          },
+          { 
+            path: 'shipperId',
+            populate: { path: 'userId', select: 'firstName lastName email phone role' }
+          }
+        ])
+        .lean();
+
+      bookings = bookings.concat(shipperBookings);
+    }
+
+    if (carrier) {
+      const carrierBookings = await Booking.find({ carrierId: carrier._id, deletstatus: 0 })
+        .populate([
+          { path: 'spaceId' },
+          { path: 'truckId' },
+          { 
+            path: 'carrierId',
+            populate: { path: 'userId', select: 'firstName lastName email phone role' }
+          },
+          { 
+            path: 'shipperId',
+            populate: { path: 'userId', select: 'firstName lastName email phone role' }
+          }
+        ])
+        .lean();
+
+      bookings = bookings.concat(carrierBookings);
+    }
+
+    if (bookings.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No bookings found for this user",
+        role: user.role
+      });
+    }
+
+    // ✅ 5. Response
+    return res.status(200).json({
+      success: true,
+      message: "Bookings fetched successfully",
+      // role: user.role,
+      count: bookings.length,
+      data: bookings
+    });
+
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching bookings",
+      error: error.message
+    });
+  }
+};
+
+//update booking status by user id of carriers alone 
+
+exports.updatebookingstatus = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+    const { status } = req.body; 
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    const booking = await Booking.findOne({ _id: bookingId, carrierId: carrier._id });
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+    }
+
+    booking.status = status || "confirmed";
+    booking.updatedAt = new Date();
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated successfully",
+      data: booking,
+    });
+
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
+
 
 
 
