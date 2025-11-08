@@ -9,18 +9,11 @@ const { v4: uuidv4 } = require('uuid');
 
 exports.createBooking = async (req, res) => {
   try {
-    const {
-      userId,
-      spaceId,
-      vehicleDetails,
-      pickup,
-      delivery,
-      shippingInfo
-    } = req.body;
+    const data = req.body;
 
-    const shipper = await Shipper.findOne({userId:userId});
+    const shipper = await Shipper.findOne({ _id: data?.shipperId });
 
-    const space = await Space.findById(spaceId);
+    const space = await Space.findById({ _id: data?.spaceId });
     if (!space) {
       return res.status(404).json({ success: false, message: 'Space not found' });
     }
@@ -32,22 +25,14 @@ exports.createBooking = async (req, res) => {
     const bookingId = `BK-${uuidv4().substring(0, 8).toUpperCase()}`;
     
     const booking = await Booking.create({
-      bookingId,
-      shipperId: shipper._id,
-      carrierId: space.carrierId || "690afffdc5696493cf8a937a",
-      truckId: space.truckId || "650d1f2b8a3c4e5d6f7a3456",
-      spaceId: space._id || "690c2da5b04e94799b000638",
-      vehicleDetails,
-      pickup,
-      delivery,
-      shippingInfo,
+      ...data,
+      bookingId:bookingId,
       status: 'pending',
-      createdBy: "690afffdc5696493cf8a937a",
-      timeline: [{
-        status: 'pending',
-        timestamp: new Date(),
-        note: 'Booking created'
-      }]
+      createdBy: data?.userId,
+      createdAt:Date.now(),
+      deletstatus: 0,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
     });
 
     space.bookedSpaces += 1;
