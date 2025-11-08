@@ -5,6 +5,7 @@ const { protect, authorize, requireProfileComplete } = require('../../middleware
 
 // Create new bids - Shipper only
 router.post('/getAddBid', bidController.createBid);
+router.put('/editBid/:bidId', bidController.editBid);
 
 //update bids status by user Id 
 router.put('/updatebidstatusbyuserId/:userId/:bidId' , bidController.updatebidstatusbyuserId);
