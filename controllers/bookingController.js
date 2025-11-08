@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBooking = async (req, res) => {
   try {
     const {
+      userId,
       spaceId,
       vehicleDetails,
       pickup,
@@ -17,7 +18,7 @@ exports.createBooking = async (req, res) => {
       shippingInfo
     } = req.body;
 
-    const shipper = await Shipper.findOne({ userId: '690c7566d3da8329aedbb41e' });
+    const shipper = await Shipper.findOne({userId:userId});
 
     const space = await Space.findById(spaceId);
     if (!space) {
@@ -29,13 +30,13 @@ exports.createBooking = async (req, res) => {
     }
 
     const bookingId = `BK-${uuidv4().substring(0, 8).toUpperCase()}`;
-
+    
     const booking = await Booking.create({
       bookingId,
       shipperId: shipper._id,
-      carrierId: space.carrierId,
-      truckId: space.truckId,
-      spaceId: space._id,
+      carrierId: space.carrierId || "690afffdc5696493cf8a937a",
+      truckId: space.truckId || "650d1f2b8a3c4e5d6f7a3456",
+      spaceId: space._id || "690c2da5b04e94799b000638",
       vehicleDetails,
       pickup,
       delivery,
@@ -61,7 +62,7 @@ exports.createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('Create booking error:', error);
-    res.status(500).json({ success: false, message: 'Server errorkk', test: error });
+    res.status(500).json({ success: false, message: 'Server error', test: error });
   }
 };
 

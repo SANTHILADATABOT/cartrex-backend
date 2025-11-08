@@ -92,10 +92,10 @@ const Space = require('./models/Space'); // adjust path as needed
 const MONGO_URI = process.env.MONGODB_URI;
 
 // IDs provided
-const carrierId = "690c6bf47e8ffea31089230e";
+const carrierId = "690afffdc5696493cf8a937a"; //"690c6bf47e8ffea31089230e"
 const truckId = "690c6c417e8ffea310892337";
 const routeId = "690c6e755cc8eb34ab62500f";
-const userId = "690c6bf37e8ffea31089230b";
+const userId = "690eb92622d1aff410ad194e"; // "690c6bf37e8ffea31089230b"
 
 async function insertSpaces() {
   try {
@@ -107,6 +107,7 @@ async function insertSpaces() {
         carrierId,
         truckId,
         routeId,
+        userId,
         origin: {
           location: "Atlanta, Georgia",
           city: "Atlanta",
@@ -147,6 +148,7 @@ async function insertSpaces() {
         carrierId,
         truckId,
         routeId,
+        userId,
         origin: {
           location: "Dallas, Texas",
           city: "Dallas",
