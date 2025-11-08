@@ -26,12 +26,14 @@ const bookingSchema = new mongoose.Schema({
 
   pickup: {
     location: { type: String, required: true },
+      stateCode: { type: String, trim: true }, 
     pickupDate: { type: Date, required: true },
     locationType: { type: String, enum: ['Business', 'AuctionHouse', 'CarDealership'], trim: true }
   },
 
   delivery: {
-    location: { type: String, required: true }
+    location: { type: String, required: true },
+      stateCode: { type: String, trim: true }, 
   },
 
   status: { 
