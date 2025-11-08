@@ -34,6 +34,7 @@ const bidSchema = new mongoose.Schema({
   pickup: {
     city: { type: String },
     state: { type: String },
+      stateCode: { type: String, trim: true }, 
     zipcode: { type: String },
     pickupDate: { type: Date },
     pickupLocationType: { type: String, trim: true }
@@ -42,6 +43,7 @@ const bidSchema = new mongoose.Schema({
   delivery: {
     city: { type: String },
     state: { type: String },
+      stateCode: { type: String, trim: true }, 
     zipcode: { type: String }
   },
   shippingInfo: {

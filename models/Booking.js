@@ -36,6 +36,7 @@ const bookingSchema = new mongoose.Schema({
   pickup: {
     city: { type: String },
     state: { type: String },
+    stateCode: { type: String, trim: true },
     location: { type: String},
     pickupDate: { type: Date},
     locationType: { type: String, enum: ['Business', 'AuctionHouse', 'CarDealership'], trim: true }
@@ -46,8 +47,8 @@ const bookingSchema = new mongoose.Schema({
     state: { type: String },
     location: { type: String},
     deliveryDate: { type: Date},
+    stateCode: { type: String, trim: true },
   },
-
   status: { 
     type: String, 
     enum: ['confirmed','pending','in_progress','cancelled','completed','ready_for_pickup'], 

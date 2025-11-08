@@ -4,12 +4,14 @@ const routeSchema = new mongoose.Schema({
    truckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
   origin: {
     state: { type: String, required: true },
+      stateCode: { type: String, trim: true }, 
     city: { type: String, required: true },
     pickupWindow: { type: String, required: true },
     pickupRadius: { type: Number, required: true } // in miles
   },
   destination: {
     state: { type: String, required: true },
+      stateCode: { type: String, trim: true }, 
     city: { type: String, required: true },
     deliveryWindow: { type: String, required: true },
     deliveryRadius: { type: Number, required: true } // in miles
