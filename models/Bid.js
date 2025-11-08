@@ -19,7 +19,7 @@ const bidSchema = new mongoose.Schema({
     vehicleType: { type: String, trim: true },
     yearMade: { type: Number },
     features: [String], // Array of features
-    condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
+    //condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // store image URLs or file paths
     contains100lbs: { type: Boolean, default: false },
