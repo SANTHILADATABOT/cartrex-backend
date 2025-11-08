@@ -191,7 +191,7 @@ exports.getBookingsByUserId = async (req, res) => {
   }
 };
 
-//update booking status by user id of carriers alone 
+//update booking status by user id of carriers alone staus:pending to confirmed
 
 exports.updatebookingstatus = async (req, res) => {
   try {
@@ -231,6 +231,127 @@ exports.updatebookingstatus = async (req, res) => {
     });
   }
 };
+
+// //update booking status=> cancelled
+// exports.updateBookingStatusCancel = async (req, res) => {
+//   try {
+//     const { userId, bookingId } = req.params;
+
+//     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+//       return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+//     }
+
+//     const user = await User.findById(userId).populate('role');
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     const roleName = user.role?.name ? user.role.name.toLowerCase() : "unknown";
+
+//     if (roleName !== 'shipper') {
+//       return res.status(403).json({
+//         success: false,
+//         message:"Only shippers can cancel bookings"
+//       });
+//     }
+
+//     // 4️⃣ Find the corresponding shipper
+//     const shipper = await Shipper.findOne({ userId });
+//     if (!shipper) {
+//       return res.status(404).json({ success: false, message: "No shipper found for this user" });
+//     }
+
+//     // 5️⃣ Find the booking owned by this shipper
+//     const booking = await Booking.findOne({ _id: bookingId, shipperId: shipper._id, deletstatus: 0 });
+//     if (!booking) {
+//       return res.status(404).json({ success: false, message: "Booking not found or not owned by this shipper" });
+//     }
+
+//     // 6️⃣ Update status to "cancelled"
+//     booking.status = "cancelled";
+//     booking.updatedAt = new Date();
+//     booking.updatedBy = userId;
+//     await booking.save();
+
+//     // 7️⃣ Success response
+//     return res.status(200).json({
+//       success: true,
+//       message: "Booking cancelled successfully",
+//       role: usre.role,
+//       data: {
+//         bookingId: booking._id,
+//         status: booking.status
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error("Error cancelling booking:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error while cancelling booking",
+//       error: error.message
+//     });
+//   }
+// };
+
+exports.updateBookingStatusCancel = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or bookingId",
+      });
+    }
+    const user = await User.findById(userId).populate("role");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    const shipper = await Shipper.findOne({ userId });
+    if (!shipper) {
+      return res.status(403).json({
+        success: false,
+        message: "Only shippers can cancel bookings.",
+      });
+    }
+     const booking = await Booking.findOne({_id: bookingId,shipperId: shipper._id,deletstatus: 0,});
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found or not owned by this shipper.",
+      });
+    }
+
+    booking.status = "cancelled";
+    booking.updatedAt = new Date();
+    booking.updatedBy = userId;
+    
+
+    await booking.save();
+    return res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully",
+      role: "shipper",
+      data: {
+        bookingId: booking._id,
+        status: booking.status,
+        booking
+      },
+    });
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while cancelling booking",
+      error: error.message,
+    });
+  }
+};
+
 
 
 

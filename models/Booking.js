@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema({
     vehicleType: { type: String, trim: true },
     yearMade: { type: Number },
     features: [String],
-    condition: { type: String, enum: ['inoperable', 'operable'], default: 'inoperable' },
+    //condition: { type: String, enum: ['inoperable', 'operable'], default: 'inoperable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // URLs of uploaded photos
     contains100lbs: { type: Boolean, default: false }

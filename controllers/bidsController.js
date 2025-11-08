@@ -151,22 +151,9 @@ exports.getBidById = async (req, res) => {
   }
 };
 
-// exports.acceptBid = async (req, res) => {
-//   try {
-//     const { truckId, additionalFee, pickupDate, deliveryDate, message } = req.body;
-//     const bid = await Bid.findById(req.params.id);
-//     if (!bid) return res.status(404).json({ success: false, message: 'Bid not found' });
-//     if (bid.status !== 'open') return res.status(400).json({ success: false, message: 'Bid is no longer available' });
 
-//     const carrier = await Carrier.findOne({ userId: req.user._id });
-
-//     bid.status = 'approved'; bid.approvedBy = carrier._id; bid.updatedAt = Date.now();
-//     await
-
-//update status by user id 
-
-
-exports.updateBidStatusByUserId = async (req, res) => {
+//update bid status =>cancelled
+exports.updatebidstatusbyuserId = async (req, res) => {
   try {
     const { userId, bidId } = req.params;
 
@@ -178,9 +165,9 @@ exports.updateBidStatusByUserId = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (user.role.name.toLowerCase() !== 'shipper') {
-      return res.status(403).json({ success: false, message: "Only shippers can cancel bids" });
-    }
+    // if (user.role.name.toLowerCase() !== 'shipper') {
+    //   return res.status(403).json({ success: false, message: "Only shippers can cancel bids" });
+    // }
 
     const shipper = await Shipper.findOne({ userId });
     if (!shipper) {
@@ -195,16 +182,16 @@ exports.updateBidStatusByUserId = async (req, res) => {
     bid.status = "cancelled";
     bid.updatedAt = new Date();
     bid.updatedBy = userId;
+    if (!bid.bidId) bid.bidId = bidId;
     await bid.save();
 
 
     return res.status(200).json({
       success: true,
       message: "Bid status updated to cancelled successfully",
-      role: user.role.name,
       data: {
         bidId: bid._id,
-        status: bid.status
+        status: bid.status,bid
       }
     });
 
@@ -223,7 +210,7 @@ exports.editBid = async (req, res) => {
     const { bidId } = req.params; // get bidId from URL params
     const data = req.body;
     const files = req.files || [];
-console.log("data",data)
+console.log("data",req.body)
     // Step 1: Validate Bid Existence
     const bid = await Bid.findById(bidId);
     if (!bid) {
@@ -322,3 +309,16 @@ console.log("data",data)
     });
   }
 };
+
+// exports.acceptBid = async (req, res) => {
+//   try {
+//     const { truckId, additionalFee, pickupDate, deliveryDate, message } = req.body;
+//     const bid = await Bid.findById(req.params.id);
+//     if (!bid) return res.status(404).json({ success: false, message: 'Bid not found' });
+//     if (bid.status !== 'open') return res.status(400).json({ success: false, message: 'Bid is no longer available' });
+
+//     const carrier = await Carrier.findOne({ userId: req.user._id });
+
+//     bid.status = 'approved'; bid.approvedBy = carrier._id; bid.updatedAt = Date.now();
+//     await;
+
