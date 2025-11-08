@@ -10,12 +10,14 @@ const bookingSchema = new mongoose.Schema({
   bookValuetaxinc: {
     taxValue: { type: String },
     tax: { type: String },
-    total: { type: String }
+    total: { type: String },
+    price:{type: String},
   },
   vehicleDetails: {
     licenseNumber: { type: String, trim: true },
     brand: { type: String, trim: true },
     vehicleType: { type: String, trim: true },
+    vehicleTypeName:{type: String, trim: true},
     yearMade: { type: Number },
     features: [String], // Array of features
     condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
@@ -48,7 +50,7 @@ const bookingSchema = new mongoose.Schema({
 
   status: { 
     type: String, 
-    enum: ['confirmed','pending','in_progress','cancelled','completed','ready for pickup'], 
+    enum: ['confirmed','pending','in_progress','cancelled','completed','ready_for_pickup'], 
     default: 'pending' 
   },
 

@@ -197,7 +197,7 @@ exports.updatebookingstatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
     }
 
-    booking.status = status || "confirmed";
+    booking.status = status;
     booking.updatedAt = new Date();
     await booking.save();
 
