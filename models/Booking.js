@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema({
     vehicleType: { type: String, trim: true },
     yearMade: { type: Number },
     features: [String],
-    condition: { type: String, enum: ['new', 'used', 'excellent', 'good', 'fair', 'poor'], default: 'good' },
+    condition: { type: String, enum: ['inoperable', 'operable'], default: 'inoperable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // URLs of uploaded photos
     contains100lbs: { type: Boolean, default: false }
@@ -38,7 +38,7 @@ const bookingSchema = new mongoose.Schema({
 
   status: { 
     type: String, 
-    enum: ['confirmed','pending','in_progress','cancelled','completed'], 
+    enum: ['confirmed','pending','in_progress','cancelled','completed','ready for pickup'], 
     default: 'pending' 
   },
 

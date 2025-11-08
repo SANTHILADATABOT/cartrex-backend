@@ -221,7 +221,9 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const dashboardRoutes = require('./routes/dashboard');
 
 const webRoutes = require('./routes/web');
-const spaceRoutes = require('./routes/web/spaces')
+const spaceRoutes = require('./routes/web/spaces');
+const bidRoutes = require('./routes/web/bid');
+const bookingRoutes =require('./routes/web/bookings');
 // const mobileRoutes = require('./routes/mobile');
 // const sharedRoutes = require('./routes/shared');
 
@@ -249,6 +251,8 @@ app.use("/dashboard", dashboardRoutes);
 // Web application routes
 app.use('/api/web', webRoutes);
 app.use('/space',spaceRoutes);
+app.use('/bid',bidRoutes);
+app.use('/bookings',bookingRoutes);
 
 
 

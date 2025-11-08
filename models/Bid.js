@@ -2,22 +2,28 @@ const mongoose = require('mongoose');
 
 const bidSchema = new mongoose.Schema({
   shipperId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shipper', required: true },
-  carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier', required: true },
-  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', required: true },
+  carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier' },
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
   userId:{type: mongoose.Schema.Types.ObjectId, ref: 'User'},
 
   bidValue: { type: Number, required: true },
-
+  bidValuetaxinc: {
+    taxValue: { type: String },
+    tax: { type: String },
+    total: { type: String }
+  },
+  bidId: { type: String, required: true },
   vehicleDetails: {
     licenseNumber: { type: String, trim: true },
     brand: { type: String, trim: true },
     vehicleType: { type: String, trim: true },
     yearMade: { type: Number },
     features: [String], // Array of features
-    condition: { type: String, enum: ['new', 'used', 'excellent', 'good', 'fair', 'poor'], default: 'good' },
+    condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // store image URLs or file paths
-    contains100lbs: { type: Boolean, default: false }
+    contains100lbs: { type: Boolean, default: false },
+    estimate_extra_weight: {type: String}
   },
 
   shippingDescription: { type: String, trim: true }, // "What are you shipping?"
@@ -40,8 +46,11 @@ const bidSchema = new mongoose.Schema({
       stateCode: { type: String, trim: true }, 
     zipcode: { type: String }
   },
-
-  additionalComments: { type: String },
+  shippingInfo: {
+    whatIsBeingShipped: { type: String},
+    whatIsBeingShippedId: { type: String},
+    additionalComments: { type: String}
+  },
 
   timing: { 
     type: String, 
