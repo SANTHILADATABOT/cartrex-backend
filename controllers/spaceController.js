@@ -302,16 +302,15 @@ exports.addSpacesDetails = async (req, res) => {
   try {
     const { carrierId } = req.params;
     const data = req.body;
-
     console.log("Received carrierId:", carrierId);
-
-
-    const carrier = await Carrier.findById(carrierId);
+    const carrier = await Carrier.findOne({ userId: carrierId });
     console.log(carrier);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
    const spaceData = {
-      carrierId: carrierId,
+      carrierId: carrierId._id,
       truckId: data?.selectedTruck,
+      routeId: data?.selectedRoute,
+      userId: carrier.userId,
       availableSpaces: data?.availablespace,
       message: data?.message,
       rateCard: data?.rateCard,
@@ -326,7 +325,7 @@ exports.addSpacesDetails = async (req, res) => {
       spaceData.origin = {
         location: data.originLocation,
         city: "",
-        state: "",
+        state: data.originLocationstate,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -342,7 +341,7 @@ exports.addSpacesDetails = async (req, res) => {
       spaceData.destination = {
         location: data.destinationLocation,
         city: "",
-        state: "",
+        state: data.destinationLocationstate,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,

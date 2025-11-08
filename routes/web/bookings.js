@@ -7,7 +7,7 @@ const { protect, authorize, requireProfileComplete } = require('../../middleware
 router.post('/', bookingController.createBooking);
 
 // Get bookings filtered by role
-router.get('/', protect, bookingController.getBookings);
+router.get('/', bookingController.getBookings);
 //router.get('/', bookingController.getBookings);
 
 
@@ -19,15 +19,15 @@ router.put('/updatebookingstatus/:userId/:bookingId',bookingController.updateboo
 
 
 // Get booking by ID
-router.get('/:id', protect, bookingController.getBookingById);
+router.get('/:id',bookingController.getBookingById);
 
 // Carrier accepts booking
-router.put('/:id/accept', protect, authorize('carrier'), bookingController.acceptBooking);
+router.put('/:id/accept',authorize('carrier'), bookingController.acceptBooking);
 
 // Cancel booking
-router.put('/:id/cancel', protect, bookingController.cancelBooking);
+router.put('/:id/cancel',bookingController.cancelBooking);
 
 // Update booking status (Carrier only)
-router.put('/:id/status', protect, authorize('carrier'), bookingController.updateBookingStatus);
+router.put('/:id/status',authorize('carrier'), bookingController.updateBookingStatus);
 
 module.exports = router;
