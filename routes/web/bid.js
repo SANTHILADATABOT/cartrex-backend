@@ -5,6 +5,6 @@ const { protect, authorize, requireProfileComplete } = require('../../middleware
 
 // Create new booking - Shipper only
 router.post('/getAddBid', bidController.createBid);
-router.post('/editBid', bidController.editBid);
+router.put('/editBid/:bidId', bidController.editBid);
 
 module.exports = router;

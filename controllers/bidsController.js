@@ -223,7 +223,7 @@ exports.editBid = async (req, res) => {
     const { bidId } = req.params; // get bidId from URL params
     const data = req.body;
     const files = req.files || [];
-
+console.log("data",data)
     // Step 1: Validate Bid Existence
     const bid = await Bid.findById(bidId);
     if (!bid) {
