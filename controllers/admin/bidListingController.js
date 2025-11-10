@@ -96,7 +96,7 @@ exports.getallbids = async (req, res) => {
 //   }
 // };
 
-// ✅ GET bid by ID
+
 
 
 
@@ -475,6 +475,107 @@ exports.getBidsByCarrierUserId = async (req, res) => {
   }
 };
 
+exports.getBidsByFilter = async (req, res) => {
+  try {
+    // const { userId } = req.params;
+    const { userId, pickupLocation, deliveryLocation, pickupDate } = req.body || {};
+
+    // 1️⃣ Check if user exists
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
+
+    const CARRIER_ROLE_ID = "68ff5689aa5d489915b8caa8";
+
+    if (String(user.role) !== String(CARRIER_ROLE_ID))
+      return res.status(400).json({ success: false, message: "User is not a carrier" });
+
+    // 2️⃣ Get carrier details
+    const carrier = await Carrier.findOne({ userId, deletstatus: 0 });
+    if (!carrier)
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+
+    // 3️⃣ Build filter for bids
+    const baseFilter = {
+      carrierId: carrier._id,
+      deletstatus: 0,
+    };
+
+    const orConditions = [];
+    const parsedPickup = pickupLocation?.split(",")[0]?.trim();
+    const parsedDelivery = deliveryLocation?.split(",")[0]?.trim();
+
+    if (parsedPickup) {
+      orConditions.push({
+        "pickup.city": { $regex: new RegExp(parsedPickup, "i") },
+      });
+    }
+
+    if (parsedDelivery) {
+      orConditions.push({
+        "delivery.city": { $regex: new RegExp(parsedDelivery, "i") },
+      });
+    }
+    // if (pickupLocation) {
+    //   orConditions.push({ "pickup.city": { $regex: new RegExp(pickupLocation, "i") } });
+    // }
+
+    // if (deliveryLocation) {
+    //   orConditions.push({ "delivery.city": { $regex: new RegExp(deliveryLocation, "i") } });
+    // }
+
+    if (pickupDate) {
+      const date = new Date(pickupDate);
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      orConditions.push({
+        "pickup.pickupDate": { $gte: startOfDay, $lte: endOfDay },
+      });
+    }
+
+    // ✅ Combine filters
+    const finalFilter = orConditions.length
+      ? { ...baseFilter, $or: orConditions }
+      : baseFilter;
+
+    console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
+
+    // 4️⃣ Fetch bids
+    const bids = await Bid.find(finalFilter)
+      .populate({
+        path: "shipperId",
+        select: "companyName userId address",
+        populate: { path: "userId", select: "firstName lastName" },
+      })
+      .populate({
+        path: "carrierId",
+        select: "companyName userId address",
+        populate: { path: "userId", select: "firstName lastName" },
+      })
+      .lean();
+
+    console.log("📦 Bids Found:", bids.length);
+    bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
+
+    // 5️⃣ Respond
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: bids.length ? "Bids found" : "No bids found",
+      data: bids,
+      test2: pickupLocation,
+      test: orConditions,
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching bids:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
 
 
 
@@ -533,6 +634,7 @@ exports.getBidsByShipperUserId = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
 
 
 
