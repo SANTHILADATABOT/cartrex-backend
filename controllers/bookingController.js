@@ -9,17 +9,11 @@ const { v4: uuidv4 } = require('uuid');
 
 exports.createBooking = async (req, res) => {
   try {
-    const {
-      spaceId,
-      vehicleDetails,
-      pickup,
-      delivery,
-      shippingInfo
-    } = req.body;
+    const data = req.body;
 
-    const shipper = await Shipper.findOne({ userId: '690c7566d3da8329aedbb41e' });
+    const shipper = await Shipper.findOne({ _id: data?.shipperId });
 
-    const space = await Space.findById(spaceId);
+    const space = await Space.findById({ _id: data?.spaceId });
     if (!space) {
       return res.status(404).json({ success: false, message: 'Space not found' });
     }
@@ -29,24 +23,16 @@ exports.createBooking = async (req, res) => {
     }
 
     const bookingId = `BK-${uuidv4().substring(0, 8).toUpperCase()}`;
-
+    
     const booking = await Booking.create({
-      bookingId,
-      shipperId: shipper._id,
-      carrierId: space.carrierId,
-      truckId: space.truckId,
-      spaceId: space._id,
-      vehicleDetails,
-      pickup,
-      delivery,
-      shippingInfo,
+      ...data,
+      bookingId:bookingId,
       status: 'pending',
-      createdBy: "690afffdc5696493cf8a937a",
-      timeline: [{
-        status: 'pending',
-        timestamp: new Date(),
-        note: 'Booking created'
-      }]
+      createdBy: data?.userId,
+      createdAt:Date.now(),
+      deletstatus: 0,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
     });
 
     space.bookedSpaces += 1;
@@ -61,7 +47,7 @@ exports.createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('Create booking error:', error);
-    res.status(500).json({ success: false, message: 'Server errorkk', test: error });
+    res.status(500).json({ success: false, message: 'Server error', test: error });
   }
 };
 
@@ -190,7 +176,7 @@ exports.getBookingsByUserId = async (req, res) => {
   }
 };
 
-//update booking status by user id of carriers alone 
+//update booking status by user id of carriers alone staus:pending to confirmed
 
 exports.updatebookingstatus = async (req, res) => {
   try {
@@ -211,7 +197,7 @@ exports.updatebookingstatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
     }
 
-    booking.status = status || "confirmed";
+    booking.status = status;
     booking.updatedAt = new Date();
     await booking.save();
 
@@ -230,6 +216,127 @@ exports.updatebookingstatus = async (req, res) => {
     });
   }
 };
+
+// //update booking status=> cancelled
+// exports.updateBookingStatusCancel = async (req, res) => {
+//   try {
+//     const { userId, bookingId } = req.params;
+
+//     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+//       return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+//     }
+
+//     const user = await User.findById(userId).populate('role');
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     const roleName = user.role?.name ? user.role.name.toLowerCase() : "unknown";
+
+//     if (roleName !== 'shipper') {
+//       return res.status(403).json({
+//         success: false,
+//         message:"Only shippers can cancel bookings"
+//       });
+//     }
+
+//     // 4️⃣ Find the corresponding shipper
+//     const shipper = await Shipper.findOne({ userId });
+//     if (!shipper) {
+//       return res.status(404).json({ success: false, message: "No shipper found for this user" });
+//     }
+
+//     // 5️⃣ Find the booking owned by this shipper
+//     const booking = await Booking.findOne({ _id: bookingId, shipperId: shipper._id, deletstatus: 0 });
+//     if (!booking) {
+//       return res.status(404).json({ success: false, message: "Booking not found or not owned by this shipper" });
+//     }
+
+//     // 6️⃣ Update status to "cancelled"
+//     booking.status = "cancelled";
+//     booking.updatedAt = new Date();
+//     booking.updatedBy = userId;
+//     await booking.save();
+
+//     // 7️⃣ Success response
+//     return res.status(200).json({
+//       success: true,
+//       message: "Booking cancelled successfully",
+//       role: usre.role,
+//       data: {
+//         bookingId: booking._id,
+//         status: booking.status
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error("Error cancelling booking:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error while cancelling booking",
+//       error: error.message
+//     });
+//   }
+// };
+
+exports.updateBookingStatusCancel = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or bookingId",
+      });
+    }
+    const user = await User.findById(userId).populate("role");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    const shipper = await Shipper.findOne({ userId });
+    if (!shipper) {
+      return res.status(403).json({
+        success: false,
+        message: "Only shippers can cancel bookings.",
+      });
+    }
+     const booking = await Booking.findOne({_id: bookingId,shipperId: shipper._id,deletstatus: 0,});
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found or not owned by this shipper.",
+      });
+    }
+
+    booking.status = "cancelled";
+    booking.updatedAt = new Date();
+    booking.updatedBy = userId;
+    
+
+    await booking.save();
+    return res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully",
+      role: "shipper",
+      data: {
+        bookingId: booking._id,
+        status: booking.status,
+        booking
+      },
+    });
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while cancelling booking",
+      error: error.message,
+    });
+  }
+};
+
 
 
 

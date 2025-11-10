@@ -151,22 +151,9 @@ exports.getBidById = async (req, res) => {
   }
 };
 
-// exports.acceptBid = async (req, res) => {
-//   try {
-//     const { truckId, additionalFee, pickupDate, deliveryDate, message } = req.body;
-//     const bid = await Bid.findById(req.params.id);
-//     if (!bid) return res.status(404).json({ success: false, message: 'Bid not found' });
-//     if (bid.status !== 'open') return res.status(400).json({ success: false, message: 'Bid is no longer available' });
 
-//     const carrier = await Carrier.findOne({ userId: req.user._id });
-
-//     bid.status = 'approved'; bid.approvedBy = carrier._id; bid.updatedAt = Date.now();
-//     await
-
-//update status by user id 
-
-
-exports.updateBidStatusByUserId = async (req, res) => {
+//update bid status =>cancelled
+exports.updatebidstatusbyuserId = async (req, res) => {
   try {
     const { userId, bidId } = req.params;
 
@@ -178,9 +165,9 @@ exports.updateBidStatusByUserId = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (user.role.name.toLowerCase() !== 'shipper') {
-      return res.status(403).json({ success: false, message: "Only shippers can cancel bids" });
-    }
+    // if (user.role.name.toLowerCase() !== 'shipper') {
+    //   return res.status(403).json({ success: false, message: "Only shippers can cancel bids" });
+    // }
 
     const shipper = await Shipper.findOne({ userId });
     if (!shipper) {
@@ -195,16 +182,16 @@ exports.updateBidStatusByUserId = async (req, res) => {
     bid.status = "cancelled";
     bid.updatedAt = new Date();
     bid.updatedBy = userId;
+    if (!bid.bidId) bid.bidId = bidId;
     await bid.save();
 
 
     return res.status(200).json({
       success: true,
       message: "Bid status updated to cancelled successfully",
-      role: user.role.name,
       data: {
         bidId: bid._id,
-        status: bid.status
+        status: bid.status,bid
       }
     });
 
@@ -217,3 +204,121 @@ exports.updateBidStatusByUserId = async (req, res) => {
     });
   }
 };
+
+exports.editBid = async (req, res) => {
+  try {
+    const { bidId } = req.params; // get bidId from URL params
+    const data = req.body;
+    const files = req.files || [];
+console.log("data",req.body)
+    // Step 1: Validate Bid Existence
+    const bid = await Bid.findById(bidId);
+    if (!bid) {
+      return res.status(404).json({ success: false, message: "Bid not found" });
+    }
+
+    // Step 2: Validate Shipper
+    const shipper = await Shipper.findOne({ userId: data.shipperId });
+    if (!shipper) {
+      return res.status(404).json({ success: false, message: "Shipper not found" });
+    }
+
+    // Step 3: Update Bid Fields
+    bid.shipperId = shipper._id;
+    bid.bidValue = data.bidValue ?? bid.bidValue;
+    bid.bidValuetaxinc = data.totalpriceinfo ?? bid.bidValuetaxinc;
+    bid.vehicleDetails = {
+      ...bid.vehicleDetails,
+      licenseNumber: data.vehicleDetails?.licenseNumber ?? bid.vehicleDetails.licenseNumber,
+      brand: data.vehicleDetails?.brand ?? bid.vehicleDetails.brand,
+      vehicleType: data.vehicleDetails?.vehicleType ?? bid.vehicleDetails.vehicleType,
+      yearMade: data.vehicleDetails?.yearMade ?? bid.vehicleDetails.yearMade,
+      features: data.vehicleDetails?.features || bid.vehicleDetails.features,
+      condition: data.vehicleDetails?.condition ?? bid.vehicleDetails.condition,
+      quantity: data.vehicleDetails?.quantity ?? bid.vehicleDetails.quantity,
+      contains100lbs: data.vehicleDetails?.contains100lbs ?? bid.vehicleDetails.contains100lbs,
+      estimate_extra_weight: data.vehicleDetails?.estimate_extra_weight ?? bid.vehicleDetails.estimate_extra_weight,
+    };
+
+    bid.shippingDescription = data.shippingInfo?.whatIsBeingShipped ?? bid.shippingDescription;
+    bid.transportType = data.transportType ?? bid.transportType;
+    bid.vinNumber = data?.vinNumber ?? bid.vinNumber;
+    bid.lotNumber = data?.lotNumber ?? bid.lotNumber;
+    bid.pickup = {
+      ...bid.pickup,
+      city: data?.pickup?.city ?? bid.pickup.city,
+      state: data?.pickup?.state ?? bid.pickup.state,
+      zipcode: data?.pickup?.zipcode ?? bid.pickup.zipcode,
+      pickupDate: data?.pickup?.pickupDate ?? bid.pickup.pickupDate,
+      pickupLocationType: data?.pickup?.pickupLocationType ?? bid.pickup.pickupLocationType,
+    };
+    bid.delivery = {
+      ...bid.delivery,
+      city: data?.delivery?.city ?? bid.delivery.city,
+      state: data?.delivery?.state ?? bid.delivery.state,
+      zipcode: data?.delivery?.zipcode ?? bid.delivery.zipcode,
+    };
+    bid.shippingInfo = {
+      ...bid.shippingInfo,
+      whatIsBeingShipped: data.shippingInfo?.whatIsBeingShipped ?? bid.shippingInfo.whatIsBeingShipped,
+      whatIsBeingShippedId: data.shippingInfo?.whatIsBeingShippedId ?? bid.shippingInfo.whatIsBeingShippedId,
+      additionalComments: data.shippingInfo?.additionalComments ?? bid.shippingInfo.additionalComments,
+    };
+    bid.timing = data?.timing ?? bid.timing;
+    bid.updatedBy = data.shipperId;
+    bid.ipAddress = req.ip;
+    bid.userAgent = req.get('User-Agent');
+    bid.updatedAt = new Date();
+
+    // Step 4: Handle Updated Photos (if new ones are uploaded)
+    const uploadDir = path.join(__dirname, "../uploads/bidvehicle");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+    const newPhotoPaths = [];
+
+    for (const file of files) {
+      const ext = path.extname(file.originalname);
+      const baseName = path.basename(file.originalname, ext);
+      const newFilename = `${baseName}_${bid._id}${ext}`;
+      const newPath = path.join(uploadDir, newFilename);
+
+      fs.renameSync(file.path, newPath);
+      newPhotoPaths.push(`/uploads/bidvehicle/${newFilename}`);
+    }
+
+    // Merge with existing photos
+    if (newPhotoPaths.length > 0) {
+      bid.vehicleDetails.photos = [...bid.vehicleDetails.photos, ...newPhotoPaths];
+    }
+
+    // Step 5: Save updated bid
+    await bid.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Bid updated successfully",
+      data: bid,
+    });
+
+  } catch (error) {
+    console.error("Edit bid error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+// exports.acceptBid = async (req, res) => {
+//   try {
+//     const { truckId, additionalFee, pickupDate, deliveryDate, message } = req.body;
+//     const bid = await Bid.findById(req.params.id);
+//     if (!bid) return res.status(404).json({ success: false, message: 'Bid not found' });
+//     if (bid.status !== 'open') return res.status(400).json({ success: false, message: 'Bid is no longer available' });
+
+//     const carrier = await Carrier.findOne({ userId: req.user._id });
+
+//     bid.status = 'approved'; bid.approvedBy = carrier._id; bid.updatedAt = Date.now();
+//     await;
+

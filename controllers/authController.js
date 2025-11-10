@@ -190,7 +190,7 @@ exports.login = async (req, res) => {
 
     // Create session
     req.session.users = {
-      id: account._id,
+      _id: account._id,
       email: role === 'admin' ? account.personalInfo?.email : account.email,
       roleId: roleInfo._id,
       roleName: roleInfo.roleName,

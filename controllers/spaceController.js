@@ -7,6 +7,7 @@ const User = require('../models/User');
 
 const Space = require('../models/Space');
 const Carrier = require('../models/Carrier');
+const AdminRoles = require('../models/AdminRoles');
 
 exports.createSpace = async (req, res) => {
   try {
@@ -202,27 +203,108 @@ exports.getspacedetails = async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
-    const carrier = await Carrier.findOne({ userId });
-    if (!carrier) {
-      return res.status(404).json({ message: "Carrier not found for this user" });
+    const UserData = await User.findOne({_id : userId});
+    if (!UserData) {
+      return res.status(400).json({ message: "User not found" });
     }
-    const trucks = await Truck.find({ carrierId: carrier._id });
-    const truckIds = trucks.map(t => t._id);
-    const routes = await Route.find({ truckId: { $in: truckIds } });
-    const availableSpaces = Array.from({ length: 9 }, (_, i) => i + 1);
-    const result = {
-      carrierId: carrier._id,
-      companyName: carrier.companyName,
-      trucks: trucks.map(truck => ({
-      _id: truck._id,
-      nickname: truck.nickname,
-      truckType: truck.truckType,
-      routes: routes.filter(r => r.truckId.toString() === truck._id.toString())
-      })),
-      availableSpaces
-    };
+    console.log('UserData.routeId =>',UserData.role);
+    console.log('UserData =>',UserData);
+    const roleData = await AdminRoles.findOne({_id :UserData.role});
+    if (!roleData) {
+      return res.status(400).json({ message: "Role not found" });
+    }
+    if(roleData.roleType === "carrier"){
+      if (!carrier) {
+        return res.status(404).json({ message: "Carrier not found for this user" });
+      }
+      const carrier = await Carrier.findOne({ userId : userId });
+      const trucks = await Truck.find({ carrierId: carrier._id });
+      const truckIds = trucks.map(t => t._id);
+      const routes = await Route.find({ truckId: { $in: truckIds } });
+      const availableSpaces = Array.from({ length: 9 }, (_, i) => i + 1);
+      const result = {
+        carrierId: carrier._id,
+        companyName: carrier.companyName,
+        trucks: trucks.map(truck => ({
+        _id: truck._id,
+        nickname: truck.nickname,
+        truckType: truck.truckType,
+        routes: routes.filter(r => r.truckId.toString() === truck._id.toString())
+        })),
+        availableSpaces
+      };
+      return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
+    }
+    else if(roleData.roleType === "shipper"){
+        // 1. Find all carrier users
+      const carrierUsers = await User.find({
+        role: "68ff5689aa5d489915b8caa8",
+        deletstatus: 0
+      });
 
-    return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
+      if (!carrierUsers.length) {
+        return res.status(200).json({
+          success: true,
+          message: "No active carrier users found",
+          data: [],
+        });
+      }
+
+      const carrierUserIds = carrierUsers.map(user => user._id.toString());
+
+      // 2. Find all carriers belonging to those users
+      const carriers = await Carrier.find({
+        userId: { $in: carrierUserIds },
+        deletstatus: 0,
+        status: "active"
+      });
+
+      if (!carriers.length) {
+        return res.status(200).json({
+          success: true,
+          message: "No active carriers found",
+          data: [],
+        });
+      }
+
+      // 3. Find all trucks belonging to these carriers
+      const carrierIds = carriers.map(c => c._id);
+      const trucks = await Truck.find({
+        carrierId: { $in: carrierIds },
+        deletstatus: 0,
+        status: "active"
+      });
+
+      // 4. Find all routes for those trucks
+      const truckIds = trucks.map(t => t._id);
+      const routes = await Route.find({ truckId: { $in: truckIds } });
+      const availableSpaces = Array.from({ length: 9 }, (_, i) => i + 1);
+
+      // 5. Build final structured response
+      const result = carriers.map(carrier => ({
+        carrierId: carrier._id,
+        companyName: carrier.companyName,
+        trucks: trucks
+          .filter(truck => truck.carrierId.toString() === carrier._id.toString())
+          .map(truck => ({
+            _id: truck._id,
+            nickname: truck.nickname,
+            truckType: truck.truckType,
+            routes: routes.filter(
+              r => r.truckId.toString() === truck._id.toString()
+            ),
+          })),
+        availableSpaces,
+      }));
+
+      return res.status(200).json({
+        success: true,
+        message: "All active carriers and trucks fetched successfully",
+        data: result,
+      });
+    }
+    
+
 
   } catch (error) {
     console.error("Error fetching space details:", error);
