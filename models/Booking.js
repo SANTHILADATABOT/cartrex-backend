@@ -54,7 +54,10 @@ const bookingSchema = new mongoose.Schema({
     enum: ['confirmed','pending','in_progress','cancelled','completed','delivered','ready_for_pickup'], 
     default: 'pending' 
   },
-
+  // statusUpdationDetail:{
+  //   status:{type:String},
+  //   dateUpdate:{type: Date}
+  // },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
