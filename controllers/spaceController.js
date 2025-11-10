@@ -207,17 +207,15 @@ exports.getspacedetails = async (req, res) => {
     if (!UserData) {
       return res.status(400).json({ message: "User not found" });
     }
-    console.log('UserData.routeId =>',UserData.role);
-    console.log('UserData =>',UserData);
     const roleData = await AdminRoles.findOne({_id :UserData.role});
     if (!roleData) {
       return res.status(400).json({ message: "Role not found" });
     }
     if(roleData.roleType === "carrier"){
+      const carrier = await Carrier.findOne({ userId : userId });
       if (!carrier) {
         return res.status(404).json({ message: "Carrier not found for this user" });
       }
-      const carrier = await Carrier.findOne({ userId : userId });
       const trucks = await Truck.find({ carrierId: carrier._id });
       const truckIds = trucks.map(t => t._id);
       const routes = await Route.find({ truckId: { $in: truckIds } });
