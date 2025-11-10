@@ -105,13 +105,14 @@ exports.getBookingsByUserId = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
-
+   
     const shipper = await Shipper.findOne({ userId });
     const carrier = await Carrier.findOne({ userId });
-
+    // console.log('user book=>',user)
     let bookings = [];
-
-    if (shipper) {
+   
+    console.log('type of rolw',user.role.roleType)
+    if (shipper && user.role.roleType === "shipper") {
       const shipperBookings = await Booking.find({ shipperId: shipper._id, deletstatus: 0 })
         .populate([
           { path: 'spaceId' },
@@ -130,7 +131,7 @@ exports.getBookingsByUserId = async (req, res) => {
       bookings = bookings.concat(shipperBookings);
     }
 
-    if (carrier) {
+    if (carrier && user.role.roleType === "carrier" ) {
       const carrierBookings = await Booking.find({ carrierId: carrier._id, deletstatus: 0 })
         .populate([
           { path: 'spaceId' },
