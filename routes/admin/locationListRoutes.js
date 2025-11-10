@@ -1,9 +1,9 @@
-import express from "express";
-import { getAllLocations } from "../../controllers/admin/locationlistingControlloer";
-
+const express = require('express');
 const router = express.Router();
+const locationListingController = require('../../controllers/admin/locationlistingControlloer');
+const { protect, authorize } = require('../../middleware/auth');
 
-// GET /api/locations
-router.get("/getAllLocations", getAllLocations);
+// 📍 Get all locations
+router.get('/getAllLocations',  locationListingController.getAllLocations);
 
-export default router;
+module.exports = router;
