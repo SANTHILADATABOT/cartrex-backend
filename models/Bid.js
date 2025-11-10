@@ -12,7 +12,7 @@ const bidSchema = new mongoose.Schema({
     tax: { type: String },
     total: { type: String }
   },
-  bidId: { type: String, required: true },
+  bidId: { type: String,  },
   vehicleDetails: {
     licenseNumber: { type: String, trim: true },
     brand: { type: String, trim: true },

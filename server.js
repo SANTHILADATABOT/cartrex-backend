@@ -224,6 +224,7 @@ const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
+const locationRoutes =require('./routes/admin/locationListRoutes');
 // const mobileRoutes = require('./routes/mobile');
 // const sharedRoutes = require('./routes/shared');
 
@@ -245,6 +246,7 @@ app.use('/routelisting', routeListRoutes);
 app.use('/bidlisting',bidListRoutes);
 app.use('/adminuserlist',adminUserlistRoutes);
 app.use('/masterRoleRoutes',masterRoleRoutes);
+app.use('/location',locationRoutes);
 
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);

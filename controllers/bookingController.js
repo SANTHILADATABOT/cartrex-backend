@@ -282,6 +282,7 @@ exports.updatebookingstatus = async (req, res) => {
 exports.updateBookingStatusCancel = async (req, res) => {
   try {
     const { userId, bookingId } = req.params;
+    const {status}= req.body
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
       return res.status(400).json({
         success: false,
@@ -311,7 +312,7 @@ exports.updateBookingStatusCancel = async (req, res) => {
       });
     }
 
-    booking.status = "cancelled";
+    booking.status = status;
     booking.updatedAt = new Date();
     booking.updatedBy = userId;
     
