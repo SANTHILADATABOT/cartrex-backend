@@ -1,6 +1,6 @@
-import Location from "../../models/Location"; // adjust path if needed
 
-export const getAllLocations = async (req, res) => {
+const Location = require('../../models/Location');
+exports.getAllLocations = async (req, res) => {
   try {
     const locations = await Location.find({}, "city state stateCode zipcode")
       .sort({ state: 1, city: 1 }); // optional sorting
