@@ -42,6 +42,13 @@ exports.addcarrier = async (req, res) => {
     const data = req.body;
     console.log('req.body => in add carrier', data);
    
+     const existingUser = await User.findOne({ email: data?.email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists. Please use a different email address.',
+      });
+    }
     // 1️⃣ Create and save User
     const userData = new User({
       email: data?.email,

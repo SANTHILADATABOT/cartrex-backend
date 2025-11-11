@@ -189,7 +189,8 @@ exports.updateStatusRole = async (req, res) => {
   try {
     const { roleid } = req.params;
     const { status } = req.body; 
-    console.log("roleid",roleid)
+    console.log("roleid",roleid,)
+    console.log("status in updaterole",status)
     if (!["active", "inactive", "under_maintenance"].includes(status)) {
       return res.status(400).json({
         success: false,
