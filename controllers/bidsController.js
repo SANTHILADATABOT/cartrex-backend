@@ -31,7 +31,7 @@ exports.createBid = async (req, res) => {
   try {
     const data = req.body;
     const files = req.files || [];
-console.log("data in create",data)
+    // console.log("data in create",data)
     // Step 1: Validate shipper
     const shipper = await Shipper.findOne({ userId: data.shipperId });
     if (!shipper) {

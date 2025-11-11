@@ -478,7 +478,7 @@ exports.getBidsByCarrierUserId = async (req, res) => {
 exports.getBidsByFilter = async (req, res) => {
   try {
     // const { userId } = req.params;
-    const { userId, pickupLocation, deliveryLocation, pickupDate } = req.body || {};
+    const { userId, pickupLocation, deliveryLocation, pickupDate, search } = req.body || {};
 
     // 1️⃣ Check if user exists
     const user = await User.findById(userId);
