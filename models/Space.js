@@ -8,7 +8,7 @@ const spaceSchema = new mongoose.Schema({
     location: { type: String, required: true },
     city: { type: String },
     state: { type: String },
-      stateCode: { type: String },
+    stateCode: { type: String },
     pickupDate: { type: Date, required: true },
     pickupWindow: { type: String, required: true },
     pickupRadius: { type: Number, required: true },

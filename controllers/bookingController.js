@@ -139,7 +139,7 @@ exports.getBookingsByUserId = async (req, res) => {
       bookings = bookings.concat(shipperBookings);
     }
 
-    if (carrier && user.role.roleType === "carrier" ) {
+    if (carrier && (user.role.roleType === "carrier")) {
       const carrierBookings = await Booking.find({ carrierId: carrier._id, deletstatus: 0 })
         .populate([
           { path: 'spaceId' },
