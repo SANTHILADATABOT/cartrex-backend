@@ -410,7 +410,9 @@ exports.getBidsByCarrierUserId = async (req, res) => {
 
     // 3️⃣ Build filter for bids
     const baseFilter = {
-      carrierId: carrier._id,
+      //  "carrierRouteList.carrierId": carrier._id.toString(),
+       "carrierRouteList.carrierId": carrier._id,
+      // carrierId: carrier._id,
       deletstatus: 0,
     };
 
