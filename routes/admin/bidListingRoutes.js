@@ -4,6 +4,7 @@ const bidController = require('../../controllers/admin/bidListingController');
 
 // GET all bids
 router.get('/getallbids', bidController.getallbids);
+router.post('/getallbidsbyfilter', bidController.getallbidsbyfilter);
 
 router.get('/getbidbyId/:bidId', bidController.getbidbyId);
 

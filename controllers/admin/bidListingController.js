@@ -96,10 +96,52 @@ exports.getallbids = async (req, res) => {
 //   }
 // };
 
+exports.getallbidsbyfilter = async (req, res) => {
+  try {
+    const { pickupLocation, deliveryLocation } = req.body || {};
+    const { isActive } = req.query;
+    const filter = { deletstatus: 0 };
+    if (isActive) {
+      if (isActive === "all") {
+        filter.status = { $in: ["pending", "confirmed", "in_progress", "completed", "cancelled"] };
+      } else {
+        filter.status = isActive; // show only the selected status
+      }
+    }
+    if (pickupLocation) {
+      filter["pickup.state"] = { $regex: new RegExp(pickupLocation, "i") };
+    }
+    if (deliveryLocation) {
+      filter["delivery.state"] = { $regex: new RegExp(deliveryLocation, "i") };
+    }
+    const bids = await Bid.find(filter)
+      .populate('shipperId', 'companyName dba')
+      .populate('carrierId', 'companyName dba')
+      .populate('routeId', 'routeName')
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email')
+      .sort({ createdAt: -1 });
 
+    if (!bids.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No bids found",
+        data: []
+      });
+    }
 
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: "Bids fetched successfully",
+      data: bids
+    });
 
-
+  } catch (error) {
+    console.error("Error fetching bids:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 exports.getbidbyId = async (req, res) => {
   try {
