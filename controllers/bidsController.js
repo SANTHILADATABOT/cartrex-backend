@@ -42,6 +42,8 @@ exports.createBid = async (req, res) => {
     const bidId = `BD-${uuidv4().substring(0, 8).toUpperCase()}`;
     const bid = await Bid.create({
       shipperId: shipper._id,
+      carrierRouteList: data.carrierRouteList,
+      userId:data.userId,
       bidValue: data.bidValue,
       bidValuetaxinc: data.totalpriceinfo,
       bidId: bidId,
@@ -226,6 +228,8 @@ console.log("data",req.body,"bidId...",bidId)
 
     // Step 3: Update Bid Fields
     bid.shipperId = shipper._id;
+    bid.userId = data.userId;
+    bid.carrierRouteList = data.carrierRouteList;
     bid.bidValue = data.bidValue ?? bid.bidValue;
     bid.bidValuetaxinc = data.totalpriceinfo ?? bid.bidValuetaxinc;
     bid.vehicleDetails = {

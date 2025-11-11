@@ -18,7 +18,7 @@ router.delete('/deleteSelectedBid', bidController.deleteSelectedBid);
 
 
 router.get('/getBidsByCarrierUserId/:userId',bidController.getBidsByCarrierUserId);
-router.post('/getBidsByCarrierUserId',bidController.getBidsByFilter);
+router.post('/getBidsByFilter',bidController.getBidsByFilter);
 
 router.get('/getBidsByShipperUserId/:userId',bidController.getBidsByShipperUserId);
 

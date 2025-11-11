@@ -10,8 +10,13 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBooking = async (req, res) => {
   try {
     const data = req.body;
+console.log("data in createbooking",data)
+    // const shipper = await Shipper.findOne({ _id: data?.shipperId });
+    const shipper = await Shipper.findOne({ userId: data?.userId });
 
-    const shipper = await Shipper.findOne({ _id: data?.shipperId });
+    if (!shipper) {
+      return res.status(404).json({ success: false, message: 'Shipper not found for this user' });
+    }
 
     const space = await Space.findById({ _id: data?.spaceId });
     if (!space) {
@@ -26,6 +31,7 @@ exports.createBooking = async (req, res) => {
     
     const booking = await Booking.create({
       ...data,
+      shipperId: shipper._id, 
       bookingId:bookingId,
       status: 'pending',
       createdBy: data?.userId,
@@ -50,6 +56,8 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', test: error });
   }
 };
+
+
 
 exports.getBookings = async (req, res) => {
   try {
