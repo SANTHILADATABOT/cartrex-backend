@@ -41,7 +41,7 @@ const bookingSchema = new mongoose.Schema({
     pickupDate: { type: Date},
     locationType: { type: String, enum: ['Business', 'AuctionHouse', 'CarDealership'], trim: true }
   },
-
+  addtionalfee: {type: Number},
   delivery: {
     city: { type: String },
     state: { type: String },
