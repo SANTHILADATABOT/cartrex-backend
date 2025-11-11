@@ -322,8 +322,8 @@ exports.getSpaceResult = async (req, res) => {
           }
         }
       };
-      filter["origin.location"] = selectpickupcity;
-      filter["destination.location"] = selectdeliverycity;
+      filter["origin.city"] = selectpickupcity;
+      filter["destination.city"] = selectdeliverycity;
     }
     console.log('filter=>',filter)
     let spaces = await Space.find(filter)
@@ -387,7 +387,7 @@ exports.addSpacesDetails = async (req, res) => {
     console.log(carrier);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
    const spaceData = {
-      carrierId: carrierId._id,
+      carrierId: carrier._id,
       truckId: data?.selectedTruck,
       routeId: data?.selectedRoute,
       userId: carrier.userId,
@@ -401,11 +401,12 @@ exports.addSpacesDetails = async (req, res) => {
     };
 
     // Add origin info if available
-    if (data?.originLocation) {
+    if (data?.origin) {
       spaceData.origin = {
-        location: data.originLocation,
-        city: "",
-        state: data.originLocationstate,
+        location: data.origin.location,
+        city:data.origin.city,
+        state: data.origin.state,
+        stateCode: data.origin.state,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -417,11 +418,12 @@ exports.addSpacesDetails = async (req, res) => {
     }
 
     // Add destination info if available
-    if (data?.destinationLocation) {
+    if (data?.destination) {
       spaceData.destination = {
-        location: data.destinationLocation,
-        city: "",
-        state: data.destinationLocationstate,
+        location: data.destination.location,
+        city: data.destination.city,
+        state: data.destination.state,
+        stateCode:data.destination.state,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,
@@ -542,11 +544,12 @@ exports.editSpacesDetails = async (req, res) => {
     };
 
     // Update origin if provided
-    if (data.originLocation) {
+    if (data.origin) {
       updatedData.origin = {
-        location: data.originLocation,
-        city: "",
-        state: "",
+        location: data.origin.location,
+        city:data.origin.city,
+        state: data.origin.state,
+        stateCode: data.origin.state,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -558,11 +561,12 @@ exports.editSpacesDetails = async (req, res) => {
     }
 
     // Update destination if provided
-    if (data.destinationLocation) {
+    if (data.destination) {
       updatedData.destination = {
-        location: data.destinationLocation,
-        city: "",
-        state: "",
+        location: data.destination.location,
+        city: data.destination.city,
+        state: data.destination.state,
+        stateCode:data.destination.state,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,
