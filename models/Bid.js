@@ -22,8 +22,9 @@ const bidSchema = new mongoose.Schema({
     licenseNumber: { type: String, trim: true },
     brand: { type: String, trim: true },
     vehicleType: { type: String, trim: true },
+    vehicleTypeName: { type: String, trim: true },
     yearMade: { type: Number },
-    features: [String], // Array of features
+    features:  { type: String, }, // Array of features
     condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // store image URLs or file paths
