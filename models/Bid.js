@@ -2,10 +2,15 @@ const mongoose = require('mongoose');
 
 const bidSchema = new mongoose.Schema({
   shipperId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shipper', required: true },
-  carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier' },
-  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
-  userId:{type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-
+  carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier'},
+  routeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Route'},
+  userId:{type: mongoose.Schema.Types.ObjectId, ref: 'User',required: true},
+  carrierRouteList: [
+    {
+      carrierId: { type: String },
+      routeList: [{ type: String }]
+    }
+  ],
   bidValue: { type: Number, required: true },
   bidValuetaxinc: {
     taxValue: { type: String },
