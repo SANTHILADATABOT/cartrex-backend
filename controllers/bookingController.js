@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBooking = async (req, res) => {
   try {
     const data = req.body;
-console.log("data in createbooking",data)
+    console.log("data in createbooking",data);
     // const shipper = await Shipper.findOne({ _id: data?.shipperId });
     const shipper = await Shipper.findOne({ userId: data?.userId });
 
@@ -31,6 +31,7 @@ console.log("data in createbooking",data)
     
     const booking = await Booking.create({
       ...data,
+      vehicleDetails,
       shipperId: shipper._id, 
       bookingId:bookingId,
       status: 'pending',
