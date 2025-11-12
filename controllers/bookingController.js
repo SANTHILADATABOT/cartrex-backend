@@ -225,6 +225,49 @@ exports.updatebookingstatus = async (req, res) => {
     });
   }
 };
+exports.updateAcceptbookingstatus = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+    const  data  = req.body; 
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId:userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    const booking = await Booking.findOne({ _id: bookingId, carrierId: carrier._id });
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+    }
+    booking.addtionalfee  = data.addtionalfee;
+    booking.conformpickupDate = data.conformpickupDate;
+    booking.estimateDeliveryDate = data.estimateDeliveryDate;
+    booking.estimateDeliveryWindow = data.estimateDeliveryWindow;
+    booking.message = data.message;
+    booking.truckforship = data.truckforship;
+    booking.status = data.status;
+    booking.updatedAt = new Date();
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated successfully",
+      data: booking,
+    });
+
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
 
 // //update booking status=> cancelled
 // exports.updateBookingStatusCancel = async (req, res) => {
