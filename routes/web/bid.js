@@ -10,4 +10,9 @@ router.put('/editBid/:bidId', bidController.editBid);
 //update bids status by user Id 
 router.put('/updatebidstatusbyuserId/:userId/:bidId' , bidController.updatebidstatusbyuserId);
 
+router.put('/updateAcceptBidstatus/:userId/:bidId',bidController.updateAcceptbidstatus);
+// cancel status
+router.put('/updateBidStatusCancel/:userId/:bidId',bidController.updateBidStatusCancel);
+
+
 module.exports = router;

@@ -329,3 +329,144 @@ console.log("data",req.body,"bidId...",bidId)
 //     bid.status = 'approved'; bid.approvedBy = carrier._id; bid.updatedAt = Date.now();
 //     await;
 
+exports.updateAcceptbidstatus = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+    const data = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    const bidsFound = await Bid.findOne({
+      _id: bidId,
+      "carrierRouteList.carrierId": carrier._id.toString(),
+    });
+
+    if (!bidsFound) {
+      return res.status(404).json({ success: false, message: "bidsFound not found for this carrier" });
+    }
+
+    // ✅ Only update given fields (no validation errors)
+    await Bid.updateOne(
+      { _id: bidId },
+      {
+        $set: {
+          addtionalfee: data.addtionalfee,
+          conformpickupDate: data.conformpickupDate,
+          estimateDeliveryDate: data.estimateDeliveryDate,
+          estimateDeliveryWindow: data.estimateDeliveryWindow,
+          message: data.message,
+          truckforship: data.truckforship,
+          status: data.status,
+          updatedAt: new Date(),
+        },
+      },
+      { runValidators: false }
+    );
+
+    const updatedBid = await Bid.findById(bidId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated successfully",
+      data: updatedBid,
+    });
+
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
+
+
+exports.updateBidStatusCancel = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+    const { status } = req.body;
+
+    // ✅ Validate params
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or bidId",
+      });
+    }
+
+    // ✅ Verify user
+    const user = await User.findById(userId).populate("role");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ✅ Ensure user is a shipper
+    const shipper = await Shipper.findOne({ userId });
+    // if (!shipper) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Only shippers can cancel bookings.",
+    //   });
+    // }
+
+    // ✅ Find the bid belonging to this shipper
+    const bidsfound = await Bid.findOne({
+      _id: bidId,
+      shipperId: shipper._id,
+      deletstatus: 0,
+    });
+
+    if (!bidsfound) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found or not owned by this shipper.",
+      });
+    }
+
+    // ✅ Update only required fields (avoid revalidating full doc)
+    await Bid.updateOne(
+      { _id: bidId },
+      {
+        $set: {
+          status: status,
+          updatedAt: new Date(),
+          updatedBy: userId,
+        },
+      },
+      { runValidators: false } // 🚫 prevents validation error from unrelated fields
+    );
+
+    // ✅ Fetch updated bid for response
+    const updatedBid = await Bid.findById(bidId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully",
+      role: "shipper",
+      data: {
+        bookingId: updatedBid._id,
+        status: updatedBid.status,
+        bid: updatedBid,
+      },
+    });
+
+  } catch (error) {
+    console.error("Error cancelling bids:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while cancelling bids",
+      error: error.message,
+    });
+  }
+};
