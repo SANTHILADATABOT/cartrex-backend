@@ -15,7 +15,7 @@ async function insertRoutes() {
     // Example routes for the two carriers
     const routes = [
         {
-    carrierId: "690eb42122d1aff410ad18c1",
+    carrierId: "69130fd46401c567c2c0202a",
     truckId: "690eb61f22d1aff410ad18f7",
     origin: {
       state: "California",
@@ -32,8 +32,8 @@ async function insertRoutes() {
       deliveryRadius: 60
     },
     status: "active",
-    createdBy: "690eb42122d1aff410ad18c1",
-    updatedBy: "690eb42122d1aff410ad18c1",
+    createdBy: "69130fd46401c567c2c0202a",
+    updatedBy: "69130fd46401c567c2c0202a",
     ipAddress: "192.168.1.101",
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     deletstatus: 0
@@ -41,7 +41,7 @@ async function insertRoutes() {
 
   // 2️⃣ Pair 2
   {
-    carrierId: "690eb42122d1aff410ad18c1",
+    carrierId: "69130fd46401c567c2c0202a",
     truckId: "690eb64822d1aff410ad18fe",
     origin: {
       state: "Arizona",
@@ -58,8 +58,8 @@ async function insertRoutes() {
       deliveryRadius: 70
     },
     status: "active",
-    createdBy: "690eb42122d1aff410ad18c1",
-    updatedBy: "690eb42122d1aff410ad18c1",
+    createdBy: "69130fd46401c567c2c0202a",
+    updatedBy: "69130fd46401c567c2c0202a",
     ipAddress: "192.168.1.102",
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     deletstatus: 0
