@@ -96,10 +96,52 @@ exports.getallbids = async (req, res) => {
 //   }
 // };
 
+exports.getallbidsbyfilter = async (req, res) => {
+  try {
+    const { pickupLocation, deliveryLocation } = req.body || {};
+    const { isActive } = req.query;
+    const filter = { deletstatus: 0 };
+    if (isActive) {
+      if (isActive === "all") {
+        filter.status = { $in: ["pending", "confirmed", "in_progress", "completed", "cancelled"] };
+      } else {
+        filter.status = isActive; // show only the selected status
+      }
+    }
+    if (pickupLocation) {
+      filter["pickup.state"] = { $regex: new RegExp(pickupLocation, "i") };
+    }
+    if (deliveryLocation) {
+      filter["delivery.state"] = { $regex: new RegExp(deliveryLocation, "i") };
+    }
+    const bids = await Bid.find(filter)
+      .populate('shipperId', 'companyName dba')
+      .populate('carrierId', 'companyName dba')
+      .populate('routeId', 'routeName')
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email')
+      .sort({ createdAt: -1 });
 
+    if (!bids.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No bids found",
+        data: []
+      });
+    }
 
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: "Bids fetched successfully",
+      data: bids
+    });
 
-
+  } catch (error) {
+    console.error("Error fetching bids:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 exports.getbidbyId = async (req, res) => {
   try {
@@ -440,7 +482,7 @@ exports.getBidsByCarrierUserId = async (req, res) => {
       ? { ...baseFilter, $or: orConditions }
       : baseFilter;
 
-    console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
+    // console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
 
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
@@ -480,8 +522,9 @@ exports.getBidsByCarrierUserId = async (req, res) => {
 exports.getBidsByFilter = async (req, res) => {
   try {
     // const { userId } = req.params;
-    const { userId, pickupLocation, deliveryLocation, pickupDate } = req.body || {};
+    const { userId, pickupLocation, deliveryLocation, pickupDate, search } = req.body || {};
 
+    // console.log("Bids Filter:", req.body || {});
     // 1️⃣ Check if user exists
     const user = await User.findById(userId);
     if (!user)
@@ -499,40 +542,55 @@ exports.getBidsByFilter = async (req, res) => {
 
     // 3️⃣ Build filter for bids
     const baseFilter = {
-      carrierId: carrier._id,
+      "carrierRouteList.carrierId": carrier._id,
+      // carrierId: carrier._id,
       deletstatus: 0,
     };
 
     const orConditions = [];
-    const parsedPickup = pickupLocation?.split(",")[0]?.trim();
-    const parsedDelivery = deliveryLocation?.split(",")[0]?.trim();
-
-    if (parsedPickup) {
-      orConditions.push({
-        "pickup.city": { $regex: new RegExp(parsedPickup, "i") },
-      });
+    
+    if (pickupLocation) {
+      orConditions.push({ "pickup.city": { $regex: new RegExp(pickupLocation, "i") } });
     }
 
-    if (parsedDelivery) {
-      orConditions.push({
-        "delivery.city": { $regex: new RegExp(parsedDelivery, "i") },
-      });
+    if (deliveryLocation) {
+      orConditions.push({ "delivery.city": { $regex: new RegExp(deliveryLocation, "i") } });
     }
-    // if (pickupLocation) {
-    //   orConditions.push({ "pickup.city": { $regex: new RegExp(pickupLocation, "i") } });
-    // }
-
-    // if (deliveryLocation) {
-    //   orConditions.push({ "delivery.city": { $regex: new RegExp(deliveryLocation, "i") } });
-    // }
 
     if (pickupDate) {
-      const date = new Date(pickupDate);
-      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-      orConditions.push({
-        "pickup.pickupDate": { $gte: startOfDay, $lte: endOfDay },
-      });
+        orConditions.push({
+          "pickup.pickupDate": pickupDate
+        });
+    }
+    // if (pickupDate) {
+    //   const date = new Date(pickupDate);
+    //   const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    //   const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    //   orConditions.push({
+    //     "pickup.pickupDate": { $gte: startOfDay, $lte: endOfDay },
+    //   });
+    // }
+
+    if (search && search.trim() !== "") {
+        const searchRegex = new RegExp(search, "i");
+        const searchNum = Number(search);
+
+        const searchConditions = [
+          { "pickup.city": searchRegex },
+          { "delivery.city": searchRegex },
+          { "pickup.state": searchRegex },
+          { "delivery.state": searchRegex },
+          { "shipperId.companyName": searchRegex },
+          { "shipperId.address": searchRegex },
+          { "timing": searchRegex },
+        ];
+
+        // ✅ Add number search only if it’s a valid number
+        if (!isNaN(searchNum)) {
+          searchConditions.push({ bidValue: searchNum });
+        }
+
+        orConditions.push(...searchConditions);
     }
 
     // ✅ Combine filters
@@ -540,7 +598,7 @@ exports.getBidsByFilter = async (req, res) => {
       ? { ...baseFilter, $or: orConditions }
       : baseFilter;
 
-    console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
+    // console.log("Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
 
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
@@ -556,7 +614,7 @@ exports.getBidsByFilter = async (req, res) => {
       })
       .lean();
 
-    console.log("📦 Bids Found:", bids.length);
+    // console.log("📦 Bids Found:", bids.length);
     bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
 
     // 5️⃣ Respond
@@ -567,6 +625,8 @@ exports.getBidsByFilter = async (req, res) => {
       data: bids,
       test2: pickupLocation,
       test: orConditions,
+      test3: req.body,
+      test4: search,
     });
 
   } catch (error) {

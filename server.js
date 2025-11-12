@@ -53,7 +53,9 @@ const io = new Server(server, {
         'http://localhost:5000',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:5174',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'http://192.168.1.46:5173',
+        'http://192.168.1.46:5174',
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
@@ -84,6 +86,8 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://127.0.0.1:5174',
   'http://localhost:5000',
+  'http://192.168.1.46:5173',
+  'http://192.168.1.46:5174',
 ];
 
 app.use(cors({
@@ -225,6 +229,7 @@ const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
 const locationRoutes =require('./routes/admin/locationListRoutes');
+const reviewRoutes =require('./routes/reviewRoutes');
 // const mobileRoutes = require('./routes/mobile');
 // const sharedRoutes = require('./routes/shared');
 
@@ -247,6 +252,7 @@ app.use('/bidlisting',bidListRoutes);
 app.use('/adminuserlist',adminUserlistRoutes);
 app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use('/location',locationRoutes);
+app.use('/review',reviewRoutes);
 
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
