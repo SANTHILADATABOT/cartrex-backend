@@ -17,6 +17,8 @@ router.get('/getBookingsByUserId/:userId', bookingController.getBookingsByUserId
 //update booking status for carrier 
 router.put('/updatebookingstatus/:userId/:bookingId',bookingController.updatebookingstatus);
 
+//update Accept booking status for carrier 
+router.put('/updateAcceptbookingstatus/:userId/:bookingId',bookingController.updateAcceptbookingstatus);
 // cancel status
 router.put('/updateBookingStatusCancel/:userId/:bookingId',bookingController.updateBookingStatusCancel);
 

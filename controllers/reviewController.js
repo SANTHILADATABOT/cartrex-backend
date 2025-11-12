@@ -1,14 +1,16 @@
-const Review = require("../models/Reviews");
+const Reviews = require("../models/Reviews");
 
 
 exports.createReview = async (req, res) => {
   try {
+    // return console.log("req.body",req.body)
     const {
       bookingId,
       carrierId,
       shipperId,
       overallRating,
       comment,
+      truckId
     } = req.body;
 
     // Basic validation
@@ -25,6 +27,7 @@ exports.createReview = async (req, res) => {
       shipperId,
       overallRating,
       comment,
+      truckId,
       createdBy: req.user?._id || shipperId, // depends on your auth setup
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
@@ -38,7 +41,7 @@ exports.createReview = async (req, res) => {
       data: savedReview,
     });
   } catch (error) {
-    console.error('Error creating review:', error);
+    console.log('Error creating review:', error);
     return res.status(500).json({
       success: false,
       message: 'Server error while creating review',
@@ -50,9 +53,9 @@ exports.createReview = async (req, res) => {
 
 exports.getReviews = async (req, res) => {
   try {
-    const reviews = await Review.find().populate("userId bidId bookingId");
-    res.status(200).json({ success: true, data: reviews });
+    const ReviewData= await Reviews.find();
+    res.status(200).json({ success: true, data: ReviewData });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching reviews" });
+    res.status(500).json({ success: false, message: error.message});
   }
 };

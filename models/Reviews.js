@@ -4,6 +4,7 @@ const reviewSchema = new mongoose.Schema({
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
   carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   shipperId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  truckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
 
   overallRating: { type: Number, required: true, min: 1, max: 5 }, // Rating out of 5
   comment: { type: String, trim: true },
