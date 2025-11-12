@@ -1,11 +1,13 @@
 // controllers/bookingController.js
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
 const Booking = require('../models/Booking');
 const Space = require('../models/Space');
 const Shipper = require('../models/Shipper');
 const Carrier = require('../models/Carrier');
 const User = require('../models/User');
 const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
 
 exports.createBooking = async (req, res) => {
   try {
@@ -269,6 +271,123 @@ exports.updateAcceptbookingstatus = async (req, res) => {
     });
   }
 };
+exports.updateJobbookingCompletedstatus = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+
+    // Validate Mongo IDs
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+    }
+
+    // Find carrier
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      // cleanup temp file if exists
+      if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    // Find booking
+    const booking = await Booking.findOne({ _id: bookingId, carrierId: carrier._id });
+    if (!booking) {
+      if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+    }
+
+    // ✅ Step 1: Update booking status
+    booking.status = "completed";
+    booking.updatedAt = new Date();
+
+    // ✅ Step 2: Handle image upload
+    if (req.file) {
+      const dir = path.join(__dirname, "../upload/bookingDelivery");
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+      const ext = path.extname(req.file.originalname);
+      const filename = `image_${bookingId}${ext}`;
+      const filePath = path.join(dir, filename);
+
+      // Move file from temp folder to final destination
+      fs.renameSync(req.file.path, filePath);
+
+      // Save relative path to DB
+      booking.confirmUploadphoto = path.join("upload", "bookingDelivery", filename);
+    }
+
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated and image uploaded successfully",
+      data: booking,
+    });
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
+// exports.updateJobbookingCompletedstatus = async (req, res) => {
+//   try {
+//     upload.single("image");
+//     const { userId, bookingId } = req.params;
+//     const  data  = req.body; 
+
+//     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+//       return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+//     }
+
+//     const carrier = await Carrier.findOne({ userId:userId });
+//     console.log('carrier=>',carrier);
+//     console.log('bookingId=>',bookingId);
+//     console.log('userId=>',userId);
+//     if (!carrier) {
+//       return res.status(404).json({ success: false, message: "Carrier not found" });
+//     }
+
+//     const booking = await Booking.findOne({ _id: bookingId, carrierId: carrier._id });
+//     if (!booking) {
+//       return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+//     }
+    
+//     // 📸 Save file path to DB
+//     if (req.file) {
+//       // store relative path like "upload/bookingDelivery/image_123.png"
+//       const relativePath = path.join(
+//         "upload",
+//         "bookingDelivery",
+//         req.file.filename
+//       );
+//       booking.confirmUploadphoto = relativePath;
+//       booking.status = "completed";
+//       booking.updatedAt = new Date();
+//       await booking.save();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: "Booking status updated successfully",
+//         data: booking,
+//       });
+//     }else {
+//         return res
+//           .status(400)
+//           .json({ success: false, message: "No image uploaded" });
+//       }
+
+//   } catch (error) {
+//     console.error("Error updating booking status:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error while updating booking status",
+//       error: error.message,
+//     });
+//   }
+// };
 
 // //update booking status=> cancelled
 // exports.updateBookingStatusCancel = async (req, res) => {
