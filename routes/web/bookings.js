@@ -1,8 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const fs = require("fs");
+const multer = require("multer");
+const path = require("path");
 const bookingController = require('../../controllers/bookingController');
 const { protect, authorize, requireProfileComplete } = require('../../middleware/auth');
-
+const tempDir = path.join(__dirname, "../upload/bookingDelivery");
+const upload = multer({ dest: tempDir });
 // Create new booking - Shipper only
 router.post('/addbooking', bookingController.createBooking);
 
@@ -19,6 +23,8 @@ router.put('/updatebookingstatus/:userId/:bookingId',bookingController.updateboo
 
 //update Accept booking status for carrier 
 router.put('/updateAcceptbookingstatus/:userId/:bookingId',bookingController.updateAcceptbookingstatus);
+//update Completed booking status with upload image for carrier  
+router.put('/updateJobbookingCompletedstatus/:userId/:bookingId',upload.single("image"),bookingController.updateJobbookingCompletedstatus);
 // cancel status
 router.put('/updateBookingStatusCancel/:userId/:bookingId',bookingController.updateBookingStatusCancel);
 
