@@ -32,7 +32,7 @@ const bookingSchema = new mongoose.Schema({
     whatIsBeingShippedId: { type: String, trim: true },
     additionalComments: { type: String, trim: true }
   },
-
+  cancelReason:{type:String},
   pickup: {
     city: { type: String },
     state: { type: String },

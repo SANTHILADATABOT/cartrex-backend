@@ -8,7 +8,7 @@ const Shipper = require('../models/Shipper');
 const Carrier = require('../models/Carrier');
 const User = require('../models/User');
 const mongoose = require('mongoose');
-
+const { v4: uuidv4 } = require('uuid');
 exports.createBooking = async (req, res) => {
   try {
     const data = req.body;
@@ -453,6 +453,7 @@ exports.updateJobbookingCompletedstatus = async (req, res) => {
 exports.updateBookingStatusCancel = async (req, res) => {
   try {
     const { userId, bookingId } = req.params;
+    const data = req.body;
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
       return res.status(400).json({
         success: false,
@@ -482,7 +483,7 @@ exports.updateBookingStatusCancel = async (req, res) => {
         message: "Booking not found or not owned by this shipper.",
       });
     }
-
+    booking.cancelReason = data.cancelReason;
     booking.status = "cancelled";
     booking.updatedAt = new Date();
     booking.updatedBy = userId;
