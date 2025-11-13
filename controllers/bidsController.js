@@ -1,121 +1,90 @@
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
 const Bid = require('../models/Bid');
 const Shipper = require('../models/Shipper');
 const Carrier = require('../models/Carrier');
 const Booking = require('../models/Booking');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const { v4: uuidv4 } = require('uuid');
 
-// Temporary upload directory
-const tempDir = path.join(__dirname, "../uploads/tmp");
-if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, tempDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}_${uuidv4().substring(0, 6)}${ext}`);
-  },
-});
-
-exports.uploadBidPhotos = multer({ storage }).array("photos", 10);
 
 // Create Bid Controller
 exports.createBid = async (req, res) => {
   try {
     const data = req.body;
-    const files = req.files || [];
-    // console.log("data in create",data)
+    console.log("data in create", data);
     // Step 1: Validate shipper
-    const shipper = await Shipper.findOne({ userId: data.shipperId });
-    if (!shipper) {
-      return res.status(404).json({ success: false, message: "Shipper not found" });
-    }
+    const shipper = await Shipper.findOne({ userId: data?.userId });
 
+    if (!shipper) {
+      return res.status(404).json({ success: false, message: "Shipper not found for this user", test: data });
+    }
     // Step 2: Create Bid Record
     const bidId = `BD-${uuidv4().substring(0, 8).toUpperCase()}`;
+    const bidValuetaxinc = JSON.parse(data.bidValuetaxinc || "{}");
+    const pickup = JSON.parse(data.pickup || "{}");
+    const delivery = JSON.parse(data.delivery || "{}");
+    const shippingInfo = JSON.parse(data.shippingInfo || "{}");
+    const carrierRouteList = JSON.parse(data.carrierRouteList || "{}");
+    const parsedVehicleDetails = JSON.parse(data.vehicleDetails || '{}');
+    const carrierData = carrierRouteList[0] || {};
+
     const bid = await Bid.create({
+      ...data,
+      carrierRouteList,
+      bidValuetaxinc,
+      vehicleDetails: parsedVehicleDetails,
+      pickup,
+      delivery,
+      shippingInfo,
       shipperId: shipper._id,
-      carrierRouteList: data.carrierRouteList,
       userId:data.userId,
-      bidValue: data.bidValue,
-      bidValuetaxinc: data.totalpriceinfo,
       bidId: bidId,
-      vehicleDetails: {
-        licenseNumber: data.vehicleDetails?.licenseNumber,
-        brand: data.vehicleDetails?.brand,
-        vehicleType: data.vehicleDetails?.vehicleType,
-        vehicleTypeName: data.vehicleDetails?.vehicleTypeName,
-        yearMade: data.vehicleDetails?.yearMade,
-        features: data.vehicleDetails?.features || [],
-        condition: data.vehicleDetails?.condition,
-        quantity: data.vehicleDetails?.quantity,
-        photos: [],
-        contains100lbs: data.vehicleDetails?.contains100lbs,
-        estimate_extra_weight: data.vehicleDetails?.estimate_extra_weight
-      },
+      carrierId: carrierData.carrierId,
+      routeId: carrierData.routeList?.[0] || null,
+      bidValue: data.bidValue,
       shippingDescription: data.shippingInfo?.whatIsBeingShipped,
       transportType: data.transportType,
       vinNumber: data?.vinNumber,
       lotNumber: data?.lotNumber,
-      pickup: {
-        city: data?.pickup?.city,
-        state: data?.pickup?.state,
-        zipcode: data?.pickup?.zipcode,
-        pickupDate: data?.pickup?.pickupDate,
-        pickupLocationType: data?.pickup?.pickupLocationType
-      },
-      delivery: {
-        city: data?.delivery?.city,
-        state: data?.delivery?.state,
-        zipcode: data?.delivery?.zipcode
-      },
-      shippingInfo: {
-        whatIsBeingShipped: data.shippingInfo?.whatIsBeingShipped,
-        whatIsBeingShippedId: data.shippingInfo?.whatIsBeingShippedId,
-        additionalComments: data.shippingInfo?.additionalComments
-      },
       timing: data?.timing,
       status: 'pending',
-      createdBy: data.shipperId,
+      createdBy: data.userId,
       deletstatus: 0,
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
     });
 
-    // Step 3: Move uploaded files from tmp to final folder
-    const uploadDir = path.join(__dirname, "../uploads/bidvehicle");
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    const uploadedPhotos = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file, index) => {
+        const ext = path.extname(file.originalname);
+        // const baseName = path.basename(file.originalname, ext);
+        const newFilename = `vehicle${index + 1}_${bid._id}${ext}`;
+        const newPath = path.join(path.dirname(file.path), newFilename);
 
-    const photoPaths = [];
-
-    for (const file of files) {
-      const ext = path.extname(file.originalname);
-      const baseName = path.basename(file.originalname, ext);
-      const newFilename = `${baseName}_${bid._id}${ext}`; // use custom bidId (e.g. BD-XXXXXX)
-      const newPath = path.join(uploadDir, newFilename);
-
-      fs.renameSync(file.path, newPath);
-      photoPaths.push(`/uploads/bidvehicle/${newFilename}`);
+        fs.renameSync(file.path, newPath);
+        uploadedPhotos.push(`/uploads/bid/${newFilename}`);
+      });
     }
 
-    // Step 4: Update bid with photo paths
-    bid.vehicleDetails.photos = photoPaths;
-    await bid.save();
+    if (uploadedPhotos.length > 0) {
+      bid.vehicleDetails.photos = uploadedPhotos;
+      await bid.save();
+    }
+    // await bid.save();
 
     res.status(201).json({ success: true, data: bid });
 
   } catch (error) {
     console.error('Create bid error:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server errorj', error: error.message, test: req.body });
   }
 };
+
 exports.getBids = async (req, res) => {
   try {
     const { status, pickupLocation, deliveryLocation, page = 1, limit = 10 } = req.query;

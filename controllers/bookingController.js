@@ -12,7 +12,7 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBooking = async (req, res) => {
   try {
     const data = req.body;
-console.log("data in createbooking",data)
+    console.log("data in createbooking",data);
     // const shipper = await Shipper.findOne({ _id: data?.shipperId });
     const shipper = await Shipper.findOne({ userId: data?.userId });
 
@@ -31,8 +31,19 @@ console.log("data in createbooking",data)
 
     const bookingId = `BK-${uuidv4().substring(0, 8).toUpperCase()}`;
     
+    const bookValuetaxinc = JSON.parse(data.bookValuetaxinc || "{}");
+    const pickup = JSON.parse(data.pickup || "{}");
+    const delivery = JSON.parse(data.delivery || "{}");
+    const shippingInfo = JSON.parse(data.shippingInfo || "{}");
+    const parsedVehicleDetails = JSON.parse(data.vehicleDetails || '{}');
+
     const booking = await Booking.create({
       ...data,
+      vehicleDetails: parsedVehicleDetails,
+      bookValuetaxinc,
+      pickup,
+      delivery,
+      shippingInfo,
       shipperId: shipper._id, 
       bookingId:bookingId,
       status: 'pending',
@@ -42,6 +53,24 @@ console.log("data in createbooking",data)
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
     });
+
+    const uploadedPhotos = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file, index) => {
+        const ext = path.extname(file.originalname);
+        // const baseName = path.basename(file.originalname, ext);
+        const newFilename = `vehicle${index + 1}_${booking._id}${ext}`;
+        const newPath = path.join(path.dirname(file.path), newFilename);
+
+        fs.renameSync(file.path, newPath);
+        uploadedPhotos.push(`/uploads/booking/${newFilename}`);
+      });
+    }
+
+    if (uploadedPhotos.length > 0) {
+      booking.vehicleDetails.photos = uploadedPhotos;
+      await booking.save();
+    }
 
     space.bookedSpaces += 1;
     if (space.bookedSpaces >= space.availableSpaces) {
@@ -55,7 +84,7 @@ console.log("data in createbooking",data)
     });
   } catch (error) {
     console.error('Create booking error:', error);
-    res.status(500).json({ success: false, message: 'Server error', test: error });
+    res.status(500).json({ success: false, message: 'Server error', test: error }); // , stack: error.stack
   }
 };
 
