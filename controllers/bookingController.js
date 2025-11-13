@@ -59,6 +59,7 @@ exports.createBooking = async (req, res) => {
     if (req.files && req.files.length > 0) {
       req.files.forEach((file, index) => {
         const ext = path.extname(file.originalname);
+        // const baseName = path.basename(file.originalname, ext);
         const newFilename = `vehicle${index + 1}_${booking._id}${ext}`;
         const newPath = path.join(path.dirname(file.path), newFilename);
 
@@ -84,7 +85,7 @@ exports.createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('Create booking error:', error);
-    res.status(500).json({ success: false, message: 'Server error', test: error, stack: error.stack });
+    res.status(500).json({ success: false, message: 'Server error', test: error }); // , stack: error.stack
   }
 };
 
