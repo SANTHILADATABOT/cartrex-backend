@@ -453,7 +453,6 @@ exports.updateJobbookingCompletedstatus = async (req, res) => {
 exports.updateBookingStatusCancel = async (req, res) => {
   try {
     const { userId, bookingId } = req.params;
-    const {status}= req.body
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
       return res.status(400).json({
         success: false,
@@ -468,14 +467,15 @@ exports.updateBookingStatusCancel = async (req, res) => {
       });
     }
     const shipper = await Shipper.findOne({ userId });
-    if (!shipper) {
-      return res.status(403).json({
-        success: false,
-        message: "Only shippers can cancel bookings.",
-      });
+    const carrier = await Carrier.findOne({ userId });
+    let booking = {};
+    if (!shipper && carrier) {
+      booking = await Booking.findOne({_id: bookingId,carrierId: carrier._id,deletstatus: 0,});
     }
-     const booking = await Booking.findOne({_id: bookingId,shipperId: shipper._id,deletstatus: 0,});
-
+    else if(shipper && !carrier){
+      booking = await Booking.findOne({_id: bookingId,shipperId: shipper._id,deletstatus: 0,});
+    } 
+    
     if (!booking) {
       return res.status(404).json({
         success: false,
@@ -483,7 +483,7 @@ exports.updateBookingStatusCancel = async (req, res) => {
       });
     }
 
-    booking.status = status;
+    booking.status = "cancelled";
     booking.updatedAt = new Date();
     booking.updatedBy = userId;
     

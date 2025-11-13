@@ -131,8 +131,6 @@ exports.login = async (req, res) => {
         message: 'Please provide email, password, and role'
       });
     }
-
-    // ✅ Decide which collection to use based on role
     let account;
     if (role === 'admin') {
       // account = await AdminUser.findOne({ email }).select('+password');
