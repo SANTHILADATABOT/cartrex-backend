@@ -24,7 +24,6 @@ exports.signup = async (req, res) => {
       zipCode 
     } = req.body;
 
-    // ✅ 1. Basic validation
     if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
@@ -32,23 +31,16 @@ exports.signup = async (req, res) => {
     if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
     }
-
-    // ✅ 2. Validate role
     const roleDoc = await AdminRole.findById(roleId);
     if (!roleDoc) {
       return res.status(400).json({ success: false, message: 'Invalid role ID' });
     }
-
-    // ✅ 3. Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    // ✅ 4. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // ✅ 5. Create User
     const user = await User.create({
       email,
       password: hashedPassword,
@@ -60,19 +52,16 @@ exports.signup = async (req, res) => {
       isActive: true,
     });
 
-    // ✅ 6. Create role-specific document
     if (roleDoc.roleType === 'carrier') {
-      // Carrier creation
       await Carrier.create({
         userId: user._id,
         createdBy: user._id,
-        status: 'pending',
+        status: 'active',
         address: address || '',
         zipCode: zipCode || '',
       });
     } 
     else if (roleDoc.roleType === 'shipper') {
-      // Shipper creation
       await Shipper.create({
         userId: user._id,
         createdBy: user._id,
@@ -81,10 +70,8 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // ✅ 7. Generate token
     const token = generateToken(user._id);
 
-    // ✅ 8. Success response
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
