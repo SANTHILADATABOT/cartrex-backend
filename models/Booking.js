@@ -42,6 +42,11 @@ const bookingSchema = new mongoose.Schema({
     locationType: { type: String, enum: ['Business', 'AuctionHouse', 'CarDealership'], trim: true }
   },
   addtionalfee: {type: Number},
+  conformpickupDate:{type: String},
+  estimateDeliveryDate:{type: String},
+  estimateDeliveryWindow:{type: String},
+  message:{type: String},
+  truckforship:{type: String},
   delivery: {
     city: { type: String },
     state: { type: String },
@@ -54,6 +59,7 @@ const bookingSchema = new mongoose.Schema({
     enum: ['confirmed','pending','in_progress','cancelled','completed','delivered','ready_for_pickup'], 
     default: 'pending' 
   },
+  confirmUploadphoto:String,
   // statusUpdationDetail:{
   //   status:{type:String},
   //   dateUpdate:{type: Date}
