@@ -162,7 +162,6 @@ exports.login = async (req, res) => {
         message: 'Invalid credentials'
       });
     }
-
     // Check if active
     if (!account.isActive) {
       return res.status(403).json({
@@ -173,7 +172,7 @@ exports.login = async (req, res) => {
 
     // Fetch role info from AdminRole collection
     const roleInfo = await AdminRole.findOne({
-      _id: account.role,      // assuming user.role stores AdminRole id
+      _id: account.role ?? account.roleId,      // assuming user.role stores AdminRole id
       isActive: "active"
     });
 
