@@ -207,7 +207,10 @@ exports.editBid = async (req, res) => {
    // 4️⃣ Remove ALL old images from server
   if (bid.vehicleDetails?.photos?.length > 0) {
     bid.vehicleDetails.photos.forEach((imgPath) => {
-      const fullPath = path.join(__dirname, `../..${imgPath}`);
+      // const fullPath = path.join(__dirname, `../..${imgPath}`);
+      const cleanPath = imgPath.replace(/^\/+/, ""); 
+      const fullPath = path.resolve(__dirname, "..", cleanPath);
+      console.log(`deleting file fullPath:`, fullPath);
       if (fs.existsSync(fullPath)) {
         try {
           fs.unlinkSync(fullPath);
@@ -224,15 +227,6 @@ exports.editBid = async (req, res) => {
   if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
   const newPhotoPaths = [];
-  // for (const file of files) {
-  //   const ext = path.extname(file.originalname);
-  //   // const baseName = path.basename(file.originalname, ext);
-  //   // const newFilename = `${baseName}_${uuidv4().substring(0, 6)}_${bid._id}${ext}`;
-  //   const newFilename = `vehicle${index + 1}_${bid._id}${ext}`;
-  //   const newPath = path.join(uploadDir, newFilename);
-  //   fs.renameSync(file.path, newPath);
-  //   newPhotoPaths.push(`/uploads/bid/${newFilename}`);
-  // }
   if (req.files && req.files.length > 0) {
       req.files.forEach((file, index) => {
         const ext = path.extname(file.originalname);
@@ -277,6 +271,7 @@ exports.editBid = async (req, res) => {
       success: true,
       message: "Bid updated successfully",
       data: bid,
+      dirname: __dirname,
     });
 
   } catch (error) {
