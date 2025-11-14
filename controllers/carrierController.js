@@ -55,7 +55,7 @@ exports.createOrUpdateProfile = async (req, res) => {
     if (req.file) {
       photoUrl = await uploadToS3(req.file, 'carrier-profiles');
     }
-
+    
     const userId = req.body.userId; // temporary (until auth is added)
 
     // ✅ Validate if location exists
