@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs");
 const User = require('../../models/User');
 const Carrier = require('../../models/Carrier');
 const mongoose = require("mongoose");
@@ -60,9 +61,10 @@ exports.addcarrier = async (req, res) => {
       isActive: true,
       audit: { ...data?.audit, deletstatus: 0 },
     });
-    if(data?.password){
-        userData.password = data.password;
-    }
+    if (data?.password) {
+  userData.password = await bcrypt.hash(data.password, 10);
+}
+
     const savedUser = await userData.save();
 
     if (!savedUser) {

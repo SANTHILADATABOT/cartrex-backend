@@ -1,4 +1,5 @@
 const Truck = require('../../models/Truck');
+const Route = require('../../models/Route');
 const mongoose = require('mongoose');
 
 
@@ -421,6 +422,33 @@ console.log("req.body in truck ",req.body)
     });
 
     await newTruck.save();
+     const routes = [
+      {
+        carrierId:owner,
+        truckId: newTruck._id,
+        origin: {
+          state: "California",
+          stateCode: "CA",
+          city: "Los Angeles",
+          pickupWindow: "2025-11-10T08:00:00.000Z",
+          pickupRadius: 50
+        },
+        destination: {
+          state: "Nevada",
+          stateCode: "NV",
+          city: "Las Vegas",
+          deliveryWindow: "2025-11-11T17:00:00.000Z",
+          deliveryRadius: 60
+        },
+        status: "active",
+        createdBy: req.user?._id || '68e73aebda9fdad99d4d53ea', // if available from auth middleware
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        deletstatus: 0
+      }
+    ];
+    
+    const result = await Route.insertMany(routes);
 
     res.status(201).json({
       success: true,
