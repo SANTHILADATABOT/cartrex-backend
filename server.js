@@ -232,6 +232,7 @@ const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
+const carrierRoutes =require('./routes/web/carriers');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
 // const mobileRoutes = require('./routes/mobile');
@@ -265,6 +266,7 @@ app.use('/api/web', webRoutes);
 app.use('/space',spaceRoutes);
 app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
+app.use('/carriers', carrierRoutes);
 
 
 

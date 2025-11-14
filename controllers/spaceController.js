@@ -335,7 +335,7 @@ exports.getSpaceResult = async (req, res) => {
           select: "firstName lastName",
         },
       })
-      .populate("truckId", "carrierId nickname truckType registrationNumber rating location")
+      .populate("truckId")
       .populate("routeId")
       .lean();
 
@@ -357,7 +357,9 @@ exports.getSpaceResult = async (req, res) => {
     truckCounts.forEach((tc) => {
       truckCountMap[tc._id.toString()] = tc.totalTrucks;
     });
-
+    spaces = spaces.filter(space => {
+        return space.availableSpaces > space.bookedSpaces;
+    });
     spaces = spaces.map((space) => {
       if (space.carrierId && space.carrierId._id) {
         space.carrierId.noOfTrucks =
@@ -365,7 +367,6 @@ exports.getSpaceResult = async (req, res) => {
       }
       return space;
     });
-
     res.status(200).json({
       success: true,
       message: "All Spaces fetched successfully",

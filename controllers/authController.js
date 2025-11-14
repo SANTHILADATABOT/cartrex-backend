@@ -1,4 +1,4 @@
-
+const bcrypt = require("bcryptjs");
 const User = require('../models/User');
 const AdminRole = require('../models/AdminRoles');
 const Carrier = require('../models/Carrier');
@@ -9,37 +9,64 @@ const { sendEmail } = require('../utils/emailService');
 // const SMSService = require('../utils/smsService');
 const { encrypt, decrypt } = require('../utils/encryption');
 // Signup Controller
+
 exports.signup = async (req, res) => {
   try {
-    const { email, password, confirmPassword, firstName, lastName, phone, role } = req.body;
+    const { 
+      email, 
+      password, 
+      confirmPassword, 
+      firstName, 
+      lastName, 
+      phone, 
+      roleId, 
+      address, 
+      zipCode 
+    } = req.body;
 
-    if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !role)
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
 
-    if (password !== confirmPassword)
+    if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
-
-    if (!['carrier', 'shipper'].includes(role))
-      return res.status(400).json({ success: false, message: 'Invalid role' });
-
+    }
+    const roleDoc = await AdminRole.findById(roleId);
+    if (!roleDoc) {
+      return res.status(400).json({ success: false, message: 'Invalid role ID' });
+    }
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
-
-const encryptedpassword = encrypt(password);
-
+    }
     const user = await User.create({
       email,
-      password:encryptedpassword,
+      password: password,
       firstName,
       lastName,
       phone,
-      role,
-      isApproved: role === 'shipper'
+      role: roleDoc._id,
+      isApproved: true, 
+      isActive: true,
     });
 
-    if (role === 'carrier') await Carrier.create({ userId: user._id, status: 'pending' });
-    else await Shipper.create({ userId: user._id });
+    if (roleDoc.roleType === 'carrier') {
+      await Carrier.create({
+        userId: user._id,
+        createdBy: user._id,
+        status: 'active',
+        address: address || '',
+        zipCode: zipCode || '',
+      });
+    } 
+    else if (roleDoc.roleType === 'shipper') {
+      await Shipper.create({
+        userId: user._id,
+        createdBy: user._id,
+        address: address,
+        zipCode: zipCode,
+      });
+    }
 
     const token = generateToken(user._id);
 
@@ -52,74 +79,19 @@ const encryptedpassword = encrypt(password);
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
+        role: roleDoc.roleType,
         isApproved: user.isApproved,
-        profileCompleted: user.profileCompleted
-      }
+        profileCompleted: user.profileCompleted,
+      },
     });
+
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ success: false, message: 'Server error during registration' });
   }
 };
 
-// Login Controller
-// exports.login = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//        console.log("req.body",req.body)
-//     if (!email || !password)
-//       return res.status(400).json({ success: false, message: 'Please provide email and password' });
 
-//     const user = await User.findOne({ email }).select('+password');
-//     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentialsssss' });
-
-//     // Compare password with hashed password stored in DB
-//     const isMatch = await user.comparePassword(password);
-//     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-
-//     if (!user.isActive)
-//       return res.status(403).json({ success: false, message: 'Account is deactivated' });
-//     // this mfa enable functionality no need now so we cmd this 
-//     /*if (user.mfaEnabled) {
-//         const otp = generateOTP();
-
-//         // Decrypt phone number if stored encrypted
-//         const phone = decrypt(user.phone);  
-
-//         await sendEmail(user.email, 'Your OTP Code', `Your OTP is: ${otp}. Valid for 10 minutes.`);
-//         await SMSService.sendSMS(phone, `Your OTP is: ${otp}`);
-
-//         return res.status(200).json({
-//           success: true,
-//           requiresMFA: true,
-//           userId: user._id,
-//           message: 'OTP sent to your email and phone'
-//         });
-//       } */
-
-//     user.lastLogin = new Date();
-//     await user.save();
-
-//     const token = generateToken(user._id);
-//     res.status(200).json({
-//       success: true,
-//       token,
-//       data: {
-//         id: user._id,
-//         email: user.email,
-//         firstName: user.firstName,
-//         lastName: user.lastName,
-//         role: user.role,
-//         isApproved: user.isApproved,
-//         profileCompleted: user.profileCompleted
-//       }
-//     });
-//   } catch (error) {
-//     console.error('Login error:', error);
-//     res.status(500).json({ success: false, message: 'Server error during login' });
-//   }
-// };
 exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -128,47 +100,38 @@ exports.login = async (req, res) => {
     if (!email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email, password, and role'
+        message: 'Please provide email, password, and role',
       });
     }
     let account;
+
+    // ✅ Identify correct collection
     if (role === 'admin') {
-      // account = await AdminUser.findOne({ email }).select('+password');
       account = await AdminUser.findOne({ 'personalInfo.email': email }).select('+password');
-    } else if (role === 'user') {
+    } else if (role === 'user' || role === 'carrier' || role === 'shipper') {
       account = await User.findOne({ email }).select('+password');
     } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid role type'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid role type' });
     }
-
-    // Check if account exists
+    // ✅ If not found
     if (!account) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Compare password
-    const isMatch = await account.comparePassword(password);
+    // ✅ Compare bcrypt password
+    const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     // Check if active
     if (!account.isActive) {
       return res.status(403).json({
         success: false,
-        message: 'Account is deactivated'
+        message: 'Account is deactivated',
       });
     }
 
-    // Fetch role info from AdminRole collection
+    // ✅ Fetch role info
     const roleInfo = await AdminRole.findOne({
       _id: account.role ?? account.roleId,      // assuming user.role stores AdminRole id
       isActive: "active"
@@ -177,15 +140,15 @@ exports.login = async (req, res) => {
     if (!roleInfo) {
       return res.status(403).json({
         success: false,
-        message: 'Role is inactive or not found'
+        message: 'Role is inactive or not found',
       });
     }
 
-    // Update last login
+    // ✅ Update last login
     account.lastLogin = new Date();
     await account.save();
 
-    // Create session
+    // ✅ Create session
     req.session.users = {
       _id: account._id,
       email: role === 'admin' ? account.personalInfo?.email : account.email,
@@ -195,15 +158,16 @@ exports.login = async (req, res) => {
       firstName: account.firstName,
       lastName: account.lastName,
       isApproved: account.isApproved,
-      profileCompleted: account.profileCompleted
+      profileCompleted: account.profileCompleted,
     };
     await req.session.save();
 
     console.log("Session created:", req.session.users);
 
-    // Generate JWT
+    // ✅ Generate token
     const token = generateToken(account._id);
 
+    // ✅ Success response
     res.status(200).json({
       success: true,
       token,
@@ -213,16 +177,16 @@ exports.login = async (req, res) => {
         email: account.email,
         firstName: account.firstName,
         lastName: account.lastName,
-        role: roleInfo.roleName,
+        role: roleInfo.roleType,
         isApproved: account.isApproved,
-        profileCompleted: account.profileCompleted
-      }
+        profileCompleted: account.profileCompleted,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during login'
+      message: 'Server error during login',
     });
   }
 };
