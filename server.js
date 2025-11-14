@@ -56,6 +56,8 @@ const io = new Server(server, {
         'http://localhost:3000',
         'http://192.168.1.46:5173',
         'http://192.168.1.46:5174',
+        "http://192.168.1.23:5173",
+        " http://192.168.1.23:5174/"
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
@@ -88,6 +90,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://192.168.1.46:5173',
   'http://192.168.1.46:5174',
+ "http://192.168.1.23:5173",
+ " http://192.168.1.23:5174/"
 ];
 
 app.use(cors({
