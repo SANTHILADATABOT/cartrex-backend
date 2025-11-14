@@ -115,13 +115,13 @@ exports.login = async (req, res) => {
     }
     // ✅ If not found
     if (!account) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid credentials1' });
     }
 
     // ✅ Compare bcrypt password
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid credentials2' });
     }
     // Check if active
     if (!account.isActive) {
