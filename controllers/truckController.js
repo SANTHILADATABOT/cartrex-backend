@@ -62,7 +62,7 @@ exports.getTrucks = async (req, res) => {
   try {
     let query = {};
 
-    if (req.user.role === 'carrier') {
+    if (req.user.role === 'Carrier') {
       const carrier = await Carrier.findOne({ userId: req.user._id });
       query.carrierId = carrier._id;
     }
