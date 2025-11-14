@@ -39,11 +39,9 @@ exports.signup = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       email,
-      password: hashedPassword,
+      password: password,
       firstName,
       lastName,
       phone,
@@ -116,7 +114,6 @@ exports.login = async (req, res) => {
     } else {
       return res.status(400).json({ success: false, message: 'Invalid role type' });
     }
-
     // ✅ If not found
     if (!account) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -127,8 +124,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
-
-    // ✅ Check if active
+    // Check if active
     if (!account.isActive) {
       return res.status(403).json({
         success: false,
@@ -138,8 +134,8 @@ exports.login = async (req, res) => {
 
     // ✅ Fetch role info
     const roleInfo = await AdminRole.findOne({
-      _id: account.role,
-      isActive: "active",
+      _id: account.role ?? account.roleId,      // assuming user.role stores AdminRole id
+      isActive: "active"
     });
 
     if (!roleInfo) {

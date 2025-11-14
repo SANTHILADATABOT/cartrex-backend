@@ -2,24 +2,74 @@ const Carrier = require('../models/Carrier');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
 const Truck = require('../models/Truck');
+const Location =require('../models/Location');
 const { uploadToS3 } = require('../utils/s3Upload');
+// exports.createOrUpdateProfile = async (req, res) => {
+//   try {
+//     const { companyName, address, city, state, zipCode, country } = req.body;
+//     let photoUrl = null;
 
+//     if (req.file) {
+//       photoUrl = await uploadToS3(req.file, 'carrier-profiles');
+//     }
+
+//     let carrier = await Carrier.findOne({ userId: req.user._id });
+
+//     if (carrier) {
+//       carrier.companyName = companyName || carrier.companyName;
+//       carrier.address = address || carrier.address;
+//       carrier.city = city || carrier.city;
+//       carrier.state = state || carrier.state;
+//       carrier.zipCode = zipCode || carrier.zipCode;
+//       carrier.country = country || carrier.country;
+//       if (photoUrl) carrier.photo = photoUrl;
+//       carrier.updatedAt = Date.now();
+//       await carrier.save();
+//     } else {
+//       carrier = await Carrier.create({
+//         userId: req.user._id,
+//         companyName,
+//         address,
+//         city,
+//         state,
+//         zipCode,
+//         country,
+//         photo: photoUrl
+//       });
+//     }
+
+//     req.user.profileCompleted = true;
+//     await req.user.save();
+
+//     res.status(200).json({ success: true, data: carrier });
+//   } catch (error) {
+//     console.error('Carrier profile error:', error);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
 exports.createOrUpdateProfile = async (req, res) => {
   try {
-    const { companyName, address, city, state, zipCode, country } = req.body;
+    const { companyName, address, locationId, zipCode, country } = req.body;
     let photoUrl = null;
 
     if (req.file) {
       photoUrl = await uploadToS3(req.file, 'carrier-profiles');
     }
 
-    let carrier = await Carrier.findOne({ userId: req.user._id });
+    const userId = req.body.userId; // temporary (until auth is added)
+
+    // ✅ Validate if location exists
+    const location = await Location.findById(locationId);
+    if (!location) {
+      return res.status(404).json({ success: false, message: "Invalid locationId" });
+    }
+
+    let carrier = await Carrier.findOne({ userId });
 
     if (carrier) {
       carrier.companyName = companyName || carrier.companyName;
       carrier.address = address || carrier.address;
-      carrier.city = city || carrier.city;
-      carrier.state = state || carrier.state;
+      carrier.locationId = locationId || carrier.locationId;
       carrier.zipCode = zipCode || carrier.zipCode;
       carrier.country = country || carrier.country;
       if (photoUrl) carrier.photo = photoUrl;
@@ -27,19 +77,15 @@ exports.createOrUpdateProfile = async (req, res) => {
       await carrier.save();
     } else {
       carrier = await Carrier.create({
-        userId: req.user._id,
+        userId,
         companyName,
         address,
-        city,
-        state,
+        locationId,
         zipCode,
         country,
         photo: photoUrl
       });
     }
-
-    req.user.profileCompleted = true;
-    await req.user.save();
 
     res.status(200).json({ success: true, data: carrier });
   } catch (error) {
