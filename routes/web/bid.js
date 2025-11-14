@@ -27,7 +27,7 @@ const upload = multer({
 // Create new bids - Shipper only
 router.post('/getAddBid', upload.array('photos', 10), bidController.createBid);
 
-router.put('/editBid/:bidId', bidController.editBid);
+router.put('/editBid/:bidId', upload.array('photos', 10), bidController.editBid);
 
 //update bids status by user Id 
 router.put('/updatebidstatusbyuserId/:userId/:bidId' , bidController.updatebidstatusbyuserId);

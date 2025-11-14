@@ -183,91 +183,94 @@ exports.editBid = async (req, res) => {
     const { bidId } = req.params; // get bidId from URL params
     const data = req.body;
     const files = req.files || [];
-console.log("data",req.body,"bidId...",bidId)
+    console.log("data",req.body,"bidId...",bidId)
     // Step 1: Validate Bid Existence
     const bid = await Bid.findById(bidId);
     if (!bid) {
       return res.status(404).json({ success: false, message: "Bid not found" });
     }
 
-    // Step 2: Validate Shipper
-    const shipper = await Shipper.findOne({ userId: data.shipperId });
+    // Step 2: Validate Shipper { userId: data.shipperId }
+    const shipper = await Shipper.findOne({ userId: data?.userId });
     if (!shipper) {
-      return res.status(404).json({ success: false, message: "Shipper not found" });
+      return res.status(404).json({ success: false, message: "Shipper not found", test: data });
     }
 
-    // Step 3: Update Bid Fields
-    bid.shipperId = shipper._id;
+    const carrierRouteList = JSON.parse(data.carrierRouteList || "[]");
+    const bidValuetaxinc = JSON.parse(data.bidValuetaxinc || "{}");
+    const pickup = JSON.parse(data.pickup || "{}");
+    const delivery = JSON.parse(data.delivery || "{}");
+    const shippingInfo = JSON.parse(data.shippingInfo || "{}");
+    const parsedVehicleDetails = JSON.parse(data.vehicleDetails || "{}");
+    const removedImages = JSON.parse(data.removedImages || "[]"); // URLs or paths of deleted old images
+
+   // 4️⃣ Remove ALL old images from server
+  if (bid.vehicleDetails?.photos?.length > 0) {
+    bid.vehicleDetails.photos.forEach((imgPath) => {
+      const fullPath = path.join(__dirname, `../..${imgPath}`);
+      if (fs.existsSync(fullPath)) {
+        try {
+          fs.unlinkSync(fullPath);
+        } catch (err) {
+          console.error(`Error deleting file ${fullPath}:`, err);
+        }
+      }
+    });
+    bid.vehicleDetails.photos = [];
+  }
+
+  // 5️⃣ Handle new image uploads
+  const uploadDir = path.join(__dirname, "../../uploads/bid");
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+  const newPhotoPaths = [];
+  // for (const file of files) {
+  //   const ext = path.extname(file.originalname);
+  //   // const baseName = path.basename(file.originalname, ext);
+  //   // const newFilename = `${baseName}_${uuidv4().substring(0, 6)}_${bid._id}${ext}`;
+  //   const newFilename = `vehicle${index + 1}_${bid._id}${ext}`;
+  //   const newPath = path.join(uploadDir, newFilename);
+  //   fs.renameSync(file.path, newPath);
+  //   newPhotoPaths.push(`/uploads/bid/${newFilename}`);
+  // }
+  if (req.files && req.files.length > 0) {
+      req.files.forEach((file, index) => {
+        const ext = path.extname(file.originalname);
+        // const baseName = path.basename(file.originalname, ext);
+        const newFilename = `vehicle${index + 1}_${bid._id}${ext}`;
+        const newPath = path.join(path.dirname(file.path), newFilename);
+
+        fs.renameSync(file.path, newPath);
+        newPhotoPaths.push(`/uploads/bid/${newFilename}`);
+      });
+    }
+
+    // 6️⃣ Merge new and old photos
+    bid.vehicleDetails.photos = [...bid.vehicleDetails.photos, ...newPhotoPaths];
+
+    // 7️⃣ Update other bid fields
+    bid.shipperId = bid.shipperId || shipper._id;
     bid.userId = data.userId;
-    bid.carrierRouteList = data.carrierRouteList;
+    bid.carrierRouteList = carrierRouteList;
+    bid.carrierId = bid.carrierId;
+    // bid.routeId = bid.routeId;
     bid.bidValue = data.bidValue ?? bid.bidValue;
-    bid.bidValuetaxinc = data.totalpriceinfo ?? bid.bidValuetaxinc;
-    bid.vehicleDetails = {
-      ...bid.vehicleDetails,
-      licenseNumber: data.vehicleDetails?.licenseNumber ?? bid.vehicleDetails.licenseNumber,
-      brand: data.vehicleDetails?.brand ?? bid.vehicleDetails.brand,
-      vehicleType: data.vehicleDetails?.vehicleType ?? bid.vehicleDetails.vehicleType,
-      vehicleTypeName: data.vehicleDetails?.vehicleTypeName ?? bid.vehicleDetails.vehicleTypeName,
-      yearMade: data.vehicleDetails?.yearMade ?? bid.vehicleDetails.yearMade,
-      features: data.vehicleDetails?.features || bid.vehicleDetails.features,
-      condition: data.vehicleDetails?.condition ?? bid.vehicleDetails.condition,
-      quantity: data.vehicleDetails?.quantity ?? bid.vehicleDetails.quantity,
-      contains100lbs: data.vehicleDetails?.contains100lbs ?? bid.vehicleDetails.contains100lbs,
-      estimate_extra_weight: data.vehicleDetails?.estimate_extra_weight ?? bid.vehicleDetails.estimate_extra_weight,
-    };
-
-    bid.shippingDescription = data.shippingInfo?.whatIsBeingShipped ?? bid.shippingDescription;
+    bid.bidValuetaxinc = bidValuetaxinc ?? bid.bidValuetaxinc;
+    bid.vehicleDetails = { ...bid.vehicleDetails, ...parsedVehicleDetails };
+    bid.shippingDescription = shippingInfo?.whatIsBeingShipped ?? bid.shippingDescription;
     bid.transportType = data.transportType ?? bid.transportType;
-    bid.vinNumber = data?.vinNumber ?? bid.vinNumber;
-    bid.lotNumber = data?.lotNumber ?? bid.lotNumber;
-    bid.pickup = {
-      ...bid.pickup,
-      city: data?.pickup?.city ?? bid.pickup.city,
-      state: data?.pickup?.state ?? bid.pickup.state,
-      zipcode: data?.pickup?.zipcode ?? bid.pickup.zipcode,
-      pickupDate: data?.pickup?.pickupDate ?? bid.pickup.pickupDate,
-      pickupLocationType: data?.pickup?.pickupLocationType ?? bid.pickup.pickupLocationType,
-    };
-    bid.delivery = {
-      ...bid.delivery,
-      city: data?.delivery?.city ?? bid.delivery.city,
-      state: data?.delivery?.state ?? bid.delivery.state,
-      zipcode: data?.delivery?.zipcode ?? bid.delivery.zipcode,
-    };
-    bid.shippingInfo = {
-      ...bid.shippingInfo,
-      whatIsBeingShipped: data.shippingInfo?.whatIsBeingShipped ?? bid.shippingInfo.whatIsBeingShipped,
-      whatIsBeingShippedId: data.shippingInfo?.whatIsBeingShippedId ?? bid.shippingInfo.whatIsBeingShippedId,
-      additionalComments: data.shippingInfo?.additionalComments ?? bid.shippingInfo.additionalComments,
-    };
-    bid.timing = data?.timing ?? bid.timing;
-    bid.updatedBy = data.shipperId;
-    bid.ipAddress = req.ip;
-    bid.userAgent = req.get('User-Agent');
+    bid.vinNumber = data.vinNumber ?? bid.vinNumber;
+    bid.lotNumber = data.lotNumber ?? bid.lotNumber;
+    bid.pickup = { ...bid.pickup, ...pickup };
+    bid.delivery = { ...bid.delivery, ...delivery };
+    bid.shippingInfo = { ...bid.shippingInfo, ...shippingInfo };
+    bid.timing = data.timing ?? bid.timing;
+    bid.updatedBy = data.userId;
     bid.updatedAt = new Date();
+    bid.ipAddress = req.ip;
+    bid.userAgent = req.get("User-Agent");
 
-    // Step 4: Handle Updated Photos (if new ones are uploaded)
-    const uploadDir = path.join(__dirname, "../uploads/bidvehicle");
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-    const newPhotoPaths = [];
-
-    for (const file of files) {
-      const ext = path.extname(file.originalname);
-      const baseName = path.basename(file.originalname, ext);
-      const newFilename = `${baseName}_${bid._id}${ext}`;
-      const newPath = path.join(uploadDir, newFilename);
-
-      fs.renameSync(file.path, newPath);
-      newPhotoPaths.push(`/uploads/bidvehicle/${newFilename}`);
-    }
-
-    // Merge with existing photos
-    if (newPhotoPaths.length > 0) {
-      bid.vehicleDetails.photos = [...bid.vehicleDetails.photos, ...newPhotoPaths];
-    }
-
-    // Step 5: Save updated bid
+    // 8️⃣ Save updates
     await bid.save();
 
     res.status(200).json({
@@ -282,6 +285,7 @@ console.log("data",req.body,"bidId...",bidId)
       success: false,
       message: "Server error",
       error: error.message,
+      test: req.body
     });
   }
 };
