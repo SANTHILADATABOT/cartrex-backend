@@ -60,10 +60,12 @@ exports.addcarrier = async (req, res) => {
       isApproved: true,
       isActive: true,
       audit: { ...data?.audit, deletstatus: 0 },
+      password:data?.password,
     });
-    if (data?.password) {
-  userData.password = await bcrypt.hash(data.password, 10);
-}
+    
+//     if (data?.password) {
+//   userData.password = await bcrypt.hash(data.password, 10);
+// }
 
     const savedUser = await userData.save();
 
