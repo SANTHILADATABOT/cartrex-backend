@@ -60,9 +60,8 @@ exports.addcarrier = async (req, res) => {
       isApproved: true,
       isActive: true,
       audit: { ...data?.audit, deletstatus: 0 },
-      password:data?.password,
+      password:data?.password
     });
-    
 //     if (data?.password) {
 //   userData.password = await bcrypt.hash(data.password, 10);
 // }
@@ -78,7 +77,7 @@ exports.addcarrier = async (req, res) => {
       userId: savedUser._id,
       companyName: data?.companyName,
       status: data?.status,
-      address:data?.Address,
+      address:data?.address,
       zipCode:data?.zipcode
     });
 

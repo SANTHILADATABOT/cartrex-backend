@@ -38,6 +38,12 @@ exports.getallbookings = async (req, res) => {
           select: "firstName lastName email"
         }
       })
+      .populate({
+  path: "truckId",
+  select: "nickname"  
+})
+      
+    
       .sort({ createdAt: -1 });
 
     if (!bookings.length) {

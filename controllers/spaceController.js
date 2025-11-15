@@ -199,7 +199,7 @@ console.log("deleteed")
 exports.getspacedetails = async (req, res) => {
   try {
     const { userId } =  req.params;
-
+    console.log('=>',userId)
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
@@ -211,7 +211,8 @@ exports.getspacedetails = async (req, res) => {
     if (!roleData) {
       return res.status(400).json({ message: "Role not found" });
     }
-    if(roleData.roleType === "carrier"){
+    console.log('roleData=>',roleData)
+    if(roleData.roleType === "Carrier"){
       const carrier = await Carrier.findOne({ userId : userId });
       if (!carrier) {
         return res.status(404).json({ message: "Carrier not found for this user" });
@@ -233,7 +234,7 @@ exports.getspacedetails = async (req, res) => {
       };
       return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
     }
-    else if(roleData.roleType === "shipper"){
+    else if(roleData.roleType === "Shipper"){
         // 1. Find all carrier users
       const carrierUsers = await User.find({
         role: "68ff5689aa5d489915b8caa8",

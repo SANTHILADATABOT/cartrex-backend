@@ -70,7 +70,7 @@ exports.getAllShippers = async (req, res) => {
 
     if (search) {
       const users = await User.find({
-        role: 'shipper',
+        role: 'Shipper',
         $or: [
           { firstName: { $regex: search, $options: 'i' } },
           { lastName: { $regex: search, $options: 'i' } },
