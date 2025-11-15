@@ -90,10 +90,10 @@ exports.getBids = async (req, res) => {
     const { status, pickupLocation, deliveryLocation, page = 1, limit = 10 } = req.query;
     let query = {};
 
-    if (req.user.role === 'carrier') {
+    if (req.user.role === 'Carrier') {
       const carrier = await Carrier.findOne({ userId: req.user._id });
       query.$or = [{ carrierId: carrier._id }, { carrierId: null }];
-    } else if (req.user.role === 'shipper') {
+    } else if (req.user.role === 'Shipper') {
       const shipper = await Shipper.findOne({ userId: req.user._id });
       query.shipperId = shipper._id;
     }

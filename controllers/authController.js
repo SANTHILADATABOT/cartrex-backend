@@ -50,7 +50,7 @@ exports.signup = async (req, res) => {
       isActive: true,
     });
 
-    if (roleDoc.roleType === 'carrier') {
+    if (roleDoc.roleType === 'Carrier') {
       await Carrier.create({
         userId: user._id,
         createdBy: user._id,
@@ -59,7 +59,7 @@ exports.signup = async (req, res) => {
         zipCode: zipCode || '',
       });
     } 
-    else if (roleDoc.roleType === 'shipper') {
+    else if (roleDoc.roleType === 'Shipper') {
       await Shipper.create({
         userId: user._id,
         createdBy: user._id,
@@ -108,7 +108,7 @@ exports.login = async (req, res) => {
     // ✅ Identify correct collection
     if (role === 'admin') {
       account = await AdminUser.findOne({ 'personalInfo.email': email }).select('+password');
-    } else if (role === 'user' || role === 'carrier' || role === 'shipper') {
+    } else if (role === 'user' || role === 'Carrier' || role === 'Shipper') {
       account = await User.findOne({ email }).select('+password');
     } else {
       return res.status(400).json({ success: false, message: 'Invalid role type' });

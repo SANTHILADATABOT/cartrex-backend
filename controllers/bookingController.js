@@ -93,15 +93,15 @@ exports.createBooking = async (req, res) => {
 exports.getBookings = async (req, res) => {
   try {
 
-    req.user = { _id: '69036837bd5648fb37fa6e27', role: 'carrier' };
+    req.user = { _id: '69036837bd5648fb37fa6e27', role: 'Carrier' };
     const { status, page = 1, limit = 10 } = req.query;
     
     let query = {};
     
-    if (req.user.role === 'carrier') {
+    if (req.user.role === 'Carrier') {
       const carrier = await Carrier.findOne({ userId: req.user._id });
       query.carrierId = carrier._id;
-    } else if (req.user.role === 'shipper') {
+    } else if (req.user.role === 'Shipper') {
       const shipper = await Shipper.findOne({ userId: req.user._id });
       query.shipperId = shipper._id;
     }
@@ -151,7 +151,7 @@ exports.getBookingsByUserId = async (req, res) => {
     let bookings = [];
    
     console.log('type of rolw',user.role.roleType)
-    if (shipper && user.role.roleType === "shipper") {
+    if (shipper && user.role.roleType === "Shipper") {
       const shipperBookings = await Booking.find({ shipperId: shipper._id, deletstatus: 0 })
         .populate([
           { path: 'spaceId' },
@@ -170,7 +170,7 @@ exports.getBookingsByUserId = async (req, res) => {
       bookings = bookings.concat(shipperBookings);
     }
 
-    if (carrier && (user.role.roleType === "carrier")) {
+    if (carrier && (user.role.roleType === "Carrier")) {
       const carrierBookings = await Booking.find({ carrierId: carrier._id, deletstatus: 0 })
         .populate([
           { path: 'spaceId' },
@@ -522,7 +522,7 @@ exports.updateBookingStatusCancel = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Booking cancelled successfully",
-      role: "shipper",
+      role: "Shipper",
       data: {
         bookingId: booking._id,
         status: booking.status,
