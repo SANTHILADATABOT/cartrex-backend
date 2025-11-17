@@ -43,7 +43,7 @@ exports.authorize = (...roles) => {
 };
 
 exports.requireApproval = async (req, res, next) => {
-  if (req.user.role === 'carrier' && !req.user.isApproved) {
+  if (req.user.role === 'Carrier' && !req.user.isApproved) {
     return res.status(403).json({
       success: false,
       message: 'Your carrier account is pending admin approval'

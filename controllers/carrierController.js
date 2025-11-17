@@ -118,7 +118,7 @@ exports.getAllCarriers = async (req, res) => {
 
     if (search) {
       const users = await User.find({
-        role: 'carrier',
+        role: 'Carrier',
         $or: [
           { firstName: { $regex: search, $options: 'i' } },
           { lastName: { $regex: search, $options: 'i' } },
