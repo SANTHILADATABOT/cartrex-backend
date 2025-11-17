@@ -23,6 +23,22 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
+const tempBidDir = path.join(__dirname, "../../uploads/bid");
+const bidstorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    if (!fs.existsSync(tempBidDir)) fs.mkdirSync(tempBidDir, { recursive: true });
+    cb(null, tempBidDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext);
+    cb(null, `${base}_${Date.now()}${ext}`);
+  },
+});
+const Bidupload = multer({
+  storage: bidstorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
 
 // Create new booking - Shipper only
 // router.post('/addbooking', bookingController.createBooking);
@@ -38,11 +54,14 @@ router.get('/getBookingsByUserId/:userId', bookingController.getBookingsByUserId
 
 //update booking status for carrier 
 router.put('/updatebookingstatus/:userId/:bookingId',bookingController.updatebookingstatus);
+router.put('/updatebidstatus/:userId/:bidId',bookingController.updatebidstatus);
 
 //update Accept booking status for carrier 
 router.put('/updateAcceptbookingstatus/:userId/:bookingId',bookingController.updateAcceptbookingstatus);
 //update Completed booking status with upload image for carrier  
 router.put('/updateJobbookingCompletedstatus/:userId/:bookingId',upload.single("image"),bookingController.updateJobbookingCompletedstatus);
+//update Completed booking status with upload image for carrier  
+router.put('/updateJobBidCompletedstatus/:userId/:bidId',Bidupload.single("image"),bookingController.updateJobBidCompletedstatus);
 // cancel status
 router.put('/updateBookingStatusCancel/:userId/:bookingId',bookingController.updateBookingStatusCancel);
 

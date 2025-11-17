@@ -23,6 +23,7 @@ router.get('/getBidsByCarrierUserId/:userId',bidController.getBidsByCarrierUserI
 router.post('/getBidsByFilter',bidController.getBidsByFilter);
 
 router.get('/getBidsByShipperUserId/:userId',bidController.getBidsByShipperUserId);
+router.get('/getBidsBycarrierUserId/:userId',bidController.getBidsBycarrierUserId);
 
 
 

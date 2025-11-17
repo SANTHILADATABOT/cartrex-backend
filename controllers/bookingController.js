@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const Booking = require('../models/Booking');
+const Bid = require('../models/Bid');
 const Space = require('../models/Space');
 const Shipper = require('../models/Shipper');
 const Carrier = require('../models/Carrier');
@@ -256,6 +257,43 @@ exports.updatebookingstatus = async (req, res) => {
     });
   }
 };
+exports.updatebidstatus = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+    const { status } = req.body; 
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+    const bidData = await Bid.findOne({ _id: bidId, "carrierRouteList.carrierId": carrier._id, });
+    if (!bidData) {
+      return res.status(404).json({ success: false, message: "Bid not found for this carrier" });
+    }
+
+    bidData.status = status;
+    bidData.updatedAt = new Date();
+    await bidData.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bid status updated successfully",
+      data: bidData,
+    });
+
+  } catch (error) {
+    console.error("Error updating Bid status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating Bid status",
+      error: error.message,
+    });
+  }
+};
 exports.updateAcceptbookingstatus = async (req, res) => {
   try {
     const { userId, bookingId } = req.params;
@@ -356,6 +394,67 @@ exports.updateJobbookingCompletedstatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
+exports.updateJobBidCompletedstatus = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+
+    // Validate Mongo IDs
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+
+    // Find carrier
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      // cleanup temp file if exists
+      if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    // Find booking
+    const BidData = await Bid.findOne({ _id: bidId,"carrierRouteList.carrierId": carrier._id.toString(), });
+    if (!BidData) {
+      if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(404).json({ success: false, message: "Bid not found for this carrier" });
+    }
+
+    // ✅ Step 1: Update BidData status
+    BidData.status = "completed";
+    BidData.updatedAt = new Date();
+
+    // ✅ Step 2: Handle image upload
+    if (req.file) {
+      const dir = path.join(__dirname, "../upload/bidDelivery");
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+      const ext = path.extname(req.file.originalname);
+      const filename = `image_${bidId}${ext}`;
+      const filePath = path.join(dir, filename);
+
+      // Move file from temp folder to final destination
+      fs.renameSync(req.file.path, filePath);
+
+      // Save relative path to DB
+      BidData.confirmUploadphoto = path.join("upload", "bidDelivery", filename);
+    }
+
+    await BidData.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bid status updated and image uploaded successfully",
+      data: BidData,
+    });
+  } catch (error) {
+    console.error("Error updating Bid status:", error);
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating Bid status",
       error: error.message,
     });
   }

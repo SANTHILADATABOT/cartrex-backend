@@ -320,37 +320,27 @@ exports.updateAcceptbidstatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "bidsFound not found for this carrier" });
     }
 
-    // ✅ Only update given fields (no validation errors)
-    await Bid.updateOne(
-      { _id: bidId },
-      {
-        $set: {
-          addtionalfee: data.addtionalfee,
-          conformpickupDate: data.conformpickupDate,
-          estimateDeliveryDate: data.estimateDeliveryDate,
-          estimateDeliveryWindow: data.estimateDeliveryWindow,
-          message: data.message,
-          truckforship: data.truckforship,
-          status: data.status,
-          updatedAt: new Date(),
-        },
-      },
-      { runValidators: false }
-    );
-
     const updatedBid = await Bid.findById(bidId);
-
+    updatedBid.addtionalfee  = data.addtionalfee;
+    updatedBid.conformpickupDate = data.conformpickupDate;
+    updatedBid.estimateDeliveryDate = data.estimateDeliveryDate;
+    updatedBid.estimateDeliveryWindow = data.estimateDeliveryWindow;
+    updatedBid.message = data.message;
+    updatedBid.truckforship = data.truckforship;
+    updatedBid.status = data.status;
+    updatedBid.updatedAt = new Date();
+    await updatedBid.save();
     return res.status(200).json({
       success: true,
-      message: "Booking status updated successfully",
+      message: "Bid status updated successfully",
       data: updatedBid,
     });
 
   } catch (error) {
-    console.error("Error updating booking status:", error);
+    console.error("Error updating Bid status:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while updating booking status",
+      message: "Server error while updating Bid status",
       error: error.message,
     });
   }
@@ -398,7 +388,7 @@ exports.updateBidStatusCancel = async (req, res) => {
     if (!bidsfound) {
       return res.status(404).json({
         success: false,
-        message: "Booking not found or not owned by this shipper.",
+        message: "Bid not found or not owned by this shipper.",
       });
     }
 
