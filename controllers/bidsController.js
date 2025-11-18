@@ -15,7 +15,6 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBid = async (req, res) => {
   try {
     const data = req.body;
-    console.log("data in create", data);
     // Step 1: Validate shipper
     const shipper = await Shipper.findOne({ userId: data?.userId });
 
@@ -129,7 +128,6 @@ exports.updatebidstatusbyuserId = async (req, res) => {
   try {
     const { userId, bidId } = req.params;
     const {status}=req.body;
-console.log("status in update api",status)
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
       return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
     }
@@ -183,7 +181,6 @@ exports.editBid = async (req, res) => {
     const { bidId } = req.params; // get bidId from URL params
     const data = req.body;
     const files = req.files || [];
-    console.log("data",req.body,"bidId...",bidId)
     // Step 1: Validate Bid Existence
     const bid = await Bid.findById(bidId);
     if (!bid) {
@@ -210,7 +207,6 @@ exports.editBid = async (req, res) => {
       // const fullPath = path.join(__dirname, `../..${imgPath}`);
       const cleanPath = imgPath.replace(/^\/+/, ""); 
       const fullPath = path.resolve(__dirname, "..", cleanPath);
-      console.log(`deleting file fullPath:`, fullPath);
       if (fs.existsSync(fullPath)) {
         try {
           fs.unlinkSync(fullPath);

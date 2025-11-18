@@ -10,7 +10,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertBookings() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('✅ Connected to MongoDB');
 
     // Example booking documents
     const bookings = [
@@ -280,7 +279,6 @@ async function insertBookings() {
     ];
 
     const result = await Booking.insertMany(bookings);
-    console.log('📦 Bookings inserted successfully:', result);
     process.exit(0);
   } catch (error) {
     console.error('❌ Error inserting bookings:', error);

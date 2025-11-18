@@ -22,7 +22,6 @@ exports.getallbookings = async (req, res) => {
       if (shipper && shipper !== "all") {
         filter.shipperId = shipper;
       }
-      console.log('filter=>',filter)
     const bookings = await Booking.find(filter)
       .populate({
         path: "carrierId",

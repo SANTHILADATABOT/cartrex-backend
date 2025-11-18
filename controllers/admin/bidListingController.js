@@ -415,7 +415,6 @@ exports.deletebid = async (req, res) => {
 //       })
 //       .populate('routeId', 'origin destination status')
 //       .lean();
-//     console.log("bids", bids)
 //     // 7️⃣ Response
 //     return res.status(200).json({
 //       success: true,
@@ -482,7 +481,6 @@ exports.getBidsByCarrierUserId = async (req, res) => {
       ? { ...baseFilter, $or: orConditions }
       : baseFilter;
 
-    // console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
 
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
@@ -501,7 +499,6 @@ exports.getBidsByCarrierUserId = async (req, res) => {
       })
       .lean();
 
-    console.log("📦 Bids Found:", bids.length);
     bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
 
     // 5️⃣ Respond
@@ -527,8 +524,6 @@ exports.getBidsByFilter = async (req, res) => {
     // const { userId } = req.params;
     const { userId, pickupLocation, deliveryLocation, pickupDate, search } = req.body || {};
 
-    // console.log("Bids Filter:", req.body || {});
-    // 1️⃣ Check if user exists
     const user = await User.findById(userId);
     if (!user)
       return res.status(404).json({ success: false, message: "User not found" });
@@ -601,8 +596,6 @@ exports.getBidsByFilter = async (req, res) => {
       ? { ...baseFilter, $or: orConditions }
       : baseFilter;
 
-    // console.log("Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
-
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
       .populate({
@@ -616,8 +609,6 @@ exports.getBidsByFilter = async (req, res) => {
         populate: { path: "userId", select: "firstName lastName" },
       })
       .lean();
-
-    // console.log("📦 Bids Found:", bids.length);
     bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
 
     // 5️⃣ Respond

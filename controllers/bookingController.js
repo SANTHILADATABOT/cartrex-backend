@@ -13,7 +13,6 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBooking = async (req, res) => {
   try {
     const data = req.body;
-    console.log("data in createbooking",data);
     // const shipper = await Shipper.findOne({ _id: data?.shipperId });
     const shipper = await Shipper.findOne({ userId: data?.userId });
 
@@ -148,10 +147,7 @@ exports.getBookingsByUserId = async (req, res) => {
    
     const shipper = await Shipper.findOne({ userId });
     const carrier = await Carrier.findOne({ userId });
-    // console.log('user book=>',user)
     let bookings = [];
-   
-    console.log('type of rolw',user.role.roleType)
     if (shipper && user.role.roleType === "Shipper") {
       const shipperBookings = await Booking.find({ shipperId: shipper._id, deletstatus: 0 })
         .populate([
@@ -459,6 +455,85 @@ exports.updateJobBidCompletedstatus = async (req, res) => {
     });
   }
 };
+exports.updateJobbookingCompletedstatusshipper = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+
+    // Validate Mongo IDs
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+    }
+
+    // Find carrier
+    const shipper = await Shipper.findOne({ userId });
+    if (!shipper) {
+      // cleanup temp file if exists
+      if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    // Find booking
+    const booking = await Booking.findOne({ _id: bookingId, shipperId: shipper._id });
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+    }
+
+    // ✅ Step 1: Update booking status
+    booking.status = "completed";
+    booking.updatedAt = new Date();
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated and image uploaded successfully",
+      data: booking,
+    });
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
+exports.updateJobBidCompletedstatusshipper = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+
+    // Validate Mongo IDs
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+
+    // Find carrier
+    const shipper = await Shipper.findOne({ userId });
+    if (!shipper) {
+      return res.status(404).json({ success: false, message: "Shipper not found" });
+    }
+    // Find booking
+    const BidData = await Bid.findOne({ _id: bidId,shipperId: shipper._id.toString(), });
+    if (!BidData) {
+      return res.status(404).json({ success: false, message: "Bid not found for this carrier" });
+    }
+    BidData.status = "completed";
+    BidData.updatedAt = new Date();
+    await BidData.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bid status updated and image uploaded successfully",
+      data: BidData,
+    });
+  } catch (error) {
+    console.error("Error updating Bid status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating Bid status",
+      error: error.message,
+    });
+  }
+};
 // exports.updateJobbookingCompletedstatus = async (req, res) => {
 //   try {
 //     upload.single("image");
@@ -470,9 +545,6 @@ exports.updateJobBidCompletedstatus = async (req, res) => {
 //     }
 
 //     const carrier = await Carrier.findOne({ userId:userId });
-//     console.log('carrier=>',carrier);
-//     console.log('bookingId=>',bookingId);
-//     console.log('userId=>',userId);
 //     if (!carrier) {
 //       return res.status(404).json({ success: false, message: "Carrier not found" });
 //     }

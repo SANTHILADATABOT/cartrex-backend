@@ -10,7 +10,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertReviews() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('✅ Connected to MongoDB');
 
     // Example reviews
     const reviews = [
@@ -53,7 +52,6 @@ async function insertReviews() {
     ];
 
     const result = await Review.insertMany(reviews);
-    console.log('⭐ Reviews inserted successfully:', result);
     process.exit(0);
   } catch (error) {
     console.error('❌ Error inserting reviews:', error);

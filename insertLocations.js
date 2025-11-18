@@ -16,7 +16,6 @@ async function insertLocations() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log("✅ Connected to MongoDB");
 
     const ipAddress = "192.168.1.10";
     const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
@@ -219,10 +218,8 @@ async function insertLocations() {
     ].map((loc) => ({ ...loc, ...createAudit() }));
 
     const inserted = await Location.insertMany(locationsData);
-    console.log("✅ Inserted locations:", inserted.length);
 
     await mongoose.connection.close();
-    console.log("🔒 Connection closed");
   } catch (err) {
     console.error("❌ Error inserting locations:", err);
   }

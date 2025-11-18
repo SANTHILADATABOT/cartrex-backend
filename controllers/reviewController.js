@@ -3,7 +3,6 @@ const Reviews = require("../models/Reviews");
 
 exports.createReview = async (req, res) => {
   try {
-    // return console.log("req.body",req.body)
     const {
       bookingId,
       carrierId,
@@ -15,7 +14,7 @@ exports.createReview = async (req, res) => {
     } = req.body;
 
     // Basic validation
-    if (!carrierId || !shipperId || !truckId) {
+    if (!shipperId || !truckId) {
       return res.status(400).json({
         success: false,
         message: 'Required fields missing',

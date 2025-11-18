@@ -58,7 +58,6 @@ class NotificationService {
   async sendPushNotification(fcmToken, title, body, data = {}) {
     try {
       if (!admin.apps.length) {
-        console.log('Firebase not initialized. Push notification skipped.');
         return { success: false, simulated: true };
       }
 

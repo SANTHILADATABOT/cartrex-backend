@@ -10,7 +10,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertShipper() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('Connected to MongoDB');
 
     // Example shipper data (with U.S. addresses)
     const shippers = [
@@ -35,7 +34,6 @@ async function insertShipper() {
     ];
 
     const result = await Shipper.insertMany(shippers);
-    console.log('Shipper data inserted successfully:', result);
     process.exit(0);
   } catch (error) {
     console.error('Error inserting shipper data:', error);

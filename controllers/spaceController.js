@@ -185,7 +185,6 @@ exports.deleteSpace = async (req, res) => {
     space.userAgent = req.headers['user-agent'];
     
     await space.save();
-console.log("deleteed")
     return res.status(200).json({
       success: true,
       message: 'Space listing marked as deleted successfully',
@@ -199,7 +198,6 @@ console.log("deleteed")
 exports.getspacedetails = async (req, res) => {
   try {
     const { userId } =  req.params;
-    console.log('=>',userId)
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
@@ -211,7 +209,6 @@ exports.getspacedetails = async (req, res) => {
     if (!roleData) {
       return res.status(400).json({ message: "Role not found" });
     }
-    console.log('roleData=>',roleData)
     if(roleData.roleType === "Carrier"){
       const carrier = await Carrier.findOne({ userId : userId });
       if (!carrier) {
@@ -326,7 +323,6 @@ exports.getSpaceResult = async (req, res) => {
       filter["origin.city"] = selectpickupcity;
       filter["destination.city"] = selectdeliverycity;
     }
-    console.log('filter=>',filter)
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
@@ -384,9 +380,7 @@ exports.addSpacesDetails = async (req, res) => {
   try {
     const { carrierId } = req.params;
     const data = req.body;
-    console.log("Received carrierId:", carrierId);
     const carrier = await Carrier.findOne({ userId: carrierId });
-    console.log(carrier);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
    const spaceData = {
       carrierId: carrier._id,
@@ -457,7 +451,6 @@ exports.addSpacesDetails = async (req, res) => {
 exports.getSpacesByCarrierUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-console.log("userId",userId)
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     // if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
@@ -515,8 +508,6 @@ exports.editSpacesDetails = async (req, res) => {
   try {
     const { spaceId } = req.params; // ✅ space ID to edit
     const data = req.body;
-
-    console.log("🟢 Received spaceId for edit:", spaceId);
 
     // Check if space exists
     const existingSpace = await Space.findById(spaceId);

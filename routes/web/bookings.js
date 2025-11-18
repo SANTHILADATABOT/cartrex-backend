@@ -62,6 +62,9 @@ router.put('/updateAcceptbookingstatus/:userId/:bookingId',bookingController.upd
 router.put('/updateJobbookingCompletedstatus/:userId/:bookingId',upload.single("image"),bookingController.updateJobbookingCompletedstatus);
 //update Completed booking status with upload image for carrier  
 router.put('/updateJobBidCompletedstatus/:userId/:bidId',Bidupload.single("image"),bookingController.updateJobBidCompletedstatus);
+router.put('/updateJobbookingCompletedstatusshipper/:userId/:bookingId',bookingController.updateJobbookingCompletedstatusshipper);
+//update Completed booking status with upload image for carrier  
+router.put('/updateJobBidCompletedstatusshipper/:userId/:bidId',bookingController.updateJobBidCompletedstatusshipper);
 // cancel status
 router.put('/updateBookingStatusCancel/:userId/:bookingId',bookingController.updateBookingStatusCancel);
 

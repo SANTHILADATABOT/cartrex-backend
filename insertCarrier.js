@@ -10,7 +10,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertCarrier() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('Connected to MongoDB');
 
     // Example carrier data (with U.S. addresses)
     const carriers = [
@@ -55,7 +54,6 @@ async function insertCarrier() {
     ];
 
     const result = await Carrier.insertMany(carriers);
-    console.log('Carrier data inserted successfully:', result);
     process.exit(0);
   } catch (error) {
     console.error('Error inserting carrier data:', error);

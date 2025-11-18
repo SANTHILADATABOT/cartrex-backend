@@ -10,7 +10,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertTruck() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('Connected to MongoDB');
 
     // Example truck data linked with your Carrier records
     const trucks = [
@@ -79,7 +78,6 @@ async function insertTruck() {
     ];
 
     const result = await Truck.insertMany(trucks);
-    console.log('Truck data inserted successfully:', result);
     process.exit(0);
   } catch (error) {
     console.error('Error inserting truck data:', error);
