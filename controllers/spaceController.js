@@ -225,8 +225,10 @@ exports.getspacedetails = async (req, res) => {
         _id: truck._id,
         nickname: truck.nickname,
         truckType: truck.truckType,
-        routes: routes.filter(r => r.truckId.toString() === truck._id.toString())
+        routes: routes.filter(r => r.truckId.toString() === truck._id.toString()),
+        truckdata:truck,
         })),
+       
         availableSpaces
       };
       return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
@@ -289,6 +291,7 @@ exports.getspacedetails = async (req, res) => {
             routes: routes.filter(
               r => r.truckId.toString() === truck._id.toString()
             ),
+            truckdata:truck,
           })),
         availableSpaces,
       }));
@@ -402,7 +405,7 @@ exports.addSpacesDetails = async (req, res) => {
         location: data.origin.location,
         city:data.origin.city,
         state: data.origin.state,
-        stateCode: data.origin.state,
+        stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -419,7 +422,7 @@ exports.addSpacesDetails = async (req, res) => {
         location: data.destination.location,
         city: data.destination.city,
         state: data.destination.state,
-        stateCode:data.destination.state,
+        stateCode:data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,
@@ -478,17 +481,15 @@ exports.getSpacesByCarrierUserId = async (req, res) => {
     if (!routeIds.length) {
       return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
     }
-  
     const spaces = await Space.find({
       carrierId: carrier._id,
       truckId: { $in: truckIds },
       routeId: { $in: routeIds },
       deletstatus: 0
-    })
-       .populate('userId', 'firstName lastName')
-      .populate('carrierId', 'companyName')
-      .populate('truckId', 'nickname registrationNumber')
-      .populate('routeId', 'origin destination status')                
+    }).populate('userId')
+      .populate('carrierId')
+      .populate('truckId')
+      .populate('routeId')                
       .lean();
        
     return res.status(200).json({
@@ -542,7 +543,7 @@ exports.editSpacesDetails = async (req, res) => {
         location: data.origin.location,
         city:data.origin.city,
         state: data.origin.state,
-        stateCode: data.origin.state,
+        stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -559,7 +560,7 @@ exports.editSpacesDetails = async (req, res) => {
         location: data.destination.location,
         city: data.destination.city,
         state: data.destination.state,
-        stateCode:data.destination.state,
+        stateCode:data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,
