@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const Carrier = require('../models/Carrier');
+const Shipper = require('../models/Shipper');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
 const Truck = require('../models/Truck');
@@ -80,10 +81,11 @@ exports.createOrUpdateProfile = async (req, res) => {
     console.log(" Incoming Request Body:", req.body);
     console.log(" Incoming File:", req.file);
 
-    const { userId, roleType, companyName, address, locationId, zipCode, country } = req.body;
+    const { userId, roleType, companyName, address, locationId, zipCode, country,city,state } = req.body;
 
     console.log("userId:", userId);
     console.log(" roleType:", roleType);
+    console.log(" req.body:", req.body);
 
     // Validate required fields
     if (!userId) {
@@ -123,7 +125,7 @@ exports.createOrUpdateProfile = async (req, res) => {
     console.log(" Existing Profile:", profile);
 
     let savedPhotoPath = null;
-
+console.log(req.file,"req.file")
     // File Upload Handling
     if (req.file) {
       const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
@@ -157,6 +159,8 @@ exports.createOrUpdateProfile = async (req, res) => {
       profile.locationId = locationId || profile.locationId;
       profile.zipCode = zipCode || profile.zipCode;
       profile.country = country || profile.country;
+      profile.city = city || profile.city;
+      profile.state = state || profile.state;
 
       if (savedPhotoPath) profile.photo = savedPhotoPath;
 
@@ -173,6 +177,8 @@ exports.createOrUpdateProfile = async (req, res) => {
         locationId,
         zipCode,
         country,
+        city,
+        state,
         photo: savedPhotoPath || null
       });
     }

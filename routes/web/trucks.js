@@ -6,7 +6,7 @@ const multer = require('multer');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/', protect, authorize('carrier'), requireProfileComplete, upload.fields([
+router.post('/createTruck', upload.fields([
   { name: 'insurance', maxCount: 1 },
   { name: 'coverPhoto', maxCount: 1 },
   { name: 'photos', maxCount: 6 }
