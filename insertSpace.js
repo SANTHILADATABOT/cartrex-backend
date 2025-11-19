@@ -9,7 +9,6 @@
 //   try {
 //     // Connect to MongoDB
 //     await mongoose.connect(MONGO_URI);
-//     console.log('✅ Connected to MongoDB');
 
 //     // Example ObjectIds (replace with valid ones from your Carrier, Truck, Route, User collections)
 //     // const carrierId = new mongoose.Types.ObjectId();
@@ -68,7 +67,6 @@
 
 //     // Save the document
 //     const result = await newSpace.save();
-//     console.log('✅ Space inserted successfully:', result);
 
 //     // Close connection
 //     await mongoose.connection.close();
@@ -100,7 +98,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertSpaces() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log("✅ Connected to MongoDB");
 
     const spaces = [
 {
@@ -310,7 +307,6 @@ async function insertSpaces() {
     ];
 
     const result = await Space.insertMany(spaces);
-    console.log("🚚 Spaces inserted successfully:", result);
     process.exit(0);
   } catch (error) {
     console.error("❌ Error inserting spaces:", error);

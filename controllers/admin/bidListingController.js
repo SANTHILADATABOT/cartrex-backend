@@ -415,7 +415,6 @@ exports.deletebid = async (req, res) => {
 //       })
 //       .populate('routeId', 'origin destination status')
 //       .lean();
-//     console.log("bids", bids)
 //     // 7️⃣ Response
 //     return res.status(200).json({
 //       success: true,
@@ -482,7 +481,6 @@ exports.getBidsByCarrierUserId = async (req, res) => {
       ? { ...baseFilter, $or: orConditions }
       : baseFilter;
 
-    // console.log("🧠 Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
 
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
@@ -496,9 +494,11 @@ exports.getBidsByCarrierUserId = async (req, res) => {
         select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
+      .populate({
+        path: "truckforship",
+      })
       .lean();
 
-    console.log("📦 Bids Found:", bids.length);
     bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
 
     // 5️⃣ Respond
@@ -524,8 +524,6 @@ exports.getBidsByFilter = async (req, res) => {
     // const { userId } = req.params;
     const { userId, pickupLocation, deliveryLocation, pickupDate, search } = req.body || {};
 
-    // console.log("Bids Filter:", req.body || {});
-    // 1️⃣ Check if user exists
     const user = await User.findById(userId);
     if (!user)
       return res.status(404).json({ success: false, message: "User not found" });
@@ -598,8 +596,6 @@ exports.getBidsByFilter = async (req, res) => {
       ? { ...baseFilter, $or: orConditions }
       : baseFilter;
 
-    // console.log("Final Bid Filter:", JSON.stringify(finalFilter, null, 2));
-
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
       .populate({
@@ -613,8 +609,6 @@ exports.getBidsByFilter = async (req, res) => {
         populate: { path: "userId", select: "firstName lastName" },
       })
       .lean();
-
-    // console.log("📦 Bids Found:", bids.length);
     bids.forEach((bid, i) => console.log(`🔹 Bid ${i + 1}:`, bid.pickup?.city, "→", bid.delivery?.city));
 
     // 5️⃣ Respond
@@ -679,6 +673,64 @@ exports.getBidsByShipperUserId = async (req, res) => {
         path: 'carrierId',
         select: 'companyName userId address',
         populate: { path: 'userId', select: 'firstName lastName' }
+      })
+      .populate({
+        path: "truckforship",
+      })
+      .populate('routeId', 'origin destination status')
+      .lean();
+
+    // 5️⃣ Response
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: bids.length ? 'Bids found' : 'No bids found for this shipper',
+      data: bids
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching bids by shipper:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+exports.getBidsBycarrierUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // 1️⃣ Check if user exists
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Shipper role ObjectId (replace with your actual shipper role ID)
+    const CARRIER_ROLE_ID = '68ff5689aa5d489915b8caa8'; 
+
+    // 2️⃣ Check if the user has a shipper role
+    if (String(user.role) !== String(CARRIER_ROLE_ID))
+      return res.status(400).json({ success: false, message: 'User is not a shipper' });
+
+    // 3️⃣ Find shipper details
+    const carrier = await Carrier.findOne({ userId, deletstatus: 0 });
+    if (!carrier)
+      return res.status(404).json({ success: false, message: 'Carrier not found' });
+
+    // 4️⃣ Find all bids created by this shipper
+    const bids = await Bid.find({
+       "carrierRouteList.carrierId": carrier._id.toString(),
+      deletstatus: 0
+    })
+      .populate({
+        path: 'shipperId',
+        select: 'companyName userId address',
+        populate: { path: 'userId', select: 'firstName lastName' }
+      })
+      .populate({
+        path: 'carrierId',
+        select: 'companyName userId address',
+        populate: { path: 'userId', select: 'firstName lastName' }
+      })
+      .populate({
+        path: "truckforship",
       })
       .populate('routeId', 'origin destination status')
       .lean();

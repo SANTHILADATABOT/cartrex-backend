@@ -7,6 +7,7 @@ const { protect } = require('../middleware/auth'); // optional, if using auth mi
 
 // POST - Create a new review
 router.post('/createReview', reviewController.createReview);
+router.delete('/deleteReview/:reviewid', reviewController.deleteReview);
 router.get('/getReviews', reviewController.getReviews);
 
 module.exports = router;

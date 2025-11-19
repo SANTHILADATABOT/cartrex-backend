@@ -6,7 +6,6 @@ const mongoose = require("mongoose");
 // exports.addcarrier = async (req, res) => {
 //   try{
 //     const data = req.body;
-//     console.log('req.body=> in add carrier ',req.body);
 //     const UserData = new User({
 //       email:data?.email,
 //       firstName: data?.firstName,
@@ -41,7 +40,6 @@ const mongoose = require("mongoose");
 exports.addcarrier = async (req, res) => {
   try {
     const data = req.body;
-    console.log('req.body => in add carrier', data);
    
      const existingUser = await User.findOne({ email: data?.email });
     if (existingUser) {

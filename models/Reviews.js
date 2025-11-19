@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const reviewSchema = new mongoose.Schema({
-  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
+  bidId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bid' },
+  carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   shipperId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   truckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
 

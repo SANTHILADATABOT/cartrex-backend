@@ -15,7 +15,6 @@ async function insertMasterData() {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-    console.log('✅ Connected to MongoDB');
 
     const ipAddress = '192.168.1.10';
     const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
@@ -137,7 +136,6 @@ async function insertMasterData() {
     const doc = new MasterData(masterDataSample);
     const savedDoc = await doc.save();
 
-    console.log('✅ MasterData inserted successfully:', savedDoc);
     await mongoose.connection.close();
   } catch (err) {
     console.error('❌ Error inserting MasterData:', err);

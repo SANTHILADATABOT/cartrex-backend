@@ -18,7 +18,6 @@ class SMSService {
   async sendSMS(to, message) {
     try {
       if (!this.enabled) {
-        console.log(`SMS would be sent to ${to}: ${message}`);
         return { success: true, simulated: true };
       }
 

@@ -15,7 +15,6 @@ async function insertAdminRoles() {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-    console.log('✅ Connected to MongoDB');
 
     const ipAddress = '192.168.1.10';
     const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
@@ -99,10 +98,8 @@ async function insertAdminRoles() {
 
     // Insert data
     const insertedRoles = await AdminRole.insertMany(rolesData);
-    console.log('✅ Roles inserted successfully:', insertedRoles.map(r => r.roleType));
 
     await mongoose.connection.close();
-    console.log('🔒 Connection closed');
   } catch (err) {
     console.error('❌ Error inserting AdminRoles:', err);
   }
