@@ -88,7 +88,6 @@ exports.getallbidsfilter = async (req, res) => {
     // const { isActive } = req.query;
     const data = req.query; // ✅ get filters from query
     const filter = { deletstatus: 0 };
-    console.log('data=>',data)
     if (data?.deliveryLocation && data?.pickupLocation) {
       filter["pickup.stateCode"] = data?.pickupLocation;
       filter["delivery.stateCode"] = data?.deliveryLocation;

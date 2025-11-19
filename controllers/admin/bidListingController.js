@@ -545,22 +545,30 @@ exports.getBidsByFilter = async (req, res) => {
       // carrierId: carrier._id,
       deletstatus: 0,
     };
-
-    const orConditions = [];
-    
-    if (pickupLocation) {
-      orConditions.push({ "pickup.city": { $regex: new RegExp(pickupLocation, "i") } });
-    }
-
+    const filter = baseFilter;
     if (deliveryLocation) {
-      orConditions.push({ "delivery.city": { $regex: new RegExp(deliveryLocation, "i") } });
+      filter["pickup.stateCode"] = pickupLocation;
     }
+    if(deliveryLocation){
+      filter["delivery.stateCode"] = deliveryLocation;
+    }
+    if(pickupLocation){
+      filter["pickup.stateCode"] = pickupLocation;
+    }
+   if (pickupDate) {
+      filter["pickup.pickupDate"] = pickupDate;
+    }
+   const orConditions = [];
+    
+    // if (pickupLocation) {
+    //   orConditions.push({ "pickup.stateCode": { $regex: new RegExp(pickupLocation, "i") } });
+    // }
 
-    if (pickupDate) {
-        orConditions.push({
-          "pickup.pickupDate": pickupDate
-        });
-    }
+    // if (deliveryLocation) {
+    //   orConditions.push({ "delivery.stateCode": { $regex: new RegExp(deliveryLocation, "i") } });
+    // }
+
+
     // if (pickupDate) {
     //   const date = new Date(pickupDate);
     //   const startOfDay = new Date(date.setHours(0, 0, 0, 0));
@@ -573,12 +581,11 @@ exports.getBidsByFilter = async (req, res) => {
     if (search && search.trim() !== "") {
         const searchRegex = new RegExp(search, "i");
         const searchNum = Number(search);
-
         const searchConditions = [
           { "pickup.city": searchRegex },
           { "delivery.city": searchRegex },
-          { "pickup.state": searchRegex },
-          { "delivery.state": searchRegex },
+          { "pickup.stateCode": searchRegex },
+          { "delivery.stateCode": searchRegex },
           { "shipperId.companyName": searchRegex },
           { "shipperId.address": searchRegex },
           { "timing": searchRegex },
@@ -594,8 +601,9 @@ exports.getBidsByFilter = async (req, res) => {
 
     // ✅ Combine filters
     const finalFilter = orConditions.length
-      ? { ...baseFilter, $or: orConditions }
-      : baseFilter;
+      ? { ...filter, $or: orConditions }
+      : filter;
+    // const finalFilter = filter;
 
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
@@ -619,7 +627,7 @@ exports.getBidsByFilter = async (req, res) => {
       message: bids.length ? "Bids found" : "No bids found",
       data: bids,
       test2: pickupLocation,
-      test: orConditions,
+      test: filter,
       test3: req.body,
       test4: search,
     });
