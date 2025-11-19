@@ -105,7 +105,6 @@ exports.createOrUpdateProfile = async (req, res) => {
       });
     }
 
-    // Validate locationId
     console.log(" Checking Location:", locationId);
     const location = await Location.findById(locationId);
 
@@ -116,17 +115,16 @@ exports.createOrUpdateProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invalid locationId" });
     }
 
-    // Select Model
+
     const Model = roleType === "Carrier" ? Carrier : Shipper;
     console.log(" Using Model:", roleType);
 
-    // Check existing profile
     let profile = await Model.findOne({ userId });
     console.log(" Existing Profile:", profile);
 
     let savedPhotoPath = null;
-console.log(req.file,"req.file")
-    // File Upload Handling
+   console.log(req.file,"req.file")
+   
     if (req.file) {
       const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
       const dir = path.join(__dirname, "../upload/" + folderName);
@@ -149,8 +147,6 @@ console.log(req.file,"req.file")
 
       console.log(" Saved Photo Path:", savedPhotoPath);
     }
-
-    // Update if exists
     if (profile) {
       console.log(" Updating Existing Profile");
 

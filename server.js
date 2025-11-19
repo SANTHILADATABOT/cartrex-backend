@@ -211,6 +211,7 @@ app.set('io', io);
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/admin/adminRoutes');
+const dashboardlistRoutes = require('./routes/admin/adminDashboardListingRoutes');
 const masterRoutes = require('./routes/admin/masterRoutes');
 const spaceListRoutes = require('./routes/admin/spaceListingRoutes');
 const carrierListRoutes = require('./routes/admin/carrierListingRoutes');
@@ -242,7 +243,8 @@ app.use('/auth', authLimiter, authRoutes); // Authentication routes
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use('/admin',adminLimiter, adminRoutes);           // → /admin/api/*
+app.use('/admin',adminLimiter, adminRoutes);          // → /admin/api/*
+app.use('/admindashboardlisting',dashboardlistRoutes);
 app.use('/masters', masterRoutes);
 app.use('/spacelisting', spaceListRoutes);
 app.use('/carrierlisting', carrierListRoutes); 

@@ -25,5 +25,4 @@ router.post('/getBidsByFilter',bidController.getBidsByFilter);
 router.get('/getBidsByShipperUserId/:userId',bidController.getBidsByShipperUserId);
 
 
-
 module.exports = router;
