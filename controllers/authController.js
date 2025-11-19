@@ -24,9 +24,9 @@ exports.signup = async (req, res) => {
       zipCode 
     } = req.body;
 
-    if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
-      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
-    }
+    // if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
+    //   return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    // }
 
     if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
