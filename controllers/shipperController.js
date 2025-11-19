@@ -2,49 +2,115 @@ const Shipper = require('../models/Shipper');
 const User = require('../models/User');
 const { uploadToS3 } = require('../utils/s3Upload');
 
+// exports.createOrUpdateProfile = async (req, res) => {
+//   try {
+//     const { companyName, dba, address, city, state, zipCode, country } = req.body;
+//     let photoUrl = null;
+
+//     if (req.file) {
+//       photoUrl = await uploadToS3(req.file, 'shipper-profiles');
+//     }
+
+//     let shipper = await Shipper.findOne({ userId: req.user._id });
+
+//     if (shipper) {
+//       shipper.companyName = companyName || shipper.companyName;
+//       shipper.dba = dba || shipper.dba;
+//       shipper.address = address || shipper.address;
+//       shipper.city = city || shipper.city;
+//       shipper.state = state || shipper.state;
+//       shipper.zipCode = zipCode || shipper.zipCode;
+//       shipper.country = country || shipper.country;
+//       if (photoUrl) shipper.photo = photoUrl;
+//       shipper.updatedAt = Date.now();
+//       await shipper.save();
+//     } else {
+//       shipper = await Shipper.create({
+//         userId: req.user._id,
+//         companyName,
+//         dba,
+//         address,
+//         city,
+//         state,
+//         zipCode,
+//         country,
+//         photo: photoUrl
+//       });
+//     }
+
+//     req.user.profileCompleted = true;
+//     await req.user.save();
+
+//     res.status(200).json({ success: true, data: shipper });
+//   } catch (error) {
+//     console.error('Shipper profile error:', error);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
+ 
+
 exports.createOrUpdateProfile = async (req, res) => {
   try {
-    const { companyName, dba, address, city, state, zipCode, country } = req.body;
-    let photoUrl = null;
-
-    if (req.file) {
-      photoUrl = await uploadToS3(req.file, 'shipper-profiles');
+    const { companyName, address, locationId, zipCode, country } = req.body;
+    const userId = req.body.userId;
+    const location = await Location.findById(locationId);
+    if (!location) {
+      return res.status(404).json({ success: false, message: "Invalid locationId" });
     }
 
-    let shipper = await Shipper.findOne({ userId: req.user._id });
+    let shipper = await Shipper.findOne({ userId });
+    let savedPhotoPath = null;
 
+
+    if (req.file) {
+      const dir = path.join(__dirname, "../upload/shipperProfiles");
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+      const ext = path.extname(req.file.originalname);
+      const filename = `shipper_${userId}${ext}`;
+      const finalPath = path.join(dir, filename);
+      fs.writeFileSync(finalPath, req.file.buffer);
+
+      savedPhotoPath = path.join("upload", "shipperProfiles", filename);
+    }
     if (shipper) {
       shipper.companyName = companyName || shipper.companyName;
-      shipper.dba = dba || shipper.dba;
       shipper.address = address || shipper.address;
-      shipper.city = city || shipper.city;
-      shipper.state = state || shipper.state;
+      shipper.locationId = locationId || shipper.locationId;
       shipper.zipCode = zipCode || shipper.zipCode;
       shipper.country = country || shipper.country;
-      if (photoUrl) shipper.photo = photoUrl;
-      shipper.updatedAt = Date.now();
+
+      if (savedPhotoPath) shipper.photo = savedPhotoPath;
+
+      shipper.updatedAt = new Date();
       await shipper.save();
     } else {
+      // Create new one
       shipper = await Shipper.create({
-        userId: req.user._id,
+        userId,
         companyName,
-        dba,
         address,
-        city,
-        state,
+        locationId,
         zipCode,
         country,
-        photo: photoUrl
+        photo: savedPhotoPath || null
       });
     }
 
-    req.user.profileCompleted = true;
-    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Shipper profile created/updated successfully",
+      data: shipper,
+    });
 
-    res.status(200).json({ success: true, data: shipper });
   } catch (error) {
-    console.error('Shipper profile error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error("Shipper profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 

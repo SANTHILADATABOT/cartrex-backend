@@ -6,6 +6,13 @@ const routeSchema = new mongoose.Schema({
     state: { type: String, required: true },
       stateCode: { type: String, trim: true }, 
     city: { type: String, required: true },
+       zipcode: {
+      type: String,
+      required: true,
+      match: [/^\d{5}(-\d{4})?$/, "Invalid ZIP code"],
+    },
+    fullAddress: { type: String, required: true, trim: true },
+    formattedAddress: { type: String, trim: true },
     pickupWindow: { type: String, required: true },
     pickupRadius: { type: Number, required: true } // in miles
   },
@@ -13,13 +20,20 @@ const routeSchema = new mongoose.Schema({
     state: { type: String, required: true },
       stateCode: { type: String, trim: true }, 
     city: { type: String, required: true },
+       zipcode: {
+      type: String,
+      required: true,
+      match: [/^\d{5}(-\d{4})?$/, "Invalid ZIP code"],
+    },
+    fullAddress: { type: String, required: true, trim: true },
+    formattedAddress: { type: String, trim: true },
     deliveryWindow: { type: String, required: true },
     deliveryRadius: { type: Number, required: true } // in miles
   },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     deletstatus: {
     type: Number,
