@@ -66,7 +66,7 @@ const bidSchema = new mongoose.Schema({
 
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'], 
+    enum: ['pending','ready_for_pickup', 'confirmed', 'in_progress', 'completed', 'cancelled','delivered'], 
     default: 'pending' 
   },
 addtionalfee: {type: Number},
@@ -74,7 +74,8 @@ addtionalfee: {type: Number},
   estimateDeliveryDate:{type: String},
   estimateDeliveryWindow:{type: String},
   message:{type: String},
-  truckforship:{type: String},
+  truckforship:{type: mongoose.Schema.Types.ObjectId, ref: 'Truck'},
+  confirmUploadphoto:String,
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

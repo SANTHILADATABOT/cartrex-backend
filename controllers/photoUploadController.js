@@ -24,7 +24,6 @@ exports.uploadFile = (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: "No file uploaded" });
   }
-console.log('req.file=>',req.file)
   const fileUrl = `uploads/master_icons/${req.file.originalname}`;
   res.status(200).json({ success: true, url: fileUrl });
 };

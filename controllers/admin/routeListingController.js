@@ -101,9 +101,7 @@ exports.getroutebyId = async (req, res) => {
 //   try {
 //     const { routeId } = req.params;
 //     const updateData = req.body;
-// console.log("updateData",updateData)
 //     const route = await Route.findOne({ _id: routeId, deletstatus: 0 });
-//     console.log("updateData-route",route)
 //     if (!route) {
 //       return res.status(404).json({ success: false, message: "Route not found or deleted" });
 //     }
@@ -132,10 +130,8 @@ exports.updateroute = async (req, res) => {
   try {
     const { routeId } = req.params;
     const updateData = req.body;
-    console.log("updateData", updateData);
 
     const route = await Route.findOne({ _id: routeId, deletstatus: 0 });
-    console.log("updateData-route", route);
 
     if (!route) {
       return res.status(404).json({
@@ -216,7 +212,6 @@ exports.deleteroute = async (req, res) => {
 exports.deleteSelectedRoute = async (req, res) => {
   try {
     const { routeId } = req.body;
-    console.log("Received Route IDs =>", routeId);
 
     if (!routeId || !Array.isArray(routeId) || routeId.length === 0) {
       return res.status(400).json({

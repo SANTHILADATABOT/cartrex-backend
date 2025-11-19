@@ -15,7 +15,6 @@ async function copyRateCard() {
   try {
     // Connect to MongoDB
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log("✅ Connected to MongoDB");
 
     // Fetch the source space
     const sourceSpace = await Space.findById(sourceSpaceId).lean();
@@ -33,10 +32,6 @@ async function copyRateCard() {
       { _id: targetSpaceId },
       { $set: { rateCard: rateCardData } }
     );
-
-    console.log("🚛 RateCard copied successfully!");
-    console.log("Result:", result);
-
     // Close the DB connection
     await mongoose.connection.close();
   } catch (error) {

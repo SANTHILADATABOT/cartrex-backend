@@ -31,7 +31,6 @@ async function insertAdminUser() {
     });
 
     await newAdmin.save();
-    console.log("✅ Admin user inserted successfully!");
     mongoose.connection.close();
   } catch (err) {
     console.error("❌ Error inserting admin user:", err);

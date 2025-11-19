@@ -95,8 +95,6 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
-    console.log("req.body", req.body);
-
     if (!email || !password || !role) {
       return res.status(400).json({
         success: false,
@@ -161,9 +159,6 @@ exports.login = async (req, res) => {
       profileCompleted: account.profileCompleted,
     };
     await req.session.save();
-
-    console.log("Session created:", req.session.users);
-
     // ✅ Generate token
     const token = generateToken(account._id);
 

@@ -185,7 +185,6 @@ exports.deleteSpace = async (req, res) => {
     space.userAgent = req.headers['user-agent'];
     
     await space.save();
-console.log("deleteed")
     return res.status(200).json({
       success: true,
       message: 'Space listing marked as deleted successfully',
@@ -199,7 +198,6 @@ console.log("deleteed")
 exports.getspacedetails = async (req, res) => {
   try {
     const { userId } =  req.params;
-    console.log('=>',userId)
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
@@ -211,7 +209,6 @@ exports.getspacedetails = async (req, res) => {
     if (!roleData) {
       return res.status(400).json({ message: "Role not found" });
     }
-    console.log('roleData=>',roleData)
     if(roleData.roleType === "Carrier"){
       const carrier = await Carrier.findOne({ userId : userId });
       if (!carrier) {
@@ -228,8 +225,10 @@ exports.getspacedetails = async (req, res) => {
         _id: truck._id,
         nickname: truck.nickname,
         truckType: truck.truckType,
-        routes: routes.filter(r => r.truckId.toString() === truck._id.toString())
+        routes: routes.filter(r => r.truckId.toString() === truck._id.toString()),
+        truckdata:truck,
         })),
+       
         availableSpaces
       };
       return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
@@ -292,6 +291,7 @@ exports.getspacedetails = async (req, res) => {
             routes: routes.filter(
               r => r.truckId.toString() === truck._id.toString()
             ),
+            truckdata:truck,
           })),
         availableSpaces,
       }));
@@ -326,7 +326,6 @@ exports.getSpaceResult = async (req, res) => {
       filter["origin.city"] = selectpickupcity;
       filter["destination.city"] = selectdeliverycity;
     }
-    console.log('filter=>',filter)
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
@@ -384,9 +383,7 @@ exports.addSpacesDetails = async (req, res) => {
   try {
     const { carrierId } = req.params;
     const data = req.body;
-    console.log("Received carrierId:", carrierId);
     const carrier = await Carrier.findOne({ userId: carrierId });
-    console.log(carrier);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
    const spaceData = {
       carrierId: carrier._id,
@@ -408,7 +405,7 @@ exports.addSpacesDetails = async (req, res) => {
         location: data.origin.location,
         city:data.origin.city,
         state: data.origin.state,
-        stateCode: data.origin.state,
+        stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -425,7 +422,7 @@ exports.addSpacesDetails = async (req, res) => {
         location: data.destination.location,
         city: data.destination.city,
         state: data.destination.state,
-        stateCode:data.destination.state,
+        stateCode:data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,
@@ -457,7 +454,6 @@ exports.addSpacesDetails = async (req, res) => {
 exports.getSpacesByCarrierUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-console.log("userId",userId)
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     // if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
@@ -485,17 +481,15 @@ console.log("userId",userId)
     if (!routeIds.length) {
       return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
     }
-  
     const spaces = await Space.find({
       carrierId: carrier._id,
       truckId: { $in: truckIds },
       routeId: { $in: routeIds },
       deletstatus: 0
-    })
-       .populate('userId', 'firstName lastName')
-      .populate('carrierId', 'companyName')
-      .populate('truckId', 'nickname registrationNumber')
-      .populate('routeId', 'origin destination status')                
+    }).populate('userId')
+      .populate('carrierId')
+      .populate('truckId')
+      .populate('routeId')                
       .lean();
        
     return res.status(200).json({
@@ -515,8 +509,6 @@ exports.editSpacesDetails = async (req, res) => {
   try {
     const { spaceId } = req.params; // ✅ space ID to edit
     const data = req.body;
-
-    console.log("🟢 Received spaceId for edit:", spaceId);
 
     // Check if space exists
     const existingSpace = await Space.findById(spaceId);
@@ -551,7 +543,7 @@ exports.editSpacesDetails = async (req, res) => {
         location: data.origin.location,
         city:data.origin.city,
         state: data.origin.state,
-        stateCode: data.origin.state,
+        stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
         pickupRadius: data.pickupradius,
@@ -568,7 +560,7 @@ exports.editSpacesDetails = async (req, res) => {
         location: data.destination.location,
         city: data.destination.city,
         state: data.destination.state,
-        stateCode:data.destination.state,
+        stateCode:data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,

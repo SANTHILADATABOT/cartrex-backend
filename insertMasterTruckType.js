@@ -15,7 +15,6 @@ async function insertTruckTypes() {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-    console.log('✅ Connected to MongoDB');
 
     const ipAddress = '192.168.1.10';
     const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
@@ -92,13 +91,11 @@ async function insertTruckTypes() {
     // ✅ Option 1: insertMany (for arrays)
     const savedTruckTypes = await TruckType.insertMany(truckTypeSample);
 
-    console.log(`✅ ${savedTruckTypes.length} truck types inserted successfully:`);
 
     savedTruckTypes.forEach(truckType => {
       console.log(`   - ${truckType.category} (${truckType.sub_categories.length} sub-categories)`);
     });
     await mongoose.connection.close();
-    console.log('📊 Database connection closed');
   } catch (err) {
     console.error('❌ Error inserting truck types:', err);
     process.exit(1);

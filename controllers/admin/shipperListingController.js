@@ -52,7 +52,6 @@ exports.updateshipper = async (req, res) => {
     const { userId } = req.params;
     const updateData = req.body;
 
-console.log("updateData",updateData );
     const user = await User.findOne({ _id: userId, deletstatus: 0 });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found or deleted" });
@@ -253,8 +252,6 @@ exports.getshipperbyId = async (req, res) => {
       .populate("createdBy", "firstName lastName email")
       .populate("updatedBy", "firstName lastName email");
 
-      console.log(shipper)
-
     if (!shipper) {
       return res.status(404).json({
         success: false,
@@ -280,7 +277,6 @@ exports.getshipperbyId = async (req, res) => {
 exports.createShipper = async (req, res) => {
   try {
     const data = req.body;
-    console.log("req.body => in add shipper", data);
 
     // 1️⃣ Create and save User
     const userData = new User({

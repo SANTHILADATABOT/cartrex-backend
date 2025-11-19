@@ -154,7 +154,6 @@ exports.updatetruck = async (req, res) => {
     // ✅ If location is passed as a string, update only the state field
     if (updateData.location && typeof updateData.location === "string") {
       const newState = updateData.location;
-      console.log("Updating state inside location =>", newState);
 
       // ensure location object exists
       if (!truck.location) {
@@ -321,7 +320,6 @@ exports.deletetruck = async (req, res) => {
 exports.deleteselectedTruck = async (req, res) => {
   try {
     const { truckId } = req.body; // receive array of admin IDs
-    console.log("Received truck IDs =>", truckId);
 
     if (!truckId || !Array.isArray(truckId) || truckId.length === 0) {
       return res.status(400).json({
@@ -383,7 +381,6 @@ exports.createTruck = async (req, res) => {
       owner,
       carrierId,
     } = req.body;
-console.log("req.body in truck ",req.body)
     // Convert "yes"/"no" → Boolean
     const hasWinchBool = hasWinch === 'yes';
 

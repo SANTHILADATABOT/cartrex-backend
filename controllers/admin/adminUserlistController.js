@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 exports.createadminuser = async (req, res) => {
   try {
     const { personalInfo =null, roleId = null, roleType = null, isActive = true, isSuperAdmin = false, password, audit } = req.body;
-    console.log(' req.body=> ',req.body);
+
     const adminUser = new AdminUser({
       personalInfo,
       roleId,
@@ -153,7 +153,6 @@ exports.updateadminuserstatus = async (req, res) => {
 exports.deleteadminuser = async (req, res) => {
   try {
     const { adminid } = req.params;
-    console.log('adminid=>',adminid)
 
     const adminUser = await AdminUser.findOne({ _id: adminid, 'audit.deletstatus': 0 });
     if (!adminUser) return res.status(404).json({ success: false, message: 'Admin user not found or already deleted' });
@@ -175,7 +174,6 @@ exports.deleteadminuser = async (req, res) => {
 exports.deleteSelectedadminuser = async (req, res) => {
   try {
     const { adminid } = req.body; // receive array of admin IDs
-    console.log("Received admin IDs =>", adminid);
 
     if (!adminid || !Array.isArray(adminid) || adminid.length === 0) {
       return res.status(400).json({

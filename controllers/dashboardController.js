@@ -3,8 +3,6 @@ const Carrier = require('../models/Carrier');
 
 exports.getCarrierBookings = async (req, res) => {
   try {
-    // console.log("Session Data:", req.session);
-    // console.log("Session User:", req.session.user);
     // if (!req.session || !req.session.user) {
     //   return res.status(401).json({ success: false, message: "ser not logged in or session expired", test: req.session });
     // }

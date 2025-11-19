@@ -15,7 +15,6 @@ const { v4: uuidv4 } = require('uuid');
 exports.createBid = async (req, res) => {
   try {
     const data = req.body;
-    console.log("data in create", data);
     // Step 1: Validate shipper
     const shipper = await Shipper.findOne({ userId: data?.userId });
 
@@ -129,7 +128,6 @@ exports.updatebidstatusbyuserId = async (req, res) => {
   try {
     const { userId, bidId } = req.params;
     const {status}=req.body;
-console.log("status in update api",status)
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
       return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
     }
@@ -183,7 +181,6 @@ exports.editBid = async (req, res) => {
     const { bidId } = req.params; // get bidId from URL params
     const data = req.body;
     const files = req.files || [];
-    console.log("data",req.body,"bidId...",bidId)
     // Step 1: Validate Bid Existence
     const bid = await Bid.findById(bidId);
     if (!bid) {
@@ -210,7 +207,6 @@ exports.editBid = async (req, res) => {
       // const fullPath = path.join(__dirname, `../..${imgPath}`);
       const cleanPath = imgPath.replace(/^\/+/, ""); 
       const fullPath = path.resolve(__dirname, "..", cleanPath);
-      console.log(`deleting file fullPath:`, fullPath);
       if (fs.existsSync(fullPath)) {
         try {
           fs.unlinkSync(fullPath);
@@ -320,37 +316,27 @@ exports.updateAcceptbidstatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "bidsFound not found for this carrier" });
     }
 
-    // ✅ Only update given fields (no validation errors)
-    await Bid.updateOne(
-      { _id: bidId },
-      {
-        $set: {
-          addtionalfee: data.addtionalfee,
-          conformpickupDate: data.conformpickupDate,
-          estimateDeliveryDate: data.estimateDeliveryDate,
-          estimateDeliveryWindow: data.estimateDeliveryWindow,
-          message: data.message,
-          truckforship: data.truckforship,
-          status: data.status,
-          updatedAt: new Date(),
-        },
-      },
-      { runValidators: false }
-    );
-
     const updatedBid = await Bid.findById(bidId);
-
+    updatedBid.addtionalfee  = data.addtionalfee;
+    updatedBid.conformpickupDate = data.conformpickupDate;
+    updatedBid.estimateDeliveryDate = data.estimateDeliveryDate;
+    updatedBid.estimateDeliveryWindow = data.estimateDeliveryWindow;
+    updatedBid.message = data.message;
+    updatedBid.truckforship = data.truckforship;
+    updatedBid.status = data.status;
+    updatedBid.updatedAt = new Date();
+    await updatedBid.save();
     return res.status(200).json({
       success: true,
-      message: "Booking status updated successfully",
+      message: "Bid status updated successfully",
       data: updatedBid,
     });
 
   } catch (error) {
-    console.error("Error updating booking status:", error);
+    console.error("Error updating Bid status:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while updating booking status",
+      message: "Server error while updating Bid status",
       error: error.message,
     });
   }
@@ -398,7 +384,7 @@ exports.updateBidStatusCancel = async (req, res) => {
     if (!bidsfound) {
       return res.status(404).json({
         success: false,
-        message: "Booking not found or not owned by this shipper.",
+        message: "Bid not found or not owned by this shipper.",
       });
     }
 

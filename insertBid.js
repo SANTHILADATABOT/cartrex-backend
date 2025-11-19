@@ -8,7 +8,6 @@
 // async function insertSampleBid() {
 //   try {
 //     await mongoose.connect(MONGO_URI);
-//     console.log('✅ Connected to MongoDB');
 
 //     const newBid = await Bid.create({
 //         shipperId: "690eb52622d1aff410ad18d4",
@@ -97,7 +96,6 @@
 //         userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X)"
 //       });
 
-//     console.log('🚛 Bid inserted successfully:', newBid._id);
 //     process.exit(0);
 //   } catch (error) {
 //     console.error('❌ Error inserting bid:', error);
@@ -121,7 +119,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertBids() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('✅ Connected to MongoDB');
 
     const bids = [
       // 1️⃣ Bid — CA to TX
@@ -336,7 +333,6 @@ async function insertBids() {
     ];
 
     const result = await Bid.insertMany(bids);
-    console.log('🚛 Bids inserted successfully:', result);
 
 
 

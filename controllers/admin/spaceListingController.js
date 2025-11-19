@@ -268,7 +268,6 @@ exports.DeleteSpace = async (req, res) => {
 exports.deleteSelectedSpace = async (req, res) => {
   try {
     const { spaceId } = req.body;
-    console.log("Received space IDs =>", spaceId);
 
     if (!spaceId || !Array.isArray(spaceId) || spaceId.length === 0) {
       return res.status(400).json({

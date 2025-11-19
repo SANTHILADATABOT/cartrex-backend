@@ -10,10 +10,8 @@ exports.create = async (req, res) => {
   try {
     const { type } = req.query; 
     const Model = getModel(type);
-console.log("req.body in create",req.body,"req.query",req.query)
     if (type === 'subcategory') {
       const category = await Category.findById(req.body.category);
-      console.log("category received",category)
       if (!category || category.deleteStatus === 1) {
         return res.status(404).json({ success: false, message: 'Category not found' });
       }
@@ -69,7 +67,6 @@ exports.delete = async (req, res) => {
      const type = (req.query.type  || '').replace(/"/g, '');
     const { id } = req.params;
     const Model = getModel(type);
-console.log("type",type,"id",id)
     const deleted = await Model.findByIdAndUpdate(
       id,
       { deleteStatus: 1, 'audit.deletedAt': new Date(), 'audit.deletedBy': req.userId },

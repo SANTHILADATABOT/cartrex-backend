@@ -48,7 +48,6 @@ exports.getRoleById = async (req, res) => {
 // exports.addRole = async (req, res) => {
 //   try {
 //     const { personalInfo, isActive } = req.body;
-// console.log("req.body in addrole",req.body)
 //     // Optionally check if roleType already exists
 //     const existingRole = await AdminRole.findOne({ roleType });
 //     if (existingRole) {
@@ -84,8 +83,6 @@ exports.addRole = async (req, res) => {
   try {
     const { personalInfo, isActive } = req.body;
     const { roll_name, roll_type } = personalInfo;
-
-    console.log("req.body in addRole:", req.body);
 
     // Check if role type already exists
     const existingRole = await AdminRole.findOne({
@@ -146,7 +143,6 @@ exports.updateRole = async (req, res) => {
 
     const role = await AdminRole.findById(roleid);
     if (!role) return res.status(404).json({ success: false, message: 'Role not found' });
-console.log("role in update role", req.body)
     role.roleName = personalInfo?.roll_name || role.roleName;
     role.roleType = personalInfo?.roll_type || role.roleType;
     // role.description = description || role.description;
@@ -169,7 +165,6 @@ console.log("role in update role", req.body)
 exports.deleteRole = async (req, res) => {
   try {
     const { roleid } = req.params;
-   console.log('roleid',roleid);
     const role = await AdminRole.findById(roleid);
     if (!role) return res.status(404).json({ success: false, message: 'Role not found' });
 
@@ -189,8 +184,6 @@ exports.updateStatusRole = async (req, res) => {
   try {
     const { roleid } = req.params;
     const { status } = req.body; 
-    console.log("roleid",roleid,)
-    console.log("status in updaterole",status)
     if (!["active", "inactive", "under_maintenance"].includes(status)) {
       return res.status(400).json({
         success: false,
@@ -199,8 +192,7 @@ exports.updateStatusRole = async (req, res) => {
     }
 
 const roles = await AdminRole.findOne({ _id: roleid });
-      
-console.log("roles found",roles)
+
     if (!roles) {
       return res.status(404).json({
         success: false,

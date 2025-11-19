@@ -88,8 +88,6 @@ app.use('/api/', limiter);
 
 // Database connection
 
-console.log("Mongo URI:", MONGO_URI);
-
 const client = new MongoClient(MONGO_URI);
 
 client.connect()
@@ -102,7 +100,6 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
 
   // Example: Listen for a custom event from client
   socket.on('example_event', (data) => {

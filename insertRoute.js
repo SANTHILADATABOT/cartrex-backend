@@ -10,7 +10,6 @@ const MONGO_URI = process.env.MONGODB_URI;
 async function insertRoutes() {
   try {
     await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    console.log('✅ Connected to MongoDB');
 
     // Example routes for the two carriers
     const routes = [
@@ -146,7 +145,6 @@ async function insertRoutes() {
     ];
 
     const result = await Route.insertMany(routes);
-    console.log('🛣️ Routes inserted successfully:', result);
     process.exit(0);
   } catch (error) {
     console.error('❌ Error inserting routes:', error);
