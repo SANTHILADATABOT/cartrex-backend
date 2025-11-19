@@ -48,6 +48,7 @@ exports.getallbids = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 // exports.getallbids = async (req, res) => {
 //   try {
 //     const { isActive } = req.query; // same param naming style as others
