@@ -87,7 +87,7 @@ exports.createOrUpdateProfile = async (req, res) => {
     console.log(" roleType:", roleType);
     console.log(" req.body:", req.body);
 
-    // Validate required fields
+    // Validate required fieldsgit 
     if (!userId) {
       console.log(" ERROR: userId missing");
       return res.status(400).json({ success: false, message: "userId is required" });

@@ -49,7 +49,6 @@ exports.getallcompletedbookingsandbids = async (req, res) => {
 };
 
 
-
 exports.getdashboardcounts = async (req, res) => {
   try {
 
@@ -59,7 +58,6 @@ exports.getdashboardcounts = async (req, res) => {
       status: "active",
       deletstatus: 0
     });
-
     const totalTrucks = await Truck.countDocuments({ deletstatus: 0 });
 
   
