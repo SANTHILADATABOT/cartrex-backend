@@ -39,18 +39,18 @@ const bidSchema = new mongoose.Schema({
 
   pickup: {
     city: { type: String },
-    state: { type: String },
-      stateCode: { type: String, trim: true }, 
+    state: { type: String }, 
+    stateCode: { type: String, trim: true }, 
     zipcode: { type: String },
     pickupDate: { type: Date },
-    pickupLocationType: { type: String, trim: true }
+    pickupLocationType: { type: String, trim: true },
   },
 
   delivery: {
     city: { type: String },
     state: { type: String },
-      stateCode: { type: String, trim: true }, 
-    zipcode: { type: String }
+    stateCode: { type: String, trim: true }, 
+    zipcode: { type: String },
   },
   shippingInfo: {
     whatIsBeingShipped: { type: String},
@@ -60,7 +60,7 @@ const bidSchema = new mongoose.Schema({
 
   timing: { 
     type: String, 
-    enum: ['good_till_cancelled', '1_week'], 
+    enum: ['good_till_cancelled', '1_week','24 hours'], 
     default: 'good_till_cancelled' 
   },
 

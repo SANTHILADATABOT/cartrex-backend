@@ -26,5 +26,4 @@ router.get('/getBidsByShipperUserId/:userId',bidController.getBidsByShipperUserI
 router.get('/getBidsBycarrierUserId/:userId',bidController.getBidsBycarrierUserId);
 
 
-
 module.exports = router;

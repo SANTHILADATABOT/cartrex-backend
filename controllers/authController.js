@@ -20,8 +20,8 @@ exports.signup = async (req, res) => {
       lastName, 
       phone, 
       roleId, 
-      address, 
-      zipCode 
+      // address, 
+      // zipCode 
     } = req.body;
 
     // if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
@@ -55,16 +55,16 @@ exports.signup = async (req, res) => {
         userId: user._id,
         createdBy: user._id,
         status: 'active',
-        address: address || '',
-        zipCode: zipCode || '',
+        // address: address || '',
+        // zipCode: zipCode || '',
       });
     } 
     else if (roleDoc.roleType === 'Shipper') {
       await Shipper.create({
         userId: user._id,
         createdBy: user._id,
-        address: address,
-        zipCode: zipCode,
+        // address: address,
+        // zipCode: zipCode,
       });
     }
 

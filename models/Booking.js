@@ -19,7 +19,8 @@ const bookingSchema = new mongoose.Schema({
     vehicleType: { type: String, trim: true },
     vehicleTypeName:{type: String, trim: true},
     yearMade: { type: Number },
-    features: [String], // Array of features
+    features: {type:String}, // Array of features
+    featuresSubName: {type:String}, // Array of features
     condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // store image URLs or file paths
@@ -38,8 +39,10 @@ const bookingSchema = new mongoose.Schema({
     state: { type: String },
     stateCode: { type: String, trim: true },
     location: { type: String},
+    pickupRadius: { type: String},
+    pickupWindow: { type: String},
     pickupDate: { type: Date},
-    locationType: { type: String, enum: ['Business', 'AuctionHouse', 'CarDealership'], trim: true }
+    locationType: { type: String, enum: ['Business', 'AuctionHouse', 'CarDealership','Residential'], trim: true }
   },
   addtionalfee: {type: Number},
   conformpickupDate:{type: String},
@@ -51,6 +54,8 @@ const bookingSchema = new mongoose.Schema({
     city: { type: String },
     state: { type: String },
     location: { type: String},
+    deliveryWindow: { type: String},
+    deliveryRadius: { type: String},
     deliveryDate: { type: Date},
     stateCode: { type: String, trim: true },
   },
