@@ -187,10 +187,10 @@ exports.getBookingsByUserId = async (req, res) => {
     }
 
     if (bookings.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: "No bookings found for this user",
-        role: user.role
+        data:[],
       });
     }
 
