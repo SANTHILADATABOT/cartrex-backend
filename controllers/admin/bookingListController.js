@@ -70,7 +70,6 @@ exports.getallbookings = async (req, res) => {
   }
 };
 
-
 exports.getbookingbyId = async (req, res) => {
   try {
     const { bookingId } = req.params;
@@ -103,7 +102,6 @@ exports.getbookingbyId = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 
 // ✅ SOFT DELETE booking (set deletstatus = 1)
 exports.deletebooking = async (req, res) => {
@@ -374,5 +372,6 @@ exports.updateStatus = async (req, res) => {
     });
   }
 };
+
 
 

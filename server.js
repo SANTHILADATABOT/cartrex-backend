@@ -215,6 +215,7 @@ app.set('io', io);
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/admin/adminRoutes');
+const dashboardlistRoutes = require('./routes/admin/adminDashboardListingRoutes');
 const masterRoutes = require('./routes/admin/masterRoutes');
 const spaceListRoutes = require('./routes/admin/spaceListingRoutes');
 const carrierListRoutes = require('./routes/admin/carrierListingRoutes');
@@ -233,6 +234,7 @@ const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
 const carrierRoutes =require('./routes/web/carriers');
+const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
 // const mobileRoutes = require('./routes/mobile');
@@ -245,7 +247,8 @@ app.use('/auth', authLimiter, authRoutes); // Authentication routes
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use('/admin',adminLimiter, adminRoutes);           // → /admin/api/*
+app.use('/admin',adminLimiter, adminRoutes);          // → /admin/api/*
+app.use('/admindashboardlisting',dashboardlistRoutes);
 app.use('/masters', masterRoutes);
 app.use('/spacelisting', spaceListRoutes);
 app.use('/carrierlisting', carrierListRoutes); 
@@ -261,12 +264,14 @@ app.use('/review',reviewRoutes);
 
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
+
 // Web application routes
 app.use('/api/web', webRoutes);
 app.use('/space',spaceRoutes);
 app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
+app.use('/trucks' , truckRoutes);
 
 
 

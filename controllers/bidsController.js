@@ -83,7 +83,44 @@ exports.createBid = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server errorj', error: error.message, test: req.body });
   }
 };
+exports.getallbidsfilter = async (req, res) => {
+  try {
+    // const { isActive } = req.query;
+    const data = req.query; // ✅ get filters from query
+    const filter = { deletstatus: 0 };
+    if (data?.deliveryLocation && data?.pickupLocation) {
+      filter["pickup.stateCode"] = data?.pickupLocation;
+      filter["delivery.stateCode"] = data?.deliveryLocation;
+    }
+    const bids = await Bid.find(filter)
+      .populate('shipperId', 'companyName dba')
+      .populate('carrierId', 'companyName dba')
+      .populate('routeId', 'routeName')
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(10);                // 🔥 only recent 10;
 
+    if (!bids.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No bids found",
+        data: []
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: "Bids fetched successfully",
+      data: bids
+    });
+
+  } catch (error) {
+    console.error("Error fetching bids:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 exports.getBids = async (req, res) => {
   try {
     const { status, pickupLocation, deliveryLocation, page = 1, limit = 10 } = req.query;

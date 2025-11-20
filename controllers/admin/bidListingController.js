@@ -48,6 +48,7 @@ exports.getallbids = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 // exports.getallbids = async (req, res) => {
 //   try {
 //     const { isActive } = req.query; // same param naming style as others
@@ -353,6 +354,43 @@ exports.deletebid = async (req, res) => {
   }
 };
 
+exports.deleteSelectedBid = async (req, res) => {
+  try {
+    const { bidId } = req.body;
+
+    if (!bidId || !Array.isArray(bidId) || bidId.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Booking IDs provided to delete",
+      });
+    }
+    const bidData = await Bid.find({
+      _id: { $in: bidId },
+      deletstatus: 0
+    });
+    if (!bidData.length) {
+      return res.status(404).json({ success: false, message: "Bid not found or already deleted" });
+    }
+    for (const bidinfo of bidData) {
+      bidinfo.deletstatus = 1;
+      bidinfo.deletedAt = new Date();
+      bidinfo.deletedBy = null;
+      bidinfo.deletedipAddress = req.ip;
+      await bidinfo.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Bid deleted successfully",
+      data: bidData
+    });
+
+  } catch (error) {
+    console.error("Error deleting bid:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 
 // exports.getBidsByCarrierUserId = async (req, res) => {
@@ -544,22 +582,30 @@ exports.getBidsByFilter = async (req, res) => {
       // carrierId: carrier._id,
       deletstatus: 0,
     };
-
-    const orConditions = [];
-    
-    if (pickupLocation) {
-      orConditions.push({ "pickup.city": { $regex: new RegExp(pickupLocation, "i") } });
-    }
-
+    const filter = baseFilter;
     if (deliveryLocation) {
-      orConditions.push({ "delivery.city": { $regex: new RegExp(deliveryLocation, "i") } });
+      filter["pickup.stateCode"] = pickupLocation;
     }
+    if(deliveryLocation){
+      filter["delivery.stateCode"] = deliveryLocation;
+    }
+    if(pickupLocation){
+      filter["pickup.stateCode"] = pickupLocation;
+    }
+   if (pickupDate) {
+      filter["pickup.pickupDate"] = pickupDate;
+    }
+   const orConditions = [];
+    
+    // if (pickupLocation) {
+    //   orConditions.push({ "pickup.stateCode": { $regex: new RegExp(pickupLocation, "i") } });
+    // }
 
-    if (pickupDate) {
-        orConditions.push({
-          "pickup.pickupDate": pickupDate
-        });
-    }
+    // if (deliveryLocation) {
+    //   orConditions.push({ "delivery.stateCode": { $regex: new RegExp(deliveryLocation, "i") } });
+    // }
+
+
     // if (pickupDate) {
     //   const date = new Date(pickupDate);
     //   const startOfDay = new Date(date.setHours(0, 0, 0, 0));
@@ -572,12 +618,11 @@ exports.getBidsByFilter = async (req, res) => {
     if (search && search.trim() !== "") {
         const searchRegex = new RegExp(search, "i");
         const searchNum = Number(search);
-
         const searchConditions = [
           { "pickup.city": searchRegex },
           { "delivery.city": searchRegex },
-          { "pickup.state": searchRegex },
-          { "delivery.state": searchRegex },
+          { "pickup.stateCode": searchRegex },
+          { "delivery.stateCode": searchRegex },
           { "shipperId.companyName": searchRegex },
           { "shipperId.address": searchRegex },
           { "timing": searchRegex },
@@ -593,8 +638,9 @@ exports.getBidsByFilter = async (req, res) => {
 
     // ✅ Combine filters
     const finalFilter = orConditions.length
-      ? { ...baseFilter, $or: orConditions }
-      : baseFilter;
+      ? { ...filter, $or: orConditions }
+      : filter;
+    // const finalFilter = filter;
 
     // 4️⃣ Fetch bids
     const bids = await Bid.find(finalFilter)
@@ -618,7 +664,7 @@ exports.getBidsByFilter = async (req, res) => {
       message: bids.length ? "Bids found" : "No bids found",
       data: bids,
       test2: pickupLocation,
-      test: orConditions,
+      test: filter,
       test3: req.body,
       test4: search,
     });
@@ -632,11 +678,6 @@ exports.getBidsByFilter = async (req, res) => {
     });
   }
 };
-
-
-
-
-
 
 exports.getBidsByShipperUserId = async (req, res) => {
   try {
@@ -746,48 +787,6 @@ exports.getBidsBycarrierUserId = async (req, res) => {
   } catch (error) {
     console.error('❌ Error fetching bids by shipper:', error);
     return res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-};
-
-
-
-
-
-
-exports.deleteSelectedBid = async (req, res) => {
-  try {
-    const { bidId } = req.body;
-
-    if (!bidId || !Array.isArray(bidId) || bidId.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No Booking IDs provided to delete",
-      });
-    }
-    const bidData = await Bid.find({
-      _id: { $in: bidId },
-      deletstatus: 0
-    });
-    if (!bidData.length) {
-      return res.status(404).json({ success: false, message: "Bid not found or already deleted" });
-    }
-    for (const bidinfo of bidData) {
-      bidinfo.deletstatus = 1;
-      bidinfo.deletedAt = new Date();
-      bidinfo.deletedBy = null;
-      bidinfo.deletedipAddress = req.ip;
-      await bidinfo.save();
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Bid deleted successfully",
-      data: bidData
-    });
-
-  } catch (error) {
-    console.error("Error deleting bid:", error);
-    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

@@ -312,9 +312,9 @@ exports.getspacedetails = async (req, res) => {
 };
 exports.getSpaceResult = async (req, res) => {
   try {
-    const { selectedVehiclecat,selectedVehiclesub,selectdeliverycity ,selectpickupcity}  =  req.query;
+    const { selectedVehiclecat,selectedVehiclesub,selectdeliverycity ,selectpickupcity ,selectdeliverystateCode,selectpickupstateCode}  =  req.query;
     const filter = { deletstatus: 0 };
-    if (selectedVehiclecat && selectedVehiclesub && selectdeliverycity && selectpickupcity) {
+    if (selectedVehiclecat && selectedVehiclesub && selectdeliverycity && selectpickupcity && selectpickupstateCode && selectdeliverystateCode) {
       filter.rateCard = {
         $elemMatch: {
           vehicleType: selectedVehiclecat,
@@ -324,7 +324,9 @@ exports.getSpaceResult = async (req, res) => {
         }
       };
       filter["origin.city"] = selectpickupcity;
+      filter["origin.stateCode"] = selectpickupstateCode;
       filter["destination.city"] = selectdeliverycity;
+      filter["destination.stateCode"] = selectdeliverystateCode;
     }
     let spaces = await Space.find(filter)
       .populate({
