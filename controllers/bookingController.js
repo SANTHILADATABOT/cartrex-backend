@@ -303,6 +303,12 @@ exports.updatebidstatus = async (req, res) => {
       updatedAt: new Date(),
       status: status
     });
+    if (status === "in_progress") {
+      bidData.statusUpdatedetails.push({
+        updatedAt: new Date(),
+        status: "Reach"
+      });
+    }
     await bidData.save();
 
     return res.status(200).json({
@@ -346,6 +352,26 @@ exports.updateAcceptbookingstatus = async (req, res) => {
     booking.truckforship = data.truckforship;
     booking.status = data.status;
     booking.updatedAt = new Date();
+    if (!Array.isArray(booking.statusUpdatedetails)) {
+      // Case 1: If it is an object (not array), convert to array
+      if (booking.statusUpdatedetails && typeof booking.statusUpdatedetails === "object") {
+        booking.statusUpdatedetails = [booking.statusUpdatedetails];
+      } 
+      // Case 2: null, undefined, string, empty, missing → set empty array
+      else {
+        booking.statusUpdatedetails = [];
+      }
+    }
+    booking.statusUpdatedetails.push({
+      updatedAt: new Date(),
+      status: data.status
+    });
+    if (data.status === "in_progress") {
+      booking.statusUpdatedetails.push({
+        updatedAt: new Date(),
+        status: "Reach"
+      });
+    }
     await booking.save();
 
     return res.status(200).json({
