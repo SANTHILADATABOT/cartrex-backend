@@ -86,14 +86,18 @@ exports.createTruckProfile = async (req, res) => {
       zipcode,
       originCity,
       originStateCode,
-originZipcode,
-destinationCity,
-destinationZipcode,
-destinationstateCode,
-deliveryRadius,
-deliveryWindow,
-pickupWindow,
-pickupRadius
+      originZipcode,
+      destinationCity,
+      destinationZipcode,
+      destinationstateCode,
+      deliveryRadius,
+      deliveryWindow,
+      pickupWindow,
+      pickupRadius,
+      originState,
+      destinationstate,
+      destinationlocation,
+      originlocation
     } = req.body.params;
 
     const baseDir = path.join(__dirname, "../upload/trucks");
@@ -159,20 +163,20 @@ pickupRadius
       carrierId: carrier._id,
       truckId: truck._id,
       origin: {
-        // fullAddress: origin.fullAddress,
+        fullAddress: originlocation,
         // formattedAddress: origin.fullAddress,
         city: originCity,
-        state: originStateCode,
+        state: originState,
         stateCode: originStateCode,
         zipcode: originZipcode,
         pickupWindow: pickupWindow,
         pickupRadius: pickupRadius
       },
       destination: {
-        // fullAddress: destination.fullAddress,
+        fullAddress: destinationlocation,
         // formattedAddress: destination.fullAddress,
         city: destinationCity,
-        state: destinationstateCode,
+        state: destinationstate,
         stateCode: destinationstateCode,
         zipcode: destinationZipcode,
         deliveryWindow:deliveryWindow,
