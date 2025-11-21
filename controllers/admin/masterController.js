@@ -1,5 +1,5 @@
 const Category = require("../../models/Category");
-const SubCategory = require("../../models/SubCategory");
+const SubCategory = require("../../models/Subcategory");
 
 const getModel = (type) => {
   if (type === 'subcategory') return SubCategory;
