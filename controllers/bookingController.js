@@ -359,20 +359,10 @@ exports.updateAcceptbookingstatus = async (req, res) => {
     booking.truckforship = data.truckforship;
     booking.status = data.status;
     booking.updatedAt = new Date();
-   if (!Array.isArray(updatedBid.statusUpdatedetails)) {
-      // Case 1: If it is an object (not array), convert to array
-      if (updatedBid.statusUpdatedetails && typeof updatedBid.statusUpdatedetails === "object") {
-        updatedBid.statusUpdatedetails = [updatedBid.statusUpdatedetails];
-      } 
-      // Case 2: null, undefined, string, empty, missing → set empty array
-      else {
-        updatedBid.statusUpdatedetails = [];
-      }
-    }
-    updatedBid.statusUpdatedetails.push({
+    booking.statusUpdatedetails = [{
       updatedAt: new Date(),
       status: data.status
-    });
+    }];
     await booking.save();
 
     return res.status(200).json({

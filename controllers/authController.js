@@ -67,9 +67,24 @@ exports.signup = async (req, res) => {
         // zipCode: zipCode,
       });
     }
-
+    const roleInfo = await AdminRole.findOne({
+      _id: roleDoc._id,      // assuming user.role stores AdminRole id
+      isActive: "active"
+    });
     const token = generateToken(user._id);
-
+        // ✅ Create session
+    req.session.users = {
+      _id: user._id,
+      email: user.email,
+      roleId: roleInfo._id,
+      roleName: roleInfo.roleName,
+      roleType: roleInfo.roleType,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isApproved: user.isApproved,
+      profileCompleted: user.profileCompleted,
+    };
+    await req.session.save();
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -83,6 +98,7 @@ exports.signup = async (req, res) => {
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
       },
+      data2: req.session.users,
     });
 
   } catch (error) {
