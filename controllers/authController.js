@@ -23,7 +23,9 @@ exports.signup = async (req, res) => {
       // address, 
       // zipCode 
     } = req.body;
-
+    if(!roleId){
+      roleId ="68ff5689aa5d489915b8caaa";
+    }
     if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
