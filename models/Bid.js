@@ -63,7 +63,10 @@ const bidSchema = new mongoose.Schema({
     enum: ['good_till_cancelled', '1_week','24 hours'], 
     default: 'good_till_cancelled' 
   },
-
+    statusUpdatedetails:[{
+    updatedAt:{ type: Date, default: Date.now },
+    status:{type: String}
+  }],
   status: { 
     type: String, 
     enum: ['pending','ready_for_pickup', 'confirmed', 'in_progress', 'completed', 'cancelled','delivered'], 
