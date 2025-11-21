@@ -52,6 +52,7 @@ exports.createBooking = async (req, res) => {
       deletstatus: 0,
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
+      statusUpdatedetails:[]
     });
 
     const uploadedPhotos = [];
@@ -236,19 +237,25 @@ exports.updatebookingstatus = async (req, res) => {
 
     booking.status = status;
     booking.updatedAt = new Date();
-    if (!Array.isArray(booking.statusUpdatedetails) || booking.statusUpdatedetails.length === 0) {
-      console.log('statusUpdatedetails=>')
-      booking.statusUpdatedetails = [
-        {
-          updatedAt: new Date(),
-          status: status
-        }
-      ];
-    } else {
-      console.log('statusUpdatedetails 2=>')
+    if (!Array.isArray(booking.statusUpdatedetails)) {
+
+      // Case 1: If it is an object (not array), convert to array
+      if (booking.statusUpdatedetails && typeof booking.statusUpdatedetails === "object") {
+        booking.statusUpdatedetails = [booking.statusUpdatedetails];
+      } 
+      // Case 2: null, undefined, string, empty, missing → set empty array
+      else {
+        booking.statusUpdatedetails = [];
+      }
+    }
+    booking.statusUpdatedetails.push({
+      updatedAt: new Date(),
+      status: status
+    });
+    if (status === "in_progress") {
       booking.statusUpdatedetails.push({
         updatedAt: new Date(),
-        status: status
+        status: "Reach"
       });
     }
     await booking.save();
@@ -352,26 +359,10 @@ exports.updateAcceptbookingstatus = async (req, res) => {
     booking.truckforship = data.truckforship;
     booking.status = data.status;
     booking.updatedAt = new Date();
-    if (!Array.isArray(booking.statusUpdatedetails)) {
-      // Case 1: If it is an object (not array), convert to array
-      if (booking.statusUpdatedetails && typeof booking.statusUpdatedetails === "object") {
-        booking.statusUpdatedetails = [booking.statusUpdatedetails];
-      } 
-      // Case 2: null, undefined, string, empty, missing → set empty array
-      else {
-        booking.statusUpdatedetails = [];
-      }
-    }
-    booking.statusUpdatedetails.push({
+    booking.statusUpdatedetails = [{
       updatedAt: new Date(),
       status: data.status
-    });
-    if (data.status === "in_progress") {
-      booking.statusUpdatedetails.push({
-        updatedAt: new Date(),
-        status: "Reach"
-      });
-    }
+    }];
     await booking.save();
 
     return res.status(200).json({

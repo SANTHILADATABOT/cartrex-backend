@@ -66,10 +66,11 @@ const { uploadToS3 } = require('../utils/s3Upload');
 exports.createTruckProfile = async (req, res) => {
   try {
  
-    const {userId} = req.body.params;
+    const {userId } = req.body.params;
+    // const userId = '692060d4895dbb36b25caaef';
 
     const carrier = await Carrier.findOne({ userId: userId });
-   console.log("req.body.userId",userId)
+    console.log("req.body.userId",userId)
     if (!carrier) {
       return res.status(404).json({ success: false, message: "Carrier not found" });
     }

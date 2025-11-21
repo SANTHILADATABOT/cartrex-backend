@@ -55,6 +55,7 @@ exports.createBid = async (req, res) => {
       deletstatus: 0,
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
+      statusUpdatedetails : []
     });
 
     const uploadedPhotos = [];
@@ -296,6 +297,7 @@ exports.editBid = async (req, res) => {
     bid.updatedAt = new Date();
     bid.ipAddress = req.ip;
     bid.userAgent = req.get("User-Agent");
+    bid.statusUpdatedetails= bid.statusUpdatedetails ?? []
 
     // 8️⃣ Save updates
     await bid.save();

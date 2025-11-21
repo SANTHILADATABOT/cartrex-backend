@@ -64,10 +64,10 @@ const bookingSchema = new mongoose.Schema({
     enum: ['confirmed','pending','in_progress','cancelled','completed','delivered','ready_for_pickup'], 
     default: 'pending' 
   },
-  statusUpdatedetails:{
+  statusUpdatedetails:[{
     updatedAt:{ type: Date, default: Date.now },
     status:{type: String}
-  },
+  }],
   confirmUploadphoto:String,
   // statusUpdationDetail:{
   //   status:{type:String},
