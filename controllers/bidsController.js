@@ -55,6 +55,7 @@ exports.createBid = async (req, res) => {
       deletstatus: 0,
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
+      statusUpdatedetails : []
     });
 
     const uploadedPhotos = [];
@@ -296,6 +297,7 @@ exports.editBid = async (req, res) => {
     bid.updatedAt = new Date();
     bid.ipAddress = req.ip;
     bid.userAgent = req.get("User-Agent");
+    bid.statusUpdatedetails= bid.statusUpdatedetails ?? []
 
     // 8️⃣ Save updates
     await bid.save();
@@ -361,6 +363,20 @@ exports.updateAcceptbidstatus = async (req, res) => {
     updatedBid.message = data.message;
     updatedBid.truckforship = data.truckforship;
     updatedBid.status = data.status;
+    if (!Array.isArray(updatedBid.statusUpdatedetails)) {
+      // Case 1: If it is an object (not array), convert to array
+      if (updatedBid.statusUpdatedetails && typeof updatedBid.statusUpdatedetails === "object") {
+        updatedBid.statusUpdatedetails = [updatedBid.statusUpdatedetails];
+      } 
+      // Case 2: null, undefined, string, empty, missing → set empty array
+      else {
+        updatedBid.statusUpdatedetails = [];
+      }
+    }
+    updatedBid.statusUpdatedetails.push({
+      updatedAt: new Date(),
+      status: data.status
+    });
     updatedBid.updatedAt = new Date();
     await updatedBid.save();
     return res.status(200).json({

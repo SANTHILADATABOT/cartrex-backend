@@ -15,8 +15,8 @@ const truckSchema = new mongoose.Schema({
   //   required: true 
   // },
   hasWinch: { type: Boolean, default: false },
-  capacity: { type: Number, required: true },
-  mcDotNumber: { type: String, required: true },
+  capacity: { type: Number },
+  mcDotNumber: { type: String},
   vinNumber: { type: String },
   insurance: { type: String }, 
   insuranceExpiry: { type: String, required: true },
