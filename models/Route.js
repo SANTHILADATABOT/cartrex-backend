@@ -3,32 +3,32 @@ const routeSchema = new mongoose.Schema({
   carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier', required: true },
    truckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
   origin: {
-    state: { type: String, required: true },
+    state: { type: String},
       stateCode: { type: String, trim: true }, 
-    city: { type: String, required: true },
+    city: { type: String},
        zipcode: {
       type: String,
-      required: true,
+    
       match: [/^\d{5}(-\d{4})?$/, "Invalid ZIP code"],
     },
-    fullAddress: { type: String, required: true, trim: true },
+    fullAddress: { type: String, trim: true },
     formattedAddress: { type: String, trim: true },
-    pickupWindow: { type: String, required: true },
-    pickupRadius: { type: Number, required: true } // in miles
+    pickupWindow: { type: String },
+    pickupRadius: { type: Number } // in miles
   },
   destination: {
-    state: { type: String, required: true },
+    state: { type: String},
       stateCode: { type: String, trim: true }, 
     city: { type: String, required: true },
        zipcode: {
       type: String,
-      required: true,
+     
       match: [/^\d{5}(-\d{4})?$/, "Invalid ZIP code"],
     },
-    fullAddress: { type: String, required: true, trim: true },
+    fullAddress: { type: String, trim: true },
     formattedAddress: { type: String, trim: true },
-    deliveryWindow: { type: String, required: true },
-    deliveryRadius: { type: Number, required: true } // in miles
+    deliveryWindow: { type: String  },
+    deliveryRadius: { type: Number } // in miles
   },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   createdAt: { type: Date, default: Date.now },
