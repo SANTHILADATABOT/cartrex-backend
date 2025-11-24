@@ -264,6 +264,37 @@ exports.verifyOTP = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error during OTP verification' });
   }
 };
+exports.UserVerification = async (req, res) => {
+  try {
+    const data = req.body;
+    const { email } = data.data;
+    console.log('data=>',email)
+    console.log('data.data=>',data.data)
+    const user = await User.findOne({email:email});
+    if (!user) return res.status(200).json({ success: false, message: 'Please enter a registered email' });
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = generateToken(user._id);
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isApproved: user.isApproved,
+        profileCompleted: user.profileCompleted
+      }
+    });
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ success: false, message: 'Server error during OTP verification' });
+  }
+};
 
 // Forgot Password Controller
 exports.forgotPassword = async (req, res) => {
