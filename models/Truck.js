@@ -21,6 +21,7 @@ const truckSchema = new mongoose.Schema({
   insurance: { type: String }, 
   insuranceExpiry: { type: String, required: true },
   insuranceValidated: { type: Boolean, default: false },
+  truckProfile: {type: String },
   coverPhoto: { type: String },
   photos: [{ type: String }], 
   rating: { type: Number, default: 0, min: 0, max: 5 },

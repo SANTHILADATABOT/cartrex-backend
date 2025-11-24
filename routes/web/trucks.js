@@ -8,6 +8,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/createTruckProfile', upload.fields([
   { name: 'insurance', maxCount: 1 },
+  { name: 'truckProfile', maxCount: 1 },
   { name: 'coverPhoto', maxCount: 1 },
   { name: 'photos', maxCount: 6 }
 ]), truckController.createTruckProfile);

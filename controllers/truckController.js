@@ -105,6 +105,7 @@ exports.createTruckProfile = async (req, res) => {
     if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
 
     let insurancePath = null;
+    let truckProfilePath = null;
     let coverPhotoPath = null;
     let photoPaths = [];
 
@@ -116,6 +117,16 @@ exports.createTruckProfile = async (req, res) => {
 
       fs.writeFileSync(savePath, file.buffer);
       insurancePath = path.join("upload", "trucks", fileName);
+    }
+
+    if (req.files?.truckProfile) {
+      const file = req.files.truckProfile[0];
+      const ext = path.extname(file.originalname);
+      const fileName = `truckProfile_${Date.now()}${ext}`;
+      const savePath = path.join(baseDir, fileName);
+
+      fs.writeFileSync(savePath, file.buffer);
+      truckProfilePath = path.join("upload", "trucks", fileName);
     }
 
     if (req.files?.coverPhoto) {
@@ -147,10 +158,12 @@ exports.createTruckProfile = async (req, res) => {
       hasWinch: hasWinch === "true",
       capacity,
       mcDotNumber,
+      zipcode,
       vinNumber,
       insurance: insurancePath,
       insuranceExpiry,
       coverPhoto: coverPhotoPath,
+      truckProfile:truckProfilePath,
       photos: photoPaths,
       createdBy: req.body.createdBy,
       updatedBy: req.body.createdBy,
