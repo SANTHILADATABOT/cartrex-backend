@@ -25,6 +25,7 @@ const bidSchema = new mongoose.Schema({
     vehicleTypeName: { type: String, trim: true },
     yearMade: { type: Number },
     features:  { type: String, }, // Array of features
+    featuresSubName:  { type: String, }, 
     condition: { type: String, enum: ['operable', 'inoperable'], default: 'operable' },
     quantity: { type: Number, default: 1 },
     photos: [String], // store image URLs or file paths
@@ -63,7 +64,10 @@ const bidSchema = new mongoose.Schema({
     enum: ['good_till_cancelled', '1_week','24 hours'], 
     default: 'good_till_cancelled' 
   },
-
+    statusUpdatedetails:[{
+    updatedAt:{ type: Date, default: Date.now },
+    status:{type: String}
+  }],
   status: { 
     type: String, 
     enum: ['pending','ready_for_pickup', 'confirmed', 'in_progress', 'completed', 'cancelled','delivered'], 

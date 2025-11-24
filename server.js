@@ -56,6 +56,8 @@ const io = new Server(server, {
         'http://localhost:3000',
         'http://192.168.1.46:5173',
         'http://192.168.1.46:5174',
+        "http://192.168.1.23:5173",
+        " http://192.168.1.23:5174/"
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
@@ -88,6 +90,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://192.168.1.46:5173',
   'http://192.168.1.46:5174',
+ "http://192.168.1.23:5173",
+ " http://192.168.1.23:5174/"
 ];
 
 app.use(cors({
@@ -230,6 +234,7 @@ const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
 const carrierRoutes =require('./routes/web/carriers');
+const otpRoutes =require('./routes/web/otpRoutes');
 const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
@@ -268,6 +273,7 @@ app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
 app.use('/trucks' , truckRoutes);
+app.use('/otpRoutes' , otpRoutes);
 
 
 

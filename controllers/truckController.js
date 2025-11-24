@@ -65,8 +65,12 @@ const { uploadToS3 } = require('../utils/s3Upload');
 
 exports.createTruckProfile = async (req, res) => {
   try {
-    const carrier = await Carrier.findOne({ userId: req.body.userId });
+ 
+    const {userId } = req.body.params;
+    // const userId = '692060d4895dbb36b25caaef';
 
+    const carrier = await Carrier.findOne({ userId: userId });
+    console.log("req.body.userId",userId)
     if (!carrier) {
       return res.status(404).json({ success: false, message: "Carrier not found" });
     }
@@ -81,10 +85,21 @@ exports.createTruckProfile = async (req, res) => {
       vinNumber,
       insuranceExpiry,
       zipcode,
-      origin,
-      destination,
-
-    } = req.body;
+      originCity,
+      originStateCode,
+      originZipcode,
+      destinationCity,
+      destinationZipcode,
+      destinationstateCode,
+      deliveryRadius,
+      deliveryWindow,
+      pickupWindow,
+      pickupRadius,
+      originState,
+      destinationstate,
+      destinationlocation,
+      originlocation
+    } = req.body.params;
 
     const baseDir = path.join(__dirname, "../upload/trucks");
     if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
@@ -149,24 +164,24 @@ exports.createTruckProfile = async (req, res) => {
       carrierId: carrier._id,
       truckId: truck._id,
       origin: {
-        fullAddress: origin.fullAddress,
-        formattedAddress: origin.fullAddress,
-        city: origin.city,
-        state: origin.state,
-        stateCode: origin.stateCode,
-        zipcode: origin.zipcode,
-        pickupWindow: origin.pickupWindow,
-        pickupRadius: origin.pickupRadius
+        fullAddress: originlocation,
+        // formattedAddress: origin.fullAddress,
+        city: originCity,
+        state: originState,
+        stateCode: originStateCode,
+        zipcode: originZipcode,
+        pickupWindow: pickupWindow,
+        pickupRadius: pickupRadius
       },
       destination: {
-        fullAddress: destination.fullAddress,
-        formattedAddress: destination.fullAddress,
-        city: destination.city,
-        state: destination.state,
-        stateCode: destination.stateCode,
-        zipcode: destination.zipcode,
-        deliveryWindow: destination.deliveryWindow,
-        deliveryRadius: destination.deliveryRadius
+        fullAddress: destinationlocation,
+        // formattedAddress: destination.fullAddress,
+        city: destinationCity,
+        state: destinationstate,
+        stateCode: destinationstateCode,
+        zipcode: destinationZipcode,
+        deliveryWindow:deliveryWindow,
+        deliveryRadius: deliveryRadius
       },
       createdBy: req.body.createdBy,
       updatedBy: req.body.createdBy,  

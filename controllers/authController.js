@@ -23,10 +23,12 @@ exports.signup = async (req, res) => {
       // address, 
       // zipCode 
     } = req.body;
-
-    // if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
-    //   return res.status(400).json({ success: false, message: 'Please provide all required fields' });
-    // }
+    if(!roleId){
+      roleId ="68ff5689aa5d489915b8caaa";
+    }
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
+      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
 
     if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
@@ -67,9 +69,24 @@ exports.signup = async (req, res) => {
         // zipCode: zipCode,
       });
     }
-
+    const roleInfo = await AdminRole.findOne({
+      _id: roleDoc._id,      // assuming user.role stores AdminRole id
+      isActive: "active"
+    });
     const token = generateToken(user._id);
-
+        // ✅ Create session
+    req.session.users = {
+      _id: user._id,
+      email: user.email,
+      roleId: roleInfo._id,
+      roleName: roleInfo.roleName,
+      roleType: roleInfo.roleType,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isApproved: user.isApproved,
+      profileCompleted: user.profileCompleted,
+    };
+    await req.session.save();
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -83,6 +100,7 @@ exports.signup = async (req, res) => {
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
       },
+      data2: req.session.users,
     });
 
   } catch (error) {

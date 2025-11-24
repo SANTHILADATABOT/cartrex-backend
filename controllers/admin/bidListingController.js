@@ -757,7 +757,7 @@ exports.getBidsBycarrierUserId = async (req, res) => {
 
     // 4️⃣ Find all bids created by this shipper
     const bids = await Bid.find({
-       "carrierRouteList.carrierId": carrier._id.toString(),
+       "carrierRouteList.carrierId": carrier._id,
       deletstatus: 0
     })
       .populate({

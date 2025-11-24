@@ -19,16 +19,16 @@ const routeSchema = new mongoose.Schema({
   destination: {
     state: { type: String},
       stateCode: { type: String, trim: true }, 
-    city: { type: String, required: true },
+    city: { type: String,  },
        zipcode: {
       type: String,
-     
+      
       match: [/^\d{5}(-\d{4})?$/, "Invalid ZIP code"],
     },
-    fullAddress: { type: String, trim: true },
+    fullAddress: { type: String,  trim: true },
     formattedAddress: { type: String, trim: true },
-    deliveryWindow: { type: String  },
-    deliveryRadius: { type: Number } // in miles
+    deliveryWindow: { type: String,  },
+    deliveryRadius: { type: Number, } // in miles
   },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   createdAt: { type: Date, default: Date.now },
