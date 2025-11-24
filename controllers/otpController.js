@@ -6,9 +6,9 @@ function generateOTP() {
 }
 
 exports.sendOtp = async (req, res) => {
-  const { type, phone, email } = req.body;
+  const { type, phone, email} = req.body;
   const otp = generateOTP();
-
+ console.log('req.body=>',req.body);
   try {
     if (type === "sms") {
       const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -19,8 +19,7 @@ exports.sendOtp = async (req, res) => {
         from: process.env.TWILIO_PHONE,
       });
     }
-
-    if (type === "email") {
+    else if (type === "email") {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       await sgMail.send({
         to: email,

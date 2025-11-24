@@ -238,9 +238,10 @@ exports.editBid = async (req, res) => {
     const shippingInfo = JSON.parse(data.shippingInfo || "{}");
     const parsedVehicleDetails = JSON.parse(data.vehicleDetails || "{}");
     const removedImages = JSON.parse(data.removedImages || "[]"); // URLs or paths of deleted old images
-
+console.log('bid.vehicleDetails=>',bid.vehicleDetails)
+console.log('req.files=>',req.files)
    // 4️⃣ Remove ALL old images from server
-  if (bid.vehicleDetails?.photos?.length > 0) {
+  if (bid.vehicleDetails?.photos?.length > 0 && req.files && req.files.length > 0) {
     bid.vehicleDetails.photos.forEach((imgPath) => {
       // const fullPath = path.join(__dirname, `../..${imgPath}`);
       const cleanPath = imgPath.replace(/^\/+/, ""); 
@@ -261,7 +262,7 @@ exports.editBid = async (req, res) => {
   if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
   const newPhotoPaths = [];
-  if (req.files && req.files.length > 0) {
+  if (req.files && req.files.length > 0 && bid.vehicleDetails?.photos?.length !== 0) {
       req.files.forEach((file, index) => {
         const ext = path.extname(file.originalname);
         // const baseName = path.basename(file.originalname, ext);
@@ -272,10 +273,10 @@ exports.editBid = async (req, res) => {
         newPhotoPaths.push(`/uploads/bid/${newFilename}`);
       });
     }
-
+  if(newPhotoPaths){
     // 6️⃣ Merge new and old photos
     bid.vehicleDetails.photos = [...bid.vehicleDetails.photos, ...newPhotoPaths];
-
+  }
     // 7️⃣ Update other bid fields
     bid.shipperId = bid.shipperId || shipper._id;
     bid.userId = data.userId;
