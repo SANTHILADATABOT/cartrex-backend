@@ -16,12 +16,17 @@ exports.sendOtp = async (req, res) => {
     console.log('type=>',type);
     
     if (type === "sms") {
+      let phoneNumber = phone;
+      if (!phone.startsWith('+')) {
+        phoneNumber = '+91' + phone; // Adjust country code accordingly
+      }
+
       const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
       await smsClient.messages.create({
         body: `Your OTP is ${otp}`,
-        to: phone,
-        from: process.env.TWILIO_PHONE,
+        to: phoneNumber,
+        from: process.env.TWILIO_PHONE_NUMBER,
       });
     }
     else if (type === 'email') {

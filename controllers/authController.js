@@ -287,7 +287,8 @@ exports.UserVerification = async (req, res) => {
         lastName: user.lastName,
         role: user.role,
         isApproved: user.isApproved,
-        profileCompleted: user.profileCompleted
+        profileCompleted: user.profileCompleted,
+        phonenumber:user.phone
       }
     });
   } catch (error) {
@@ -317,7 +318,8 @@ exports.forgotPassword = async (req, res) => {
 // Reset Password Controller
 exports.resetPassword = async (req, res) => {
   try {
-    const { userId, otp, newPassword } = req.body;
+    const data = req.body;
+    const { userId, otp, newPassword } = data.data;
 
     // Verify OTP (use Redis in production)
     const user = await User.findById(userId);
