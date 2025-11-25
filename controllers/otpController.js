@@ -5,23 +5,17 @@ const sgMail = require("@sendgrid/mail");
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000);
 }
-
-// GLOBAL STORE FOR OTPs
-global.otpStore = global.otpStore || {};  
-// Structure: otpStore["email/phone"] = { otp, expiresAt }
-
+global.otps = {}; // { email: otp }
 exports.sendOtp = async (req, res) => {
-  const { type, phone, email } = req.body;
-  const otp = generateOTP();
-  const key = phone || email;
-
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-  global.otpStore[key] = { otp, expiresAt };
-
-  console.log("Generated OTP:", otp);
 
   try {
+    const data = req.body;
+    const { type, phone, email} = data.data;
+    const otp = generateOTP();
+    console.log('req.body=>',req.body);
+    console.log('email=>',email);
+    console.log('type=>',type);
+    
     if (type === "sms") {
       const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -30,9 +24,11 @@ exports.sendOtp = async (req, res) => {
         to: phone,
         from: process.env.TWILIO_PHONE,
       });
-    } else if (type === "email") {
+    }
+    else if (type === 'email') {
+      console.log(process.env.SENDGRID_API_KEY)
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+      console.log('type === email=>',sgMail);
       await sgMail.send({
         to: email,
         from: process.env.FROM_EMAIL,
@@ -41,7 +37,7 @@ exports.sendOtp = async (req, res) => {
       });
     }
 
-    res.json({ success: true, message: "OTP sent successfully!" });
+    global.otps[email] = otp; // Store OTP by email
 
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -49,24 +45,15 @@ exports.sendOtp = async (req, res) => {
 };
 
 exports.verifyOtp = (req, res) => {
-  const { otp, phone, email } = req.body;
-  const key = phone || email;
-
-  const stored = global.otpStore[key];
-
-  if (!stored) {
-    return res.status(400).json({ success: false, message: "OTP expired or not found!" });
-  }
-
-  if (Date.now() > stored.expiresAt) {
-    delete global.otpStore[key];
-    return res.status(400).json({ success: false, message: "OTP expired!" });
-  }
-
-  if (Number(otp) === Number(stored.otp)) {
-    delete global.otpStore[key];
+  const data = req.body;
+  const {otp,email} = data.data;
+console.log('data=>',data)
+console.log('global.latestOTP=>',global.otps)
+  // Compare with stored OTP (this is a simple demo)
+  if (global.otps[email] && Number(otp) === Number(global.otps[email])) {
+    delete global.otps[email]; // Optional: clean up
     return res.json({ success: true, message: "OTP verified successfully!" });
   }
-
-  return res.status(400).json({ success: false, message: "Incorrect OTP!" });
+  
+  return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
 };
