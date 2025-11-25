@@ -2,6 +2,7 @@ const Booking = require('../../models/Booking');
 const Bid = require('../../models/Bid');
 const Truck = require('../../models/Truck');
 const Shipper = require('../../models/Shipper');
+const Carrier = require('../../models/Carrier')
 const mongoose = require('mongoose');
 
 // get all bookings and bids status:completed
@@ -48,7 +49,11 @@ exports.getallcompletedbookingsandbids = async (req, res) => {
   }
 };
 
-
+const monthShort = [
+  "", // dummy
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
 
 exports.getdashboardcounts = async (req, res) => {
   try {
@@ -65,6 +70,62 @@ exports.getdashboardcounts = async (req, res) => {
   
     const totalBookings = await Booking.countDocuments({ deletstatus: 0 });
 
+    //  const carrierMonthlyData = await Carrier.aggregate([
+    //   {
+    //     $match: {
+    //       status: "active",     // only active
+    //       deletstatus: 0        // not deleted
+    //     }
+    //   },
+    //   {
+    //     $group: {
+    //       _id: { month: { $month: "$createdAt" } },
+    //       count: { $sum: 1 }
+    //     }
+    //   },
+    //   { $sort: { "_id.month": 1 } },
+    //   {
+    //     $project: {
+    //       _id: 0,
+    //       month: {
+    //         $arrayElemAt: [monthNames, "$_id.month"]
+    //       },
+    //       count: 1
+    //     }
+    //   }
+    // ]);
+   const shipperAgg = await Shipper.aggregate([
+      { $match: { deletstatus: 0 ,status: "active" , $expr: { $eq: [ { $year: "$createdAt" }, 2025 ] }  } },
+      { $group: { _id: { month: { $month: "$createdAt" } }, count: { $sum: 1 } } },
+      { $sort: { "_id.month": 1 } }
+    ]);
+
+ 
+    const carrierAgg = await Carrier.aggregate([
+      { $match: { deletstatus: 0, status: "active" , $expr: { $eq: [ { $year: "$createdAt" }, 2025 ] }  } },
+      { $group: { _id: { month: { $month: "$createdAt" } }, count: { $sum: 1 } } },
+      { $sort: { "_id.month": 1 } }
+    ]);
+
+  
+    const shipperMap = {};
+    shipperAgg.forEach(i => { shipperMap[i._id.month] = i.count });
+
+    const carrierMap = {};
+    carrierAgg.forEach(i => { carrierMap[i._id.month] = i.count });
+
+    
+    const monthlyData = [];
+
+    for (let m = 1; m <= 12; m++) {
+      monthlyData.push({
+        month: monthShort[m],
+        shippers: shipperMap[m] || 0,
+        carriers: carrierMap[m] || 0
+      });
+    }
+
+
     return res.status(200).json({
       success: true,
       message: "Counts of TotalShippers,ActiveShippers,TotalTrucks,TotalBookings fetched successfully",
@@ -72,7 +133,8 @@ exports.getdashboardcounts = async (req, res) => {
       {totalShippers,
       activeShippers,
       totalTrucks,
-      totalBookings}
+      totalBookings},
+         monthly_data: monthlyData
     });
 
   } catch (error) {
