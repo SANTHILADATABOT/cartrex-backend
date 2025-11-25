@@ -8,6 +8,7 @@ const shipperSchema = new mongoose.Schema({
   address: { type: String },
   city: { type: String,  },
   state: { type: String, },
+  stateCode: { type: String, },
   zipCode: { type: String},
   country: { type: String,  },
   totalBookings: { type: Number, default: 0 },
