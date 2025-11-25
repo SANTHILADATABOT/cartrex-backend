@@ -273,9 +273,7 @@ app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
 app.use('/trucks' , truckRoutes);
-app.use('/otpRoutes' , otpRoutes);
-
-
+app.use('/api/auth', otpRoutes);
 
 // Mobile API routes
 // app.use('/api/v1/mobile', mobileRoutes);
