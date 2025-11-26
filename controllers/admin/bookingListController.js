@@ -11,7 +11,8 @@ exports.getallbookings = async (req, res) => {
      const filter = {deletstatus: 0};
       if (status) {
         if (status === "all") {
-          filter.status = { $in: ['confirmed','pending','in_progress','cancelled','completed'] }; // both
+      
+         filter.status = { $in: ['confirmed','pending','in_progress','cancelled','completed'] }; // both
         } else {
           filter.status = status;
         }

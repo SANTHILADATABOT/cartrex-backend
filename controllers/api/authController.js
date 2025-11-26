@@ -1,13 +1,16 @@
 const bcrypt = require("bcryptjs");
-const User = require('../models/User');
-const AdminRole = require('../models/AdminRoles');
-const Carrier = require('../models/Carrier');
-const Shipper = require('../models/Shipper');
-const AdminUser = require('../models/AdminUsers');
-const { generateToken, generateOTP } = require('../utils/jwt');
-const { sendEmail } = require('../utils/emailService');
-// const SMSService = require('../utils/smsService');
-const { encrypt, decrypt } = require('../utils/encryption');
+const User = require('../../models/User');
+const AdminRole = require('../../models/AdminRoles');
+const Carrier = require('../../models/Carrier');
+const Shipper = require('../../models/Shipper');
+const AdminUser = require('../../models/AdminUsers');
+const twilio = require("twilio");
+const sgMail = require("@sendgrid/mail");
+
+const { generateToken, generateOTP } = require('../../utils/jwt');
+const { sendEmail } = require('../../utils/emailService');
+const { encrypt, decrypt } = require('../../utils/encryption');
+global.otps = {}; // { email: otp }
 // Signup Controller
 
 exports.signup = async (req, res) => {
@@ -91,7 +94,7 @@ exports.signup = async (req, res) => {
       success: true,
       message: 'User registered successfully',
       token,
-      user: {
+      data: {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
@@ -99,8 +102,8 @@ exports.signup = async (req, res) => {
         role: roleDoc.roleType,
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
+        sessionData:req.session.users,
       },
-      data2: req.session.users,
     });
 
   } catch (error) {
@@ -184,7 +187,6 @@ exports.login = async (req, res) => {
     res.status(200).json({
       success: true,
       token,
-      data2: req.session.users,
       data: {
         id: account._id,
         email: account.email,
@@ -193,6 +195,7 @@ exports.login = async (req, res) => {
         role: roleInfo.roleType,
         isApproved: account.isApproved,
         profileCompleted: account.profileCompleted,
+        sessionData:req.session.users,
       },
     });
   } catch (error) {
@@ -234,34 +237,53 @@ exports.logout = async (req, res) => {
 };
 
 // Verify OTP Controller
-exports.verifyOTP = async (req, res) => {
+exports.verifyOtp = (req, res) => {
+  const data = req.body;
+  const {otp,email} = data.data;
+  // Compare with stored OTP (this is a simple demo)
+  if (global.otps[email] && Number(otp) === Number(global.otps[email])) {
+    delete global.otps[email]; // Optional: clean up
+    return res.json({ success: true, message: "OTP verified successfully!" });
+  }
+  
+  return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+};
+exports.sendOtp = async (req, res) => {
   try {
-    const { userId, otp } = req.body;
-
-    // Verify OTP (use Redis in production)
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-
-    user.lastLogin = new Date();
-    await user.save();
-
-    const token = generateToken(user._id);
-    res.status(200).json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        isApproved: user.isApproved,
-        profileCompleted: user.profileCompleted
+    const data = req.body;
+    const { type, phone, email} = data.data;
+    const otp = generateOTP();
+    if (type === "sms") {
+      let phoneNumber = phone;
+      if (!phone.startsWith('+')) {
+        phoneNumber = '+91' + phone; // Adjust country code accordingly
       }
-    });
-  } catch (error) {
-    console.error('OTP verification error:', error);
-    res.status(500).json({ success: false, message: 'Server error during OTP verification' });
+
+      const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+
+      await smsClient.messages.create({
+        body: `Your OTP is ${otp}`,
+        to: phoneNumber,
+        from: process.env.TWILIO_PHONE_NUMBER,
+      });
+    }
+    else if (type === 'email') {
+      console.log(process.env.SENDGRID_API_KEY)
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      console.log('type === email=>',sgMail);
+      await sgMail.send({
+        to: email,
+        from: process.env.FROM_EMAIL,
+        subject: "Your OTP",
+        text: `Your OTP is ${otp}`,
+      });
+    }
+
+    global.otps[email] = otp; // Store OTP by email
+
+    res.json({ success: true, message: "OTP sent!" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 exports.UserVerification = async (req, res) => {

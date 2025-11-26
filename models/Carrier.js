@@ -24,6 +24,7 @@ const carrierSchema = new mongoose.Schema({
   address: { type: String},
   city: { type: String },
   state: { type: String },
+  stateCode: { type: String },
   zipCode: { type: String },
   country: { type: String},
   rating: { type: Number, default: 0, min: 0, max: 5 },

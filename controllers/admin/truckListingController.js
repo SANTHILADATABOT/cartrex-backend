@@ -141,6 +141,8 @@ exports.getalltrucks = async (req, res) => {
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
+
+
 exports.updatetruck = async (req, res) => {
   try {
     const { truckId } = req.params;

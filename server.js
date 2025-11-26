@@ -238,6 +238,11 @@ const otpRoutes =require('./routes/web/otpRoutes');
 const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
+
+// <!---------------------- Api Route------------------------------------------------------>
+const apiroute =require('./routes/Api/ApiRoutes');
+app.use('/api' ,apiroute);
+
 // const mobileRoutes = require('./routes/mobile');
 // const sharedRoutes = require('./routes/shared');
 
@@ -273,7 +278,8 @@ app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
 app.use('/trucks' , truckRoutes);
-app.use('/api/auth', otpRoutes);
+app.use('/otpRoutes' , otpRoutes);
+
 
 // Mobile API routes
 // app.use('/api/v1/mobile', mobileRoutes);

@@ -309,7 +309,7 @@ exports.createShipper = async (req, res) => {
       address: data?.address || "",
       city: data?.city || "",
       state: data?.state || "",
-      zipCode: data?.zipcode || "",
+      zipCode: data?.zipCode || "",
       country: data?.country || "",
       status: data?.status || "active",
       createdBy: data?.audit?.createdBy || savedUser._id,

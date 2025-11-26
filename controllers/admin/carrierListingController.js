@@ -76,7 +76,7 @@ exports.addcarrier = async (req, res) => {
       companyName: data?.companyName,
       status: data?.status,
       address:data?.address,
-      zipCode:data?.zipcode
+      zipCode:data?.zipCode
     });
 
     const savedCarrier = await carrierData.save();
