@@ -114,8 +114,9 @@ exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
     if (!email || !password || !role) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
+        notVerified:true,
         message: 'Please provide email, password, and role',
       });
     }
@@ -127,22 +128,23 @@ exports.login = async (req, res) => {
     } else if (role === 'user' || role === 'Carrier' || role === 'Shipper') {
       account = await User.findOne({ email }).select('+password');
     } else {
-      return res.status(400).json({ success: false, message: 'Invalid role type' });
+      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid role type' });
     }
     // ✅ If not found
     if (!account) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials1' });
+      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials1' });
     }
 
     // ✅ Compare bcrypt password
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials2' });
+      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
     }
     // Check if active
     if (!account.isActive) {
-      return res.status(403).json({
+      return res.status(200).json({
         success: false,
+        notVerified:true,
         message: 'Account is deactivated',
       });
     }
@@ -154,8 +156,9 @@ exports.login = async (req, res) => {
     });
 
     if (!roleInfo) {
-      return res.status(403).json({
+      return res.status(200).json({
         success: false,
+        notVerified:true,
         message: 'Role is inactive or not found',
       });
     }
@@ -163,7 +166,16 @@ exports.login = async (req, res) => {
     // ✅ Update last login
     account.lastLogin = new Date();
     await account.save();
-
+    if(role === "user"){
+      if(account.verifyuser !== "verified") {
+        return res.status(200).json({
+          success: false,
+          notVerified:true,
+          navigate:"/forgotpassword",
+          message: 'user not verified please verified'
+        });
+      }
+    }
     // ✅ Create session
     req.session.users = {
       _id: account._id,
@@ -183,6 +195,7 @@ exports.login = async (req, res) => {
     // ✅ Success response
     res.status(200).json({
       success: true,
+      notVerified:false,
       token,
       data2: req.session.users,
       data: {
@@ -267,11 +280,13 @@ exports.verifyOTP = async (req, res) => {
 exports.UserVerification = async (req, res) => {
   try {
     const data = req.body;
-    const { email } = data.data;
-    console.log('data=>',email)
-    console.log('data.data=>',data.data)
-    const user = await User.findOne({email:email});
-    if (!user) return res.status(200).json({ success: false, message: 'Please enter a registered email' });
+    const { email,step } = data.data;
+    let filter = {email:email ,deletstatus:0};
+    if(step !== "verification"){
+      filter.verifyuser = "verified";
+    }
+    const user = await User.findOne(filter);
+    if (!user) return res.status(200).json({ success: false, message: 'Please enter a verified registered email' });
 
     user.lastLogin = new Date();
     await user.save();

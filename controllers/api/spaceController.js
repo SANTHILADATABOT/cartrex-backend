@@ -292,7 +292,7 @@ exports.getSpaceResult = async (req, res) => {
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
-        select: "userId companyName",
+        select: "userId companyName photo address city state stateCode zipCode country rating totalRatings totalBookings outstandingPayouts status updatedAt createdAt recentActivity updatedBy deletstatus createdBy ",
         populate: {
           path: "userId",
           select: "firstName lastName",

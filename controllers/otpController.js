@@ -1,5 +1,6 @@
 const twilio = require("twilio");
 const sgMail = require("@sendgrid/mail");
+const User = require('../models/User');
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000);
@@ -11,10 +12,6 @@ exports.sendOtp = async (req, res) => {
     const data = req.body;
     const { type, phone, email} = data.data;
     const otp = generateOTP();
-    console.log('req.body=>',req.body);
-    console.log('email=>',email);
-    console.log('type=>',type);
-    
     if (type === "sms") {
       let phoneNumber = phone;
       if (!phone.startsWith('+')) {
@@ -43,21 +40,30 @@ exports.sendOtp = async (req, res) => {
 
     global.otps[email] = otp; // Store OTP by email
 
-    res.json({ success: true, message: "OTP sent!" });
+    res.json({ success: true, message: "OTP sent!",otp:otp });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-exports.verifyOtp = (req, res) => {
+exports.verifyOtp = async (req, res) => {
   const data = req.body;
-  const {otp,email} = data.data;
-console.log('data=>',data)
-console.log('global.latestOTP=>',global.otps)
+  const {step,otp,email} = data.data;
   // Compare with stored OTP (this is a simple demo)
   if (global.otps[email] && Number(otp) === Number(global.otps[email])) {
-    delete global.otps[email]; // Optional: clean up
-    return res.json({ success: true, message: "OTP verified successfully!" });
+     const user = await User.findOne({email:email});
+     if(step === "signup" || step === "verification"){
+        user.verifyuser = "verified";
+       user.lastLogin = new Date();
+       await user.save();
+        delete global.otps[email]; // Optional: clean up
+        return res.json({ success: true, message: "OTP verified successfully!" });
+     }
+     else if(step === "forget" && user.verifyuser === "verified"){
+        delete global.otps[email]; // Optional: clean up
+        return res.json({ success: true, message: "OTP verified successfully!" });
+     }
+       
   }
   
   return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
