@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema({
   lastLogin: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  verifyuser:{type:String, enum:["verified","unverified"], default: "unverified"},
   //  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
