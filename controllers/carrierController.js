@@ -158,6 +158,7 @@ exports.createOrUpdateProfile = async (req, res) => {
       profile.country = country || profile.country;
       profile.city = city || profile.city;
       profile.state = state || profile.state;
+      profile.stateCode = stateCode || profile.stateCode;
 
       if (savedPhotoPath) profile.photo = savedPhotoPath;
 

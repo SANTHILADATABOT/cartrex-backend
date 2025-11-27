@@ -186,32 +186,24 @@ exports.login = async (req, res) => {
         });
       }
     }
-     if (role === "Carrier") {
-
-      const carrierProfile = await Carrier.findOne({ userId: account._id });
-
-      if (!carrierProfile) {
-        return res.status(200).json({
-          success: false,
-          nextStep: "carrier_profile",
-          message: "Carrier profile not completed",
-          profileCompleted: false,
-        });
+     let profileCompleted = false;
+    let shipperprofle = false;
+    let HaveTruck = false;
+    const userId = account._id;
+    const carrierProfile = await Carrier.findOne({ userId: userId });
+      if (carrierProfile) {
+        profileCompleted=true;
       }
-
+      const shipperProfile = await Shipper.findOne({ userId: userId });
+      if (shipperProfile) {
+        shipperprofle=true;
+      }
       const trucks = await Truck.find({ carrierId: carrierProfile._id });
-
-      if (!trucks || trucks.length === 0) {
-        return res.status(200).json({
-          success: false,
-          nextStep: "truck_profile",
-          message: "No trucks found. Please create truck profile.",
-          truckCreated: false,
-        });
+      if (trucks || trucks.length > 0) {
+        HaveTruck = true;
       }
 
       // If both are good → continue login
-    }
     // ✅ Create session
     req.session.users = {
       _id: account._id,
@@ -222,7 +214,7 @@ exports.login = async (req, res) => {
       firstName: account.firstName,
       lastName: account.lastName,
       isApproved: account.isApproved,
-      profileCompleted: account.profileCompleted,
+      profileCompleted: profileCompleted,
     };
     await req.session.save();
     // ✅ Generate token
@@ -240,7 +232,10 @@ exports.login = async (req, res) => {
         lastName: account.lastName,
         role: roleInfo.roleType,
         isApproved: account.isApproved,
-        profileCompleted: account.profileCompleted,
+        carrier:{profileCompleted,HaveTruck},
+        shipper:{shipperprofle},
+        profileCompleted: profileCompleted,
+        HaveTruck:HaveTruck,
         sessionData: req.session.users,
       },
     });
