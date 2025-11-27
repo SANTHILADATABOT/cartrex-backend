@@ -3,6 +3,7 @@ const User = require('../../models/User');
 const AdminRole = require('../../models/AdminRoles');
 const Carrier = require('../../models/Carrier');
 const Shipper = require('../../models/Shipper');
+const Truck = require('../../models/Truck');
 const AdminUser = require('../../models/AdminUsers');
 const twilio = require("twilio");
 const sgMail = require("@sendgrid/mail");
@@ -15,19 +16,19 @@ global.otps = {}; // { email: otp }
 
 exports.signup = async (req, res) => {
   try {
-    const { 
-      email, 
-      password, 
-      confirmPassword, 
-      firstName, 
-      lastName, 
-      phone, 
-      roleId, 
+    const {
+      email,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      phone,
+      roleId,
       // address, 
       // zipCode 
     } = req.body;
-    if(!roleId){
-      roleId ="68ff5689aa5d489915b8caaa";
+    if (!roleId) {
+      roleId = "68ff5689aa5d489915b8caaa";
     }
     if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
       return res.status(200).json({ success: false, message: 'Please provide all required fields' });
@@ -51,34 +52,36 @@ exports.signup = async (req, res) => {
       lastName,
       phone,
       role: roleDoc._id,
-      isApproved: true, 
+      isApproved: true,
       isActive: true,
       verifyuser:"verified"
     });
 
-    if (roleDoc.roleType === 'Carrier') {
-      await Carrier.create({
-        userId: user._id,
-        createdBy: user._id,
-        status: 'active',
-        // address: address || '',
-        // zipCode: zipCode || '',
-      });
-    } 
-    else if (roleDoc.roleType === 'Shipper') {
-      await Shipper.create({
-        userId: user._id,
-        createdBy: user._id,
-        // address: address,
-        // zipCode: zipCode,
-      });
-    }
+    // if (roleDoc.roleType === 'Carrier') {
+    //   await Carrier.create({
+    //     userId: user._id,
+    //     createdBy: user._id,
+    //     status: 'active',
+    //     // address: address || '',
+    //     // zipCode: zipCode || '',
+    //   });
+    // }
+    // else if (roleDoc.roleType === 'Shipper') {
+    //   await Shipper.create({
+    //     userId: user._id,
+    //     createdBy: user._id,
+    //     // address: address,
+    //     // zipCode: zipCode,
+    //   });
+    // }
+
+
     const roleInfo = await AdminRole.findOne({
       _id: roleDoc._id,      // assuming user.role stores AdminRole id
       isActive: "active"
     });
     const token = generateToken(user._id);
-        // ✅ Create session
+    // ✅ Create session
     req.session.users = {
       _id: user._id,
       email: user.email,
@@ -103,7 +106,7 @@ exports.signup = async (req, res) => {
         role: roleDoc.roleType,
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
-        sessionData:req.session.users,
+        sessionData: req.session.users,
       },
     });
 
@@ -120,7 +123,7 @@ exports.login = async (req, res) => {
     if (!email || !password || !role) {
       return res.status(200).json({
         success: false,
-        notVerified:true,
+        notVerified: true,
         message: 'Please provide email, password, and role',
       });
     }
@@ -144,11 +147,15 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
     }
+    
+    
+
+
     // Check if active
     if (!account.isActive) {
       return res.status(200).json({
         success: false,
-        notVerified:true,
+        notVerified: true,
         message: 'Account is deactivated',
       });
     }
@@ -161,7 +168,7 @@ exports.login = async (req, res) => {
     if (!roleInfo) {
       return res.status(200).json({
         success: false,
-        notVerified:true,
+        notVerified: true,
         message: 'Role is inactive or not found',
       });
     }
@@ -174,10 +181,36 @@ exports.login = async (req, res) => {
       if(account.verifyuser !== "verified") {
         return res.status(200).json({
           success: false,
-          notVerified:true,
+          notVerified: true,
           message: 'user not verified please verified'
         });
       }
+    }
+     if (role === "Carrier") {
+
+      const carrierProfile = await Carrier.findOne({ userId: account._id });
+
+      if (!carrierProfile) {
+        return res.status(200).json({
+          success: false,
+          nextStep: "carrier_profile",
+          message: "Carrier profile not completed",
+          profileCompleted: false,
+        });
+      }
+
+      const trucks = await Truck.find({ carrierId: carrierProfile._id });
+
+      if (!trucks || trucks.length === 0) {
+        return res.status(200).json({
+          success: false,
+          nextStep: "truck_profile",
+          message: "No trucks found. Please create truck profile.",
+          truckCreated: false,
+        });
+      }
+
+      // If both are good → continue login
     }
     // ✅ Create session
     req.session.users = {
@@ -198,7 +231,7 @@ exports.login = async (req, res) => {
     // ✅ Success response
     res.status(200).json({
       success: true,
-      notVerified:true,
+      notVerified: true,
       token,
       data: {
         id: account._id,
@@ -208,7 +241,7 @@ exports.login = async (req, res) => {
         role: roleInfo.roleType,
         isApproved: account.isApproved,
         profileCompleted: account.profileCompleted,
-        sessionData:req.session.users,
+        sessionData: req.session.users,
       },
     });
   } catch (error) {
@@ -250,7 +283,7 @@ exports.logout = async (req, res) => {
 };
 
 // Verify OTP Controller
-exports.verifyOtp = async(req, res) => {
+exports.verifyOtp = async (req, res) => {
   const data = req.body;
   const {step,otp,email} = data;
   // Compare with stored OTP (this is a simple demo)
@@ -268,7 +301,7 @@ exports.verifyOtp = async(req, res) => {
         return res.json({ success: true, message: "OTP verified successfully!" });
      }
   }
-  
+
   return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
 };
 exports.sendOtp = async (req, res) => {
@@ -293,7 +326,7 @@ exports.sendOtp = async (req, res) => {
     else if (type === 'email') {
       console.log(process.env.SENDGRID_API_KEY)
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('type === email=>',sgMail);
+      console.log('type === email=>', sgMail);
       await sgMail.send({
         to: email,
         from: process.env.FROM_EMAIL,
@@ -304,7 +337,7 @@ exports.sendOtp = async (req, res) => {
 
     global.otps[email] = otp; // Store OTP by email
 
-    res.json({ success: true, message: "OTP sent!",otp:otp });
+    res.json({ success: true, message: "OTP sent!", otp: otp });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -352,7 +385,7 @@ exports.UserVerification = async (req, res) => {
         role: user.role,
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
-        phonenumber:user.phone
+        phonenumber: user.phone
       }
     });
   } catch (error) {
@@ -406,7 +439,7 @@ exports.resetPassword = async (req, res) => {
 exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find().select('-password');
-    
+
     res.status(200).json({
       success: true,
       count: users.length,

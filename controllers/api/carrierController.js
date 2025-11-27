@@ -165,7 +165,7 @@ exports.createupdateProfile = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `${roleType} profile created/updated successfully`,
+      message: `${roleType} profile created successfully`,
       data: profile
     });
 
