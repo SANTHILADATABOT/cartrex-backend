@@ -5,7 +5,7 @@ const path = require("path");
 const router = express.Router();
 const { signup, login, logout, verifyOtp, sendOtp, UserVerification, forgotPassword, resetPassword } = require('../../controllers/api/authController');
 const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspacedetails, getSpaceResult, addSpacesDetails, getSpacesByCarrierUserId, editSpacesDetails } = require('../../controllers/api/spaceController');
-const { createupdateProfile, createupdateProfilePhoto } = require('../../controllers/api/carrierController');
+const { createupdateProfile, createupdateProfilePhoto,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
 const { createOrUpdateshipperProfile } = require('../../controllers/api/shipperController');
 const {getReviewRouteDetails} = require('../../controllers/api/RouteController');
 const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails} = require('../../controllers/api/TruckController');
@@ -24,6 +24,7 @@ router.post('/logout', logout);
 
 //router.post('/carrierprofile', upload.single('photo'), createOrUpdateCarrierProfile);
 router.post('/createupdateProfile', createupdateProfile);
+router.get('/checkCarrierProfileCompleteTruckHave/:userId', checkCarrierProfileCompleteTruckHave);
 
 router.post('/createupdateProfilePhoto', upload.single('photo'), createupdateProfilePhoto);
 

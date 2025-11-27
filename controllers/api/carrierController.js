@@ -7,6 +7,7 @@ const User = require('../../models/User');
 const Booking = require('../../models/Booking');
 const Truck = require('../../models/Truck');
 const Location =require('../../models/Location');
+const AdminRole = require('../../models/AdminRoles');
 const { uploadToS3 } = require('../../utils/s3Upload');
 
 // exports.createOrUpdateCarrierProfile = async (req, res) => {
@@ -173,7 +174,57 @@ exports.createupdateProfile = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
+  try{
+    const {userId} = req.params;
+    if(!userId){
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+    const user = await User.findOne({_id:userId});
+    if(!user){
+      return res.status(400).json({ success: false, message: "user Not Found" });
+    }
+    const roleInfo = await AdminRole.findOne({
+      _id: user.role,      // assuming user.role stores AdminRole id
+      isActive: "active"
+    });
+    
+    if (!roleInfo) {
+        return res.status(200).json({
+          success: false,
+          notVerified: true,
+          message: 'Role is inactive or not found',
+      });
+     }
+    let profileCompleted = false;
+    let shipperprofle = false;
+    let HaveTruck = false;
+      const carrierProfile = await Carrier.findOne({ userId: userId });
+      if (carrierProfile) {
+        profileCompleted=true;
+      }
+      const shipperProfile = await Shipper.findOne({ userId: userId });
+      if (shipperProfile) {
+        shipperprofle=true;
+      }
+      const trucks = await Truck.find({ carrierId: carrierProfile._id });
+      if (trucks || trucks.length > 0) {
+        HaveTruck = true;
+      }
+      return res.status(200).json({
+        success: true,
+        data: {
+         carrier:{HaveTruck,profileCompleted},
+         shipper:{shipperprofle}
+        }
+      });
+      // If both are good → continue login
+    
+  }catch(error){
+      return res.status(500).json({ success: false, message: error.message });
+  }
 
+}
 //upload profile photo 
 exports.createupdateProfilePhoto = async (req, res) => {
   try {

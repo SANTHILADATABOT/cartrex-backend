@@ -5,6 +5,7 @@ const Carrier = require('../models/Carrier');
 const Shipper = require('../models/Shipper');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
+const Bid = require('../models/Bid');
 const Truck = require('../models/Truck');
 const Location =require('../models/Location');
 const { uploadToS3 } = require('../utils/s3Upload');
@@ -157,6 +158,7 @@ exports.createOrUpdateProfile = async (req, res) => {
       profile.country = country || profile.country;
       profile.city = city || profile.city;
       profile.state = state || profile.state;
+      profile.stateCode = stateCode || profile.stateCode;
 
       if (savedPhotoPath) profile.photo = savedPhotoPath;
 
@@ -253,6 +255,87 @@ exports.getAllCarriers = async (req, res) => {
   } catch (error) {
     console.error('Get carriers error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+exports.getcarrierDeatilsbyId = async (req, res) => {
+  try {
+    const { userid } = req.params;
+    if (!userid) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    /** ---------------------------------------------------
+     * 1. Get Carrier by userId
+     * --------------------------------------------------- */
+    const carrier = await Carrier.findOne({ 
+        userId: userid, 
+        deletstatus: 0 
+      })
+      .populate("userId", "firstName lastName email phone role")
+      .populate("createdBy", "firstName lastName email")
+      .populate("updatedBy", "firstName lastName email");
+
+    if (!carrier) {
+      return res.status(404).json({
+        success: false,
+        message: "Carrier not found",
+      });
+    }
+
+    const carrierId = carrier._id;
+
+    /** ---------------------------------------------------
+     * 2. Get Trucks under this carrier
+     * --------------------------------------------------- */
+    const trucks = await Truck.find({ 
+      carrierId: carrierId, 
+      deletstatus: 0 
+    });
+
+    /** ---------------------------------------------------
+     * 3. Get Bookings for this carrier
+     * --------------------------------------------------- */
+    const bookings = await Booking.find({
+      carrierId: carrierId,
+      deletstatus: 0
+    });
+
+    /** ---------------------------------------------------
+     * 4. Get Bids for this carrier
+     * --------------------------------------------------- */
+    const bids = await Bid.find({
+      carrierId: carrierId,
+      deletstatus: 0
+    });
+
+    /** ---------------------------------------------------
+     * 5. Count totals
+     * --------------------------------------------------- */
+    const summary = {
+      totalTrucks: trucks.length,
+      totalBookings: bookings.length,
+      totalBids: bids.length,
+    };
+    res.status(200).json({
+      success: true,
+      message: "Carrier details fetched successfully",
+      data: {
+        carrier,
+        trucks,
+        bookings,
+        bids,
+        summary
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching carrier by ID:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
