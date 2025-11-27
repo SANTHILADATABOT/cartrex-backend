@@ -198,3 +198,63 @@ exports.createTruckRoute = async (req, res) => {
         return res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
+
+exports.getTruckDetails = async (req, res) => {
+    try {
+        const { truckId } = req.body;
+
+        const truck = await Truck.findById(truckId)
+            .populate({
+                path: "carrierId",
+                select: "companyName userId email phone"
+            })
+            .populate({
+                path: "truckType",
+                select: "name parentCategory"
+            });
+
+        if (!truck) {
+            return res.status(404).json({
+                success: false,
+                message: "Truck not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Truck details fetched successfully",
+            data: {
+                truckId: truck._id,
+                nickname: truck.nickname,
+                registrationNumber: truck.registrationNumber,
+                truckType: truck.truckType,
+                hasWinch: truck.hasWinch,
+                capacity: truck.capacity,
+                mcDotNumber: truck.mcDotNumber,
+                vinNumber: truck.vinNumber,
+                zipcode: truck.zipcode,
+                insurance: truck.insurance,
+                insuranceExpiry: truck.insuranceExpiry,
+                userAgent: truck.userAgent,
+                
+                // Photos from second API
+                truckProfile: truck.truckProfile,
+                coverPhoto: truck.coverPhoto,
+                photos: truck.photos,
+
+                // Carrier details
+                carrier: truck.carrierId,
+
+                createdAt: truck.createdAt,
+                updatedAt: truck.updatedAt
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
