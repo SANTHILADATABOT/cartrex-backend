@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true ,select: false },
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, trim: true },
-  phone: { type: String, required: true },
+  phone: { type: String},
   // role: { type: String, enum: ['admin', 'carrier', 'shipper'], required: true },
   role: {
   type: mongoose.Schema.Types.ObjectId,
@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema({
   lastLogin: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  verifyuser:{type:String, enum:["verified","unverified"], default: "unverified"},
   //  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

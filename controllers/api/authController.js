@@ -1,13 +1,16 @@
 const bcrypt = require("bcryptjs");
-const User = require('../models/User');
-const AdminRole = require('../models/AdminRoles');
-const Carrier = require('../models/Carrier');
-const Shipper = require('../models/Shipper');
-const AdminUser = require('../models/AdminUsers');
-const { generateToken, generateOTP } = require('../utils/jwt');
-const { sendEmail } = require('../utils/emailService');
-// const SMSService = require('../utils/smsService');
-const { encrypt, decrypt } = require('../utils/encryption');
+const User = require('../../models/User');
+const AdminRole = require('../../models/AdminRoles');
+const Carrier = require('../../models/Carrier');
+const Shipper = require('../../models/Shipper');
+const AdminUser = require('../../models/AdminUsers');
+const twilio = require("twilio");
+const sgMail = require("@sendgrid/mail");
+
+const { generateToken, generateOTP } = require('../../utils/jwt');
+const { sendEmail } = require('../../utils/emailService');
+const { encrypt, decrypt } = require('../../utils/encryption');
+global.otps = {}; // { email: otp }
 // Signup Controller
 
 exports.signup = async (req, res) => {
@@ -91,7 +94,7 @@ exports.signup = async (req, res) => {
       success: true,
       message: 'User registered successfully',
       token,
-      user: {
+      data: {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
@@ -99,8 +102,8 @@ exports.signup = async (req, res) => {
         role: roleDoc.roleType,
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
+        sessionData:req.session.users,
       },
-      data2: req.session.users,
     });
 
   } catch (error) {
@@ -114,7 +117,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
     if (!email || !password || !role) {
-      return res.status(200).json({
+      return res.status(400).json({
         success: false,
         notVerified:true,
         message: 'Please provide email, password, and role',
@@ -128,27 +131,26 @@ exports.login = async (req, res) => {
     } else if (role === 'user' || role === 'Carrier' || role === 'Shipper') {
       account = await User.findOne({ email }).select('+password');
     } else {
-      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid role type' });
+      return res.status(400).json({ success: false,notVerified:true, message: 'Invalid role type' });
     }
     // ✅ If not found
     if (!account) {
-      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials1' });
+      return res.status(401).json({ success: false, notVerified:true,message: 'Invalid credentials1' });
     }
 
     // ✅ Compare bcrypt password
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) {
-      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
+      return res.status(401).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
     }
     // Check if active
     if (!account.isActive) {
-      return res.status(200).json({
+      return res.status(403).json({
         success: false,
         notVerified:true,
         message: 'Account is deactivated',
       });
     }
-
     // ✅ Fetch role info
     const roleInfo = await AdminRole.findOne({
       _id: account.role ?? account.roleId,      // assuming user.role stores AdminRole id
@@ -156,7 +158,7 @@ exports.login = async (req, res) => {
     });
 
     if (!roleInfo) {
-      return res.status(200).json({
+      return res.status(403).json({
         success: false,
         notVerified:true,
         message: 'Role is inactive or not found',
@@ -166,12 +168,12 @@ exports.login = async (req, res) => {
     // ✅ Update last login
     account.lastLogin = new Date();
     await account.save();
+    
     if(role === "user"){
       if(account.verifyuser !== "verified") {
-        return res.status(200).json({
+        return res.status(500).json({
           success: false,
           notVerified:true,
-          navigate:"/forgotpassword",
           message: 'user not verified please verified'
         });
       }
@@ -195,9 +197,8 @@ exports.login = async (req, res) => {
     // ✅ Success response
     res.status(200).json({
       success: true,
-      notVerified:false,
+      notVerified:true,
       token,
-      data2: req.session.users,
       data: {
         id: account._id,
         email: account.email,
@@ -206,6 +207,7 @@ exports.login = async (req, res) => {
         role: roleInfo.roleType,
         isApproved: account.isApproved,
         profileCompleted: account.profileCompleted,
+        sessionData:req.session.users,
       },
     });
   } catch (error) {
@@ -247,30 +249,80 @@ exports.logout = async (req, res) => {
 };
 
 // Verify OTP Controller
-exports.verifyOTP = async (req, res) => {
+exports.verifyOtp = async(req, res) => {
+  const data = req.body;
+  const {step,otp,email} = data.data;
+  // Compare with stored OTP (this is a simple demo)
+  if (global.otps[email] && Number(otp) === Number(global.otps[email])) {
+    const user = await User.findOne({email:email});
+      if(step === "signup"){
+        user.verifyuser = "verified";
+        user.lastLogin = new Date();
+        await user.save();
+        delete global.otps[email]; // Optional: clean up
+        return res.json({ success: true, message: "OTP verified successfully!" });
+     }
+     else if(step === "forget" && user.verifyuser === "verified"){
+        delete global.otps[email]; // Optional: clean up
+        return res.json({ success: true, message: "OTP verified successfully!" });
+     }
+  }
+  
+  return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+};
+exports.sendOtp = async (req, res) => {
   try {
-    const { userId, otp } = req.body;
+    const data = req.body;
+    const { type, phone, email} = data.data;
+    const otp = generateOTP();
+    if (type === "sms") {
+      let phoneNumber = phone;
+      if (!phone.startsWith('+')) {
+        phoneNumber = '+91' + phone; // Adjust country code accordingly
+      }
 
-    // Verify OTP (use Redis in production)
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+      const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-    user.lastLogin = new Date();
-    await user.save();
+      await smsClient.messages.create({
+        body: `Your OTP is ${otp}`,
+        to: phoneNumber,
+        from: process.env.TWILIO_PHONE_NUMBER,
+      });
+    }
+    else if (type === 'email') {
+      console.log(process.env.SENDGRID_API_KEY)
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      console.log('type === email=>',sgMail);
+      await sgMail.send({
+        to: email,
+        from: process.env.FROM_EMAIL,
+        subject: "Your OTP",
+        text: `Your OTP is ${otp}`,
+      });
+    }
 
-    const token = generateToken(user._id);
+    global.otps[email] = otp; // Store OTP by email
+
+    res.json({ success: true, message: "OTP sent!",otp:otp });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.signUpVerification = async (req, res) => {
+  try {
+    const data = req.body;
+    const { email ,phone} = data.data;
+    const user = await User.findOne({
+      $or: [
+        { phone: phone },
+        { email: email }
+      ]
+    });
+    if (!user) return res.status(200).json({ success: false, message: 'Email or Phone number Already registered' });
     res.status(200).json({
       success: true,
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        isApproved: user.isApproved,
-        profileCompleted: user.profileCompleted
-      }
+      message: "Valid email"
     });
   } catch (error) {
     console.error('OTP verification error:', error);
@@ -280,12 +332,8 @@ exports.verifyOTP = async (req, res) => {
 exports.UserVerification = async (req, res) => {
   try {
     const data = req.body;
-    const { email,step } = data.data;
-    let filter = {email:email ,deletstatus:0};
-    if(step !== "verification"){
-      filter.verifyuser = "verified";
-    }
-    const user = await User.findOne(filter);
+    const { email } = data.data;
+    const user = await User.findOne({email:email ,verifyuser:"verified"});
     if (!user) return res.status(200).json({ success: false, message: 'Please enter a verified registered email' });
 
     user.lastLogin = new Date();

@@ -3,20 +3,21 @@ const routeSchema = new mongoose.Schema({
   carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier', required: true },
    truckId: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
   origin: {
-    state: { type: String,  },
+    state: { type: String},
       stateCode: { type: String, trim: true }, 
-    city: { type: String, },
+    city: { type: String},
        zipcode: {
       type: String,
+    
       match: [/^\d{5}(-\d{4})?$/, "Invalid ZIP code"],
     },
-    fullAddress: { type: String,  trim: true },
+    fullAddress: { type: String, trim: true },
     formattedAddress: { type: String, trim: true },
-    pickupWindow: { type: String,  },
-    pickupRadius: { type: Number, } // in miles
+    pickupWindow: { type: String },
+    pickupRadius: { type: Number } // in miles
   },
   destination: {
-    state: { type: String,  },
+    state: { type: String},
       stateCode: { type: String, trim: true }, 
     city: { type: String,  },
        zipcode: {
