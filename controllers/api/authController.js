@@ -53,6 +53,7 @@ exports.signup = async (req, res) => {
       role: roleDoc._id,
       isApproved: true, 
       isActive: true,
+      verifyuser:"verified"
     });
 
     if (roleDoc.roleType === 'Carrier') {
