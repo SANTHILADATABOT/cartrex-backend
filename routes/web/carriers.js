@@ -9,6 +9,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/profile', upload.single('photo'), carrierController.createOrUpdateProfile);
 router.get('/profile', protect, authorize('carrier'), carrierController.getProfile);
 router.get('/', protect, authorize('admin'), carrierController.getAllCarriers);
+router.get('/getcarrierDeatilsbyId/:userid', carrierController.getcarrierDeatilsbyId);
 router.put('/:id/approve', protect, authorize('admin'), carrierController.approveCarrier);
 router.delete('/:id', protect, authorize('admin'), carrierController.deleteCarrier);
 

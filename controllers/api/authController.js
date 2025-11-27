@@ -3,6 +3,7 @@ const User = require('../../models/User');
 const AdminRole = require('../../models/AdminRoles');
 const Carrier = require('../../models/Carrier');
 const Shipper = require('../../models/Shipper');
+const Truck = require('../../models/Truck');
 const AdminUser = require('../../models/AdminUsers');
 const twilio = require("twilio");
 const sgMail = require("@sendgrid/mail");
@@ -15,34 +16,34 @@ global.otps = {}; // { email: otp }
 
 exports.signup = async (req, res) => {
   try {
-    const { 
-      email, 
-      password, 
-      confirmPassword, 
-      firstName, 
-      lastName, 
-      phone, 
-      roleId, 
+    const {
+      email,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      phone,
+      roleId,
       // address, 
       // zipCode 
     } = req.body;
-    if(!roleId){
-      roleId ="68ff5689aa5d489915b8caaa";
+    if (!roleId) {
+      roleId = "68ff5689aa5d489915b8caaa";
     }
     if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
-      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+      return res.status(200).json({ success: false, message: 'Please provide all required fields' });
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ success: false, message: 'Passwords do not match' });
+      return res.status(200).json({ success: false, message: 'Passwords do not match' });
     }
     const roleDoc = await AdminRole.findById(roleId);
     if (!roleDoc) {
-      return res.status(400).json({ success: false, message: 'Invalid role ID' });
+      return res.status(200).json({ success: false, message: 'Invalid role ID' });
     }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Email already registered' });
+      return res.status(200).json({ success: false, message: 'Email already registered' });
     }
     const user = await User.create({
       email,
@@ -51,33 +52,36 @@ exports.signup = async (req, res) => {
       lastName,
       phone,
       role: roleDoc._id,
-      isApproved: true, 
+      isApproved: true,
       isActive: true,
+      verifyuser:"verified"
     });
 
-    if (roleDoc.roleType === 'Carrier') {
-      await Carrier.create({
-        userId: user._id,
-        createdBy: user._id,
-        status: 'active',
-        // address: address || '',
-        // zipCode: zipCode || '',
-      });
-    } 
-    else if (roleDoc.roleType === 'Shipper') {
-      await Shipper.create({
-        userId: user._id,
-        createdBy: user._id,
-        // address: address,
-        // zipCode: zipCode,
-      });
-    }
+    // if (roleDoc.roleType === 'Carrier') {
+    //   await Carrier.create({
+    //     userId: user._id,
+    //     createdBy: user._id,
+    //     status: 'active',
+    //     // address: address || '',
+    //     // zipCode: zipCode || '',
+    //   });
+    // }
+    // else if (roleDoc.roleType === 'Shipper') {
+    //   await Shipper.create({
+    //     userId: user._id,
+    //     createdBy: user._id,
+    //     // address: address,
+    //     // zipCode: zipCode,
+    //   });
+    // }
+
+
     const roleInfo = await AdminRole.findOne({
       _id: roleDoc._id,      // assuming user.role stores AdminRole id
       isActive: "active"
     });
     const token = generateToken(user._id);
-        // ✅ Create session
+    // ✅ Create session
     req.session.users = {
       _id: user._id,
       email: user.email,
@@ -90,7 +94,7 @@ exports.signup = async (req, res) => {
       profileCompleted: user.profileCompleted,
     };
     await req.session.save();
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: 'User registered successfully',
       token,
@@ -102,7 +106,7 @@ exports.signup = async (req, res) => {
         role: roleDoc.roleType,
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
-        sessionData:req.session.users,
+        sessionData: req.session.users,
       },
     });
 
@@ -117,9 +121,9 @@ exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
     if (!email || !password || !role) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
-        notVerified:true,
+        notVerified: true,
         message: 'Please provide email, password, and role',
       });
     }
@@ -131,23 +135,27 @@ exports.login = async (req, res) => {
     } else if (role === 'user' || role === 'Carrier' || role === 'Shipper') {
       account = await User.findOne({ email }).select('+password');
     } else {
-      return res.status(400).json({ success: false,notVerified:true, message: 'Invalid role type' });
+      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid role type' });
     }
     // ✅ If not found
     if (!account) {
-      return res.status(401).json({ success: false, notVerified:true,message: 'Invalid credentials1' });
+      return res.status(200).json({ success: false, notVerified:true,message: 'Invalid credentials1' });
     }
 
     // ✅ Compare bcrypt password
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
+      return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
     }
+    
+    
+
+
     // Check if active
     if (!account.isActive) {
-      return res.status(403).json({
+      return res.status(200).json({
         success: false,
-        notVerified:true,
+        notVerified: true,
         message: 'Account is deactivated',
       });
     }
@@ -158,9 +166,9 @@ exports.login = async (req, res) => {
     });
 
     if (!roleInfo) {
-      return res.status(403).json({
+      return res.status(200).json({
         success: false,
-        notVerified:true,
+        notVerified: true,
         message: 'Role is inactive or not found',
       });
     }
@@ -171,13 +179,31 @@ exports.login = async (req, res) => {
     
     if(role === "user"){
       if(account.verifyuser !== "verified") {
-        return res.status(500).json({
+        return res.status(200).json({
           success: false,
-          notVerified:true,
+          notVerified: true,
           message: 'user not verified please verified'
         });
       }
     }
+     let profileCompleted = false;
+    let shipperprofle = false;
+    let HaveTruck = false;
+    const userId = account._id;
+    const carrierProfile = await Carrier.findOne({ userId: userId });
+      if (carrierProfile) {
+        profileCompleted=true;
+      }
+      const shipperProfile = await Shipper.findOne({ userId: userId });
+      if (shipperProfile) {
+        shipperprofle=true;
+      }
+      const trucks = await Truck.find({ carrierId: carrierProfile._id });
+      if (trucks || trucks.length > 0) {
+        HaveTruck = true;
+      }
+
+      // If both are good → continue login
     // ✅ Create session
     req.session.users = {
       _id: account._id,
@@ -188,7 +214,7 @@ exports.login = async (req, res) => {
       firstName: account.firstName,
       lastName: account.lastName,
       isApproved: account.isApproved,
-      profileCompleted: account.profileCompleted,
+      profileCompleted: profileCompleted,
     };
     await req.session.save();
     // ✅ Generate token
@@ -197,7 +223,7 @@ exports.login = async (req, res) => {
     // ✅ Success response
     res.status(200).json({
       success: true,
-      notVerified:true,
+      notVerified: true,
       token,
       data: {
         id: account._id,
@@ -206,8 +232,11 @@ exports.login = async (req, res) => {
         lastName: account.lastName,
         role: roleInfo.roleType,
         isApproved: account.isApproved,
-        profileCompleted: account.profileCompleted,
-        sessionData:req.session.users,
+        carrier:{profileCompleted,HaveTruck},
+        shipper:{shipperprofle},
+        profileCompleted: profileCompleted,
+        HaveTruck:HaveTruck,
+        sessionData: req.session.users,
       },
     });
   } catch (error) {
@@ -225,7 +254,7 @@ exports.logout = async (req, res) => {
     req.session.destroy((err) => {
       if (err) {
         console.error('Session destroy error:', err);
-        return res.status(500).json({
+        return res.status(200).json({
           success: false,
           message: 'Error logging out'
         });
@@ -249,16 +278,16 @@ exports.logout = async (req, res) => {
 };
 
 // Verify OTP Controller
-exports.verifyOtp = async(req, res) => {
+exports.verifyOtp = async (req, res) => {
   const data = req.body;
-  const {step,otp,email} = data.data;
+  const {step,otp,email} = data;
   // Compare with stored OTP (this is a simple demo)
   if (global.otps[email] && Number(otp) === Number(global.otps[email])) {
     const user = await User.findOne({email:email});
       if(step === "signup"){
-        user.verifyuser = "verified";
-        user.lastLogin = new Date();
-        await user.save();
+        // user.verifyuser = "verified";
+        // user.lastLogin = new Date();
+        // await user.save();
         delete global.otps[email]; // Optional: clean up
         return res.json({ success: true, message: "OTP verified successfully!" });
      }
@@ -267,13 +296,13 @@ exports.verifyOtp = async(req, res) => {
         return res.json({ success: true, message: "OTP verified successfully!" });
      }
   }
-  
+
   return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
 };
 exports.sendOtp = async (req, res) => {
   try {
     const data = req.body;
-    const { type, phone, email} = data.data;
+    const { type, phone, email} = data;
     const otp = generateOTP();
     if (type === "sms") {
       let phoneNumber = phone;
@@ -292,7 +321,7 @@ exports.sendOtp = async (req, res) => {
     else if (type === 'email') {
       console.log(process.env.SENDGRID_API_KEY)
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('type === email=>',sgMail);
+      console.log('type === email=>', sgMail);
       await sgMail.send({
         to: email,
         from: process.env.FROM_EMAIL,
@@ -303,7 +332,7 @@ exports.sendOtp = async (req, res) => {
 
     global.otps[email] = otp; // Store OTP by email
 
-    res.json({ success: true, message: "OTP sent!",otp:otp });
+    res.json({ success: true, message: "OTP sent!", otp: otp });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -312,7 +341,7 @@ exports.sendOtp = async (req, res) => {
 exports.signUpVerification = async (req, res) => {
   try {
     const data = req.body;
-    const { email ,phone} = data.data;
+    const { email ,phone} = data;
     const user = await User.findOne({
       $or: [
         { phone: phone },
@@ -332,7 +361,7 @@ exports.signUpVerification = async (req, res) => {
 exports.UserVerification = async (req, res) => {
   try {
     const data = req.body;
-    const { email } = data.data;
+    const { email } = data;
     const user = await User.findOne({email:email ,verifyuser:"verified"});
     if (!user) return res.status(200).json({ success: false, message: 'Please enter a verified registered email' });
 
@@ -351,7 +380,7 @@ exports.UserVerification = async (req, res) => {
         role: user.role,
         isApproved: user.isApproved,
         profileCompleted: user.profileCompleted,
-        phonenumber:user.phone
+        phonenumber: user.phone
       }
     });
   } catch (error) {
@@ -382,7 +411,7 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const data = req.body;
-    const { userId, otp, newPassword } = data.data;
+    const { userId, otp, newPassword } = data;
 
     // Verify OTP (use Redis in production)
     const user = await User.findById(userId);
@@ -405,7 +434,7 @@ exports.resetPassword = async (req, res) => {
 exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find().select('-password');
-    
+
     res.status(200).json({
       success: true,
       count: users.length,
