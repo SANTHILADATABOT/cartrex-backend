@@ -7,7 +7,8 @@ const { signup, login, logout, verifyOtp, sendOtp, UserVerification, forgotPassw
 const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspacedetails, getSpaceResult, addSpacesDetails, getSpacesByCarrierUserId, editSpacesDetails } = require('../../controllers/api/spaceController');
 const { createupdateProfile, createupdateProfilePhoto,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
 const { createOrUpdateshipperProfile } = require('../../controllers/api/shipperController');
-const { createTruckProfile, uploadTruckPhotos, createTruckRoute } = require('../../controllers/api/TruckController');
+const {getReviewRouteDetails} = require('../../controllers/api/RouteController');
+const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails} = require('../../controllers/api/TruckController');
 const upload = multer({ storage: multer.memoryStorage() });
 //auth 
 router.post('/signup', signup);
@@ -47,10 +48,14 @@ router.post("/uploadtruckphotos",upload.fields([
 
 router.post("/createtruckroute", createTruckRoute);
 
+router.get("/getTruckDetails",getTruckDetails);
+
 //space
 
 router.get('/getSpaceResult', getSpaceResult);
 
+//route
+router.get('/getreviewroutedetails', getReviewRouteDetails);
 
 
 module.exports = router;

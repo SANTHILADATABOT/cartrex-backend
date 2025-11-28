@@ -224,6 +224,7 @@ exports.login = async (req, res) => {
     res.status(200).json({
       success: true,
       notVerified: true,
+      message: 'Carrier Login Sucessfully',
       token,
       data: {
         id: account._id,
