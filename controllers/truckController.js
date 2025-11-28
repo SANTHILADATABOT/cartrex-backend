@@ -127,6 +127,15 @@ exports.createTruckProfile = async (req, res) => {
       fs.writeFileSync(savePath, file.buffer);
       coverPhotoPath = path.join("upload", "trucks", fileName);
     }
+    if (req.files?.truckPhoto) {
+      const file = req.files.truckPhoto[0];
+      const ext = path.extname(file.originalname);
+      const fileName = `truck_${Date.now()}${ext}`;
+      const savePath = path.join(baseDir, fileName);
+
+      fs.writeFileSync(savePath, file.buffer);
+      TruckPhotoPath = path.join("upload", "trucks", fileName);
+    }
     if (req.files?.photos) {
       req.files.photos.forEach((file, index) => {
         const ext = path.extname(file.originalname);
@@ -151,6 +160,7 @@ exports.createTruckProfile = async (req, res) => {
       insurance: insurancePath,
       insuranceExpiry,
       coverPhoto: coverPhotoPath,
+      truckPhoto: TruckPhotoPath,
       photos: photoPaths,
       createdBy: req.body.createdBy,
       updatedBy: req.body.createdBy,

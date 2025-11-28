@@ -235,6 +235,7 @@ const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
 const carrierRoutes =require('./routes/web/carriers');
+const shipperRoutes =require('./routes/web/shippers');
 const otpRoutes =require('./routes/web/otpRoutes');
 const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
@@ -278,6 +279,7 @@ app.use('/space',spaceRoutes);
 app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
+app.use('/shippers', shipperRoutes);
 app.use('/trucks' , truckRoutes);
 app.use('/otpRoutes' , otpRoutes);
 

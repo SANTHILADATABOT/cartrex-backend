@@ -9,15 +9,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/createTruckProfile', upload.fields([
   { name: 'insurance', maxCount: 1 },
   { name: 'coverPhoto', maxCount: 1 },
+  { name: 'truckPhoto', maxCount: 1 },
   { name: 'photos', maxCount: 6 }
 ]), truckController.createTruckProfile);
 
 router.put('/updateTruck/:truckId/:routeId' ,upload.fields([
   { name: 'insurance', maxCount: 1 },
   { name: 'coverPhoto', maxCount: 1 },
+  { name: 'truckPhoto', maxCount: 1 },
   { name: 'photos', maxCount: 6 }
-]),
-  truckController.updateTruck);
+]), truckController.updateTruck);
 
 router.get('/', protect, truckController.getTrucks);
 
