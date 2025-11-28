@@ -20,6 +20,7 @@ const auditSchema = new mongoose.Schema({
 const carrierSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   companyName: { type: String },
+  companyDescription: { type: String },
   photo: { type: String },
   address: { type: String},
   city: { type: String },
