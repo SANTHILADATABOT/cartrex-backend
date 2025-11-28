@@ -48,6 +48,78 @@ const { uploadToS3 } = require('../utils/s3Upload');
 //   }
 // };
  
+exports.getShipperDeatilsbyId = async (req, res) => {
+  try {
+    const { userid } = req.params;
+    if (!userid) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    /** ---------------------------------------------------
+     * 1. Get Carrier by userId
+     * --------------------------------------------------- */
+    const shipper = await Shipper.findOne({ 
+        userId: userid, 
+        deletstatus: 0 
+      })
+      .populate("userId", "firstName lastName email phone role")
+      .populate("createdBy", "firstName lastName email")
+      .populate("updatedBy", "firstName lastName email");
+
+    if (!shipper) {
+      return res.status(404).json({
+        success: false,
+        message: "Carrier not found",
+      });
+    }
+
+    const shipperId = shipper._id;
+
+
+    /** ---------------------------------------------------
+     * 3. Get Bookings for this carrier
+     * --------------------------------------------------- */
+    const bookings = await Booking.find({
+      shipperId: shipperId,
+      deletstatus: 0
+    });
+
+    /** ---------------------------------------------------
+     * 4. Get Bids for this carrier
+     * --------------------------------------------------- */
+    const bids = await Bid.find({
+      shipperId: shipperId,
+      deletstatus: 0
+    });
+
+    /** ---------------------------------------------------
+     * 5. Count totals
+     * --------------------------------------------------- */
+    const summary = {
+      totalBookings: bookings.length,
+      totalBids: bids.length,
+    };
+    res.status(200).json({
+      success: true,
+      message: "shipper details fetched successfully",
+      data: {
+        shipper,
+        bookings,
+        bids,
+        summary
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching shipper by ID:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 
 exports.createOrUpdateProfile = async (req, res) => {
   try {

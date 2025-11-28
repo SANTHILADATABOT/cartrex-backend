@@ -9,5 +9,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/profile', protect, authorize('shipper'), upload.single('photo'), shipperController.createOrUpdateProfile);
 router.get('/profile', protect, authorize('shipper'), shipperController.getProfile);
 router.get('/', protect, authorize('admin'), shipperController.getAllShippers);
+router.get('/getShipperDeatilsbyId/:userid', shipperController.getShipperDeatilsbyId);
 
 module.exports = router;
