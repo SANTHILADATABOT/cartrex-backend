@@ -7,119 +7,270 @@ const User = require('../../models/User');
 const Booking = require('../../models/Booking');
 const Truck = require('../../models/Truck');
 const Location =require('../../models/Location');
+const AdminRole = require('../../models/AdminRoles');
 const { uploadToS3 } = require('../../utils/s3Upload');
 
-exports.createOrUpdateCarrierProfile = async (req, res) => {
+// exports.createOrUpdateCarrierProfile = async (req, res) => {
+//   try {
+//     console.log(" Incoming Request Body:", req.body);
+//     console.log(" Incoming File:", req.file);
+
+//     const { userId, roleType, companyName, address,  zipCode, country,city,state ,stateCode} = req.body;
+
+//     console.log("userId:", userId);
+//     console.log(" roleType:", roleType);
+//     console.log(" req.body:", req.body);
+
+//     // Validate required fields
+//     if (!userId) {
+//       console.log(" ERROR: userId missing");
+//       return res.status(400).json({ success: false, message: "userId is required" });
+//     }
+//     if (!roleType) {
+//       console.log(" ERROR: roleType missing");
+//       return res.status(400).json({ success: false, message: "roleType is required" });
+//     }
+
+//     if (!["Carrier", "Shipper"].includes(roleType)) {
+//       console.log(" ERROR: Invalid roleType", roleType);
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid roleType. Use Carrier or Shipper",
+//       });
+//     }
+//     const Model = roleType === "Carrier" ? Carrier : Shipper;
+//     console.log(" Using Model:", roleType);
+
+//     let profile = await Model.findOne({ userId });
+//     console.log(" Existing Profile:", profile);
+
+//     let savedPhotoPath = null;
+//    console.log(req.file,"req.file")
+   
+//     if (req.file) {
+//       const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
+//       const dir = path.join(__dirname, "../upload/" + folderName);
+
+//       console.log(" Upload Directory:", dir);
+
+//       if (!fs.existsSync(dir)) {
+//         console.log(" Creating folder:", dir);
+//         fs.mkdirSync(dir, { recursive: true });
+//       }
+
+//       const ext = path.extname(req.file.originalname);
+//       const filename = `${roleType.toLowerCase()}_${userId}${ext}`;
+//       const finalPath = path.join(dir, filename);
+
+//       console.log(" Saving File To:", finalPath);
+
+//       fs.writeFileSync(finalPath, req.file.buffer);
+//       savedPhotoPath = path.join("upload", folderName, filename);
+
+//       console.log(" Saved Photo Path:", savedPhotoPath);
+//     }
+//     if (profile) {
+//       console.log(" Updating Existing Profile");
+
+//       profile.companyName = companyName || profile.companyName;
+//       profile.address = address || profile.address;
+//       profile.zipCode = zipCode || profile.zipCode;
+//       profile.country = country || profile.country;
+//       profile.city = city || profile.city;
+//       profile.state = state || profile.state;
+//       profile.stateCode = stateCode || profile.stateCode;
+
+
+//       if (savedPhotoPath) profile.photo = savedPhotoPath;
+
+//       profile.updatedAt = new Date();
+//       await profile.save();
+//     } 
+//     else {
+//       console.log("➡ Creating New Profile");
+
+//       profile = await Model.create({
+//         userId,
+//         companyName,
+//         address,
+//         zipCode,
+//         country,
+//         city,
+//         state,
+//         stateCode,
+//         photo: savedPhotoPath || null
+//       });
+//     }
+
+//     console.log(" SUCCESS: Profile Saved:", profile);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: `${roleType} profile created/updated successfully`,
+//       data: profile,
+//     });
+
+//   } catch (error) {
+//     console.error(" SERVER ERROR:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+exports.createupdateProfile = async (req, res) => {
   try {
-    console.log(" Incoming Request Body:", req.body);
-    console.log(" Incoming File:", req.file);
+    const { userId, roleType, companyName, address, locationId, zipCode, country, city, state } = req.body;
 
-    const { userId, roleType, companyName, address,  zipCode, country,city,state ,stateCode} = req.body;
-
-    console.log("userId:", userId);
-    console.log(" roleType:", roleType);
-    console.log(" req.body:", req.body);
-
-    // Validate required fields
-    if (!userId) {
-      console.log(" ERROR: userId missing");
-      return res.status(400).json({ success: false, message: "userId is required" });
-    }
-    if (!roleType) {
-      console.log(" ERROR: roleType missing");
-      return res.status(400).json({ success: false, message: "roleType is required" });
-    }
+    if (!userId) return res.status(400).json({ success: false, message: "userId is required" });
+    if (!roleType) return res.status(400).json({ success: false, message: "roleType is required" });
 
     if (!["Carrier", "Shipper"].includes(roleType)) {
-      console.log(" ERROR: Invalid roleType", roleType);
-      return res.status(400).json({
-        success: false,
-        message: "Invalid roleType. Use Carrier or Shipper",
+      return res.status(400).json({ success: false, message: "Invalid roleType" });
+    }
+
+    const location = await Location.findById(locationId);
+    if (!location) {
+      return res.status(404).json({ success: false, message: "Invalid locationId" });
+    }
+
+    const Model = roleType === "Carrier" ? Carrier : Shipper;
+    let profile = await Model.findOne({ userId });
+
+    if (profile) {
+      profile.companyName = companyName;
+      profile.address = address;
+      profile.locationId = locationId;
+      profile.zipCode = zipCode;
+      profile.country = country;
+      profile.city = city;
+      profile.state = state;
+      profile.updatedAt = new Date();
+      await profile.save();
+    } else {
+      profile = await Model.create({
+        userId,
+        companyName,
+        address,
+        locationId,
+        zipCode,
+        country,
+        city,
+        state,
+        photo: null
       });
     }
-    const Model = roleType === "Carrier" ? Carrier : Shipper;
-    console.log(" Using Model:", roleType);
 
-    let profile = await Model.findOne({ userId });
-    console.log(" Existing Profile:", profile);
+    return res.status(200).json({
+      success: true,
+      message: `${roleType} profile created successfully`,
+      data: profile
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
+  try{
+    const {userId} = req.params;
+    if(!userId){
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+    const user = await User.findOne({_id:userId});
+    if(!user){
+      return res.status(400).json({ success: false, message: "user Not Found" });
+    }
+    const roleInfo = await AdminRole.findOne({
+      _id: user.role,      // assuming user.role stores AdminRole id
+      isActive: "active"
+    });
+    
+    if (!roleInfo) {
+        return res.status(200).json({
+          success: false,
+          notVerified: true,
+          message: 'Role is inactive or not found',
+      });
+     }
+    let profileCompleted = false;
+    let shipperprofle = false;
+    let HaveTruck = false;
+      const carrierProfile = await Carrier.findOne({ userId: userId });
+      if (carrierProfile) {
+        profileCompleted=true;
+      }
+      const shipperProfile = await Shipper.findOne({ userId: userId });
+      if (shipperProfile) {
+        shipperprofle=true;
+      }
+      const trucks = await Truck.find({ carrierId: carrierProfile._id });
+      if (trucks || trucks.length > 0) {
+        HaveTruck = true;
+      }
+      return res.status(200).json({
+        success: true,
+        data: {
+         carrier:{HaveTruck,profileCompleted},
+         shipper:{shipperprofle}
+        }
+      });
+      // If both are good → continue login
+    
+  }catch(error){
+      return res.status(500).json({ success: false, message: error.message });
+  }
+
+}
+//upload profile photo 
+exports.createupdateProfilePhoto = async (req, res) => {
+  try {
+    const { userId, roleType } = req.body;
+
+    if (!userId) return res.status(400).json({ success: false, message: "userId is required" });
+    if (!roleType) return res.status(400).json({ success: false, message: "roleType is required" });
+
+    const Model = roleType === "Carrier" ? Carrier : Shipper;
+
+    const profile = await Model.findOne({ userId });
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Profile not found" });
+    }
 
     let savedPhotoPath = null;
-   console.log(req.file,"req.file")
-   
+
     if (req.file) {
+
       const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
       const dir = path.join(__dirname, "../upload/" + folderName);
 
-      console.log(" Upload Directory:", dir);
-
-      if (!fs.existsSync(dir)) {
-        console.log(" Creating folder:", dir);
-        fs.mkdirSync(dir, { recursive: true });
-      }
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
       const ext = path.extname(req.file.originalname);
       const filename = `${roleType.toLowerCase()}_${userId}${ext}`;
       const finalPath = path.join(dir, filename);
 
-      console.log(" Saving File To:", finalPath);
-
       fs.writeFileSync(finalPath, req.file.buffer);
       savedPhotoPath = path.join("upload", folderName, filename);
 
-      console.log(" Saved Photo Path:", savedPhotoPath);
-    }
-    if (profile) {
-      console.log(" Updating Existing Profile");
-
-      profile.companyName = companyName || profile.companyName;
-      profile.address = address || profile.address;
-      profile.zipCode = zipCode || profile.zipCode;
-      profile.country = country || profile.country;
-      profile.city = city || profile.city;
-      profile.state = state || profile.state;
-      profile.stateCode = stateCode || profile.stateCode;
-
-
-      if (savedPhotoPath) profile.photo = savedPhotoPath;
-
+      profile.photo = savedPhotoPath;
       profile.updatedAt = new Date();
       await profile.save();
-    } 
-    else {
-      console.log("➡ Creating New Profile");
-
-      profile = await Model.create({
-        userId,
-        companyName,
-        address,
-        zipCode,
-        country,
-        city,
-        state,
-        stateCode,
-        photo: savedPhotoPath || null
-      });
     }
-
-    console.log(" SUCCESS: Profile Saved:", profile);
 
     return res.status(200).json({
       success: true,
-      message: `${roleType} profile created/updated successfully`,
-      data: profile,
+      message: `${roleType} profile photo created/updated successfully`,
+      data: profile
     });
 
   } catch (error) {
-    console.error(" SERVER ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 
 exports.getProfile = async (req, res) => {

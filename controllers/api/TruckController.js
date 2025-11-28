@@ -1,0 +1,260 @@
+const path = require('path');
+const fs = require('fs');
+const Truck = require('../../models/Truck');
+const Carrier = require('../../models/Carrier');
+const Route = require('../../models/Route');
+const { uploadToS3 } = require('../../utils/s3Upload');
+
+exports.createTruckProfile = async (req, res) => {
+    try {
+        const {
+            userId,
+            nickname,
+            registrationNumber,
+            truckType,
+            hasWinch,
+            capacity,
+            insuranceExpiry,
+            mcDotNumber,
+            vinNumber,
+            zipcode
+        } = req.body;
+
+
+        if (!truckType || !truckType.subcategoryId) { 
+            return res.status(400).json({ success: false, message: "Truck type subcategoryId required" }); }
+
+        const carrier = await Carrier.findOne({ userId });
+        if (!carrier) {
+            return res.status(404).json({ success: false, message: "Carrier not found" });
+        }
+
+        const baseDir = path.join(__dirname, "../upload/trucks");
+        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+        let insurancePath = null;
+
+        if (req.files?.insurance) {
+            const file = req.files.insurance[0];
+            const ext = path.extname(file.originalname);
+            const fileName = `insurance_${Date.now()}${ext}`;
+            const savePath = path.join(baseDir, fileName);
+
+            fs.writeFileSync(savePath, file.buffer);
+            insurancePath = path.join("upload", "trucks", fileName);
+        }
+
+        const truck = await Truck.create({
+            carrierId: carrier._id,
+            nickname,
+            registrationNumber,
+            truckType:truckType.subcategoryId,
+            hasWinch,
+            capacity,
+            mcDotNumber,
+            vinNumber,
+            zipcode,
+            insurance: insurancePath,
+            insuranceExpiry,
+            userAgent: req.headers['user-agent'],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: " Truck Profile created successfully",
+            data: truck
+        });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};
+
+exports.uploadTruckPhotos = async (req, res) => {
+    try {
+        const { truckId } = req.body;
+        const baseDir = path.join(__dirname, "../upload/trucks");
+        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+        let truckProfilePath = null;
+        let coverPhotoPath = null;
+        let photoPaths = [];
+
+
+
+        if (req.files?.truckProfile) {
+            const file = req.files.truckProfile[0];
+            const ext = path.extname(file.originalname);
+            const filename = `truckProfile_${Date.now()}${ext}`;
+
+            fs.writeFileSync(path.join(baseDir, filename), file.buffer);
+            truckProfilePath = `upload/trucks/${filename}`;
+        }
+
+        if (req.files?.coverPhoto) {
+            const file = req.files.coverPhoto[0];
+            const ext = path.extname(file.originalname);
+            const filename = `cover_${Date.now()}${ext}`;
+
+            fs.writeFileSync(path.join(baseDir, filename), file.buffer);
+            coverPhotoPath = `upload/trucks/${filename}`;
+        }
+
+        if (req.files?.photos) {
+            req.files.photos.forEach((file, idx) => {
+                const ext = path.extname(file.originalname);
+                const filename = `photo_${Date.now()}_${idx}${ext}`;
+
+                fs.writeFileSync(path.join(baseDir, filename), file.buffer);
+                photoPaths.push(`upload/trucks/${filename}`);
+            });
+        }
+
+        const truck = await Truck.findByIdAndUpdate(
+            truckId,
+            {
+                truckProfile: truckProfilePath,
+                coverPhoto: coverPhotoPath,
+                photos: photoPaths
+            },
+            { new: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Truck photos uploaded successfully",
+            data: truck
+        });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};
+
+exports.createTruckRoute = async (req, res) => {
+    try {
+        const {
+            truckId,
+            userId,
+            originCity,
+            originState,
+            originStateCode,
+            originZipcode,
+            originlocation,
+            pickupWindow,
+            pickupRadius,
+
+            destinationCity,
+            destinationstate,
+            destinationstateCode,
+            destinationZipcode,
+            destinationlocation,
+            deliveryWindow,
+            deliveryRadius
+        } = req.body;
+
+
+        const carrier = await Carrier.findOne({ userId });
+        if (!carrier) return res.status(404).json({ success: false, message: "Carrier not found" });
+
+        const route = await Route.create({
+            carrierId: carrier._id,
+            truckId,
+            origin: {
+                fullAddress: originlocation,
+                city: originCity,
+                state: originState,
+                stateCode: originStateCode,
+                zipcode: originZipcode,
+                pickupWindow,
+                pickupRadius
+            },
+            destination: {
+                fullAddress: destinationlocation,
+                city: destinationCity,
+                state: destinationstate,
+                stateCode: destinationstateCode,
+                zipcode: destinationZipcode,
+                deliveryWindow,
+                deliveryRadius
+            },
+            createdBy: req.body.createdBy,
+            updatedBy: req.body.createdBy,
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully created a Route for the Truck ",
+            data: route
+        });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};
+
+exports.getTruckDetails = async (req, res) => {
+    try {
+        const { truckId } = req.body;
+
+        const truck = await Truck.findById(truckId)
+            .populate({
+                path: "carrierId",
+                select: "companyName userId email phone"
+            })
+            .populate({
+                path: "truckType",
+                select: "name parentCategory"
+            });
+
+        if (!truck) {
+            return res.status(404).json({
+                success: false,
+                message: "Truck not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Truck details fetched successfully",
+            data: {
+                truckId: truck._id,
+                nickname: truck.nickname,
+                registrationNumber: truck.registrationNumber,
+                truckType: truck.truckType,
+                hasWinch: truck.hasWinch,
+                capacity: truck.capacity,
+                mcDotNumber: truck.mcDotNumber,
+                vinNumber: truck.vinNumber,
+                zipcode: truck.zipcode,
+                insurance: truck.insurance,
+                insuranceExpiry: truck.insuranceExpiry,
+                userAgent: truck.userAgent,
+                
+                // Photos from second API
+                truckProfile: truck.truckProfile,
+                coverPhoto: truck.coverPhoto,
+                photos: truck.photos,
+
+                // Carrier details
+                carrier: truck.carrierId,
+
+                createdAt: truck.createdAt,
+                updatedAt: truck.updatedAt
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
