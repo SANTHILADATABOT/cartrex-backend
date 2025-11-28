@@ -101,10 +101,11 @@ exports.getdashboardcounts = async (req, res) => {
         carriers: carrierMap[m] || 0
       });
     }
+    const now = new Date();
         // Current Year Range
     const startCurrent = new Date(now.getFullYear(), 0, 1);
     const endCurrent = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-
+    
     // Last Year Range
     const lastYear = now.getFullYear() - 1;
     const startLast = new Date(lastYear, 0, 1);
