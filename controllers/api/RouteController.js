@@ -6,42 +6,43 @@ exports.getReviewRouteDetails = async (req, res) => {
     try {
         const { truckId } = req.body;
 
-        if (!truckId) {
-            return res.status(400).json({
-                success: false,
-                message: "truckId is required"
-            });
-        }
-
-        const route = await Route.findOne({ truckId })
+        const route = await Route.findOne({ truckId, deletstatus:0 })
             .populate({
                 path: "truckId",
-                select: "nickname registrationNumber truckType"
+                select: "nickname registrationNumber "
             })
-            .populate("carrierId", "companyName");
+            .populate({
+                path: "carrierId",
+                select: "companyName email phone userId"
+            });
 
         if (!route) {
             return res.status(404).json({
                 success: false,
-                message: "No route found for this truck"
+                message: "Route not found for this truck"
             });
         }
 
         return res.status(200).json({
             success: true,
-            message: "Review route details fetched successfully",
+            message: "Truck route details fetched successfully",
             data: {
                 routeId: route._id,
-                truckId: route.truckId,
+                truckId,
                 carrier: route.carrierId,
 
                 origin: route.origin,
                 destination: route.destination,
 
-                status: route.status,
-                createdAt: route.createdAt
+                createdBy: route.createdBy,
+                updatedBy: route.updatedBy,
+                ipAddress: route.ipAddress,
+                userAgent: route.userAgent,
+                createdAt: route.createdAt,
+                updatedAt: route.updatedAt
             }
         });
+
     } catch (error) {
         return res.status(500).json({
             success: false,

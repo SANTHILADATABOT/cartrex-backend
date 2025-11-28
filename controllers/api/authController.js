@@ -189,9 +189,10 @@ exports.login = async (req, res) => {
         });
       }
     }
-     let profileCompleted = false;
+    let profileCompleted = false;
     let shipperprofle = false;
     let HaveTruck = false;
+    
     const userId = account._id;
     const carrierProfile = await Carrier.findOne({ userId: userId });
       if (carrierProfile) {
