@@ -61,10 +61,16 @@ exports.createTruckProfile = async (req, res) => {
             updatedAt: new Date()
         });
 
+         const populatedTruck = await Truck.findById(truck._id)
+            .populate("truckType", "name  description");
+
         return res.status(201).json({
             success: true,
-            message: " Truck Profile created successfully",
-            data: truck
+            message: "Truck Profile created successfully",
+            data: {
+                ...populatedTruck._doc,       // includes all truck fields
+                truckType: populatedTruck.truckType // populated object
+            }
         });
 
     } catch (error) {
