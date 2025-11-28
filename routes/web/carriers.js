@@ -7,6 +7,7 @@ const carrierController = require('../../controllers/carrierController');
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/profile', upload.single('photo'), carrierController.createOrUpdateProfile);
+router.post('/CarrierprofileUpdate', upload.single('photo'), carrierController.CarrierprofileUpdate);
 router.get('/profile', protect, authorize('carrier'), carrierController.getProfile);
 router.get('/', protect, authorize('admin'), carrierController.getAllCarriers);
 router.get('/getcarrierDeatilsbyId/:userid', carrierController.getcarrierDeatilsbyId);
