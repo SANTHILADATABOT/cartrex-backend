@@ -5,6 +5,7 @@ const Carrier = require('../models/Carrier');
 const Shipper = require('../models/Shipper');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
+const Route = require('../models/Route');
 const Bid = require('../models/Bid');
 const Truck = require('../models/Truck');
 const Location =require('../models/Location');
@@ -415,6 +416,12 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
       carrierId: carrierId, 
       deletstatus: 0 
     });
+    const truckIds = trucks.map(t => t._id);
+
+    const routes = await Route.find({
+      truckId: { $in: truckIds },
+      deletstatus: 0
+    });
 
     /** ---------------------------------------------------
      * 3. Get Bookings for this carrier
@@ -448,6 +455,7 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
         trucks,
         bookings,
         bids,
+        routes,
         summary
       },
     });
