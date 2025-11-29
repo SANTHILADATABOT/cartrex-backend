@@ -1,6 +1,8 @@
 const Shipper = require('../models/Shipper');
 const User = require('../models/User');
 const { uploadToS3 } = require('../utils/s3Upload');
+const Booking = require("../models/Booking");
+const Bid = require("../models/Bid");
 
 // exports.createOrUpdateProfile = async (req, res) => {
 //   try {
@@ -59,7 +61,7 @@ exports.getShipperDeatilsbyId = async (req, res) => {
     }
 
     /** ---------------------------------------------------
-     * 1. Get Carrier by userId
+     * 1. Get shipper by userId
      * --------------------------------------------------- */
     const shipper = await Shipper.findOne({ 
         userId: userid, 
@@ -72,7 +74,7 @@ exports.getShipperDeatilsbyId = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Carrier not found",
+        message: "Shipper not found",
       });
     }
 
@@ -80,7 +82,7 @@ exports.getShipperDeatilsbyId = async (req, res) => {
 
 
     /** ---------------------------------------------------
-     * 3. Get Bookings for this carrier
+     * 3. Get Bookings for this shipper
      * --------------------------------------------------- */
     const bookings = await Booking.find({
       shipperId: shipperId,
@@ -88,7 +90,7 @@ exports.getShipperDeatilsbyId = async (req, res) => {
     });
 
     /** ---------------------------------------------------
-     * 4. Get Bids for this carrier
+     * 4. Get Bids for this shipper
      * --------------------------------------------------- */
     const bids = await Bid.find({
       shipperId: shipperId,
