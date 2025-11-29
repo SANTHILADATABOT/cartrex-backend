@@ -320,7 +320,7 @@ exports.getcategorysubcategories = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
+//find a space 
 exports.getSpaceResult = async (req, res) => {
   try {
     const {city,statecode}  =  req.query;
