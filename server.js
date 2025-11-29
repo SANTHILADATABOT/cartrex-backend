@@ -8,6 +8,8 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const path = require("path");
 
+
+
 dotenv.config();
 
 const rateLimit = require('express-rate-limit');
@@ -59,7 +61,11 @@ const io = new Server(server, {
         'http://192.168.1.13:5174',
         "http://192.168.1.23:5173",
         "http://192.168.1.2:5173",
-        " http://192.168.1.23:5174/"
+        " http://192.168.1.23:5174/",
+        " http://192.168.1.23:5174/",
+        " http://192.168.1.5:5174/",
+         "http://192.168.1.5:5173"
+
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
@@ -95,7 +101,10 @@ const allowedOrigins = [
  "http://192.168.1.23:5173",
   "http://192.168.1.2:5173",
  " http://192.168.1.23:5174/",
- "http://192.168.1.17:5173/"
+ "http://192.168.1.17:5173/",
+ " http://192.168.1.23:5174/",
+        " http://192.168.1.5:5174/",
+         "http://192.168.1.5:5173"
 ];
 
 app.use(cors({
