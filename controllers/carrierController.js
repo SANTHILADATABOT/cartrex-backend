@@ -388,10 +388,6 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
         message: "User ID is required",
       });
     }
-
-    /** ---------------------------------------------------
-     * 1. Get Carrier by userId
-     * --------------------------------------------------- */
     const carrier = await Carrier.findOne({ 
         userId: userid, 
         deletstatus: 0 
@@ -409,9 +405,6 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
 
     const carrierId = carrier._id;
 
-    /** ---------------------------------------------------
-     * 2. Get Trucks under this carrier
-     * --------------------------------------------------- */
     const trucks = await Truck.find({ 
       carrierId: carrierId, 
       deletstatus: 0 
@@ -423,25 +416,16 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
       deletstatus: 0
     });
 
-    /** ---------------------------------------------------
-     * 3. Get Bookings for this carrier
-     * --------------------------------------------------- */
     const bookings = await Booking.find({
       carrierId: carrierId,
       deletstatus: 0
     });
 
-    /** ---------------------------------------------------
-     * 4. Get Bids for this carrier
-     * --------------------------------------------------- */
     const bids = await Bid.find({
       carrierId: carrierId,
       deletstatus: 0
     });
 
-    /** ---------------------------------------------------
-     * 5. Count totals
-     * --------------------------------------------------- */
     const summary = {
       totalTrucks: trucks.length,
       totalBookings: bookings.length,
