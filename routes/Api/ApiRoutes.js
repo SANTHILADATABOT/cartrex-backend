@@ -5,10 +5,12 @@ const path = require("path");
 const router = express.Router();
 const { signup, login, logout, verifyOtp, sendOtp, UserVerification, forgotPassword, resetPassword } = require('../../controllers/api/authController');
 const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspacedetails, getSpaceResult, getAllLocations, getcategorysubcategories, addSpacesDetails, getSpacesByCarrierUserId, editSpacesDetails } = require('../../controllers/api/spaceController');
-const { createupdateProfile, createupdateProfilePhoto,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
-const { createOrUpdateshipperProfile,getshipperbyId,createBooking,getBookingsByUserId,getallbidsfilter } = require('../../controllers/api/shipperController');
+const { createOrUpdateProfile,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
+const { createOrUpdateshipperProfile,getshipperbyId} = require('../../controllers/api/shipperController');
 const {getReviewRouteDetails} = require('../../controllers/api/RouteController');
 const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails} = require('../../controllers/api/TruckController');
+const {createBooking,getBookingsByUserId} = require('../../controllers/api/bookingController');
+const {getallbidsfilter,getBidsByCarrierUserId} = require('../../controllers/api/bidsController');
 const upload = multer({ storage: multer.memoryStorage() });
 //auth 
 router.post('/signup', signup);
@@ -23,16 +25,22 @@ router.post('/logout', logout);
 //carrier 
 
 //router.post('/carrierprofile', upload.single('photo'), createOrUpdateCarrierProfile);
-router.post('/createupdateProfile', createupdateProfile);
+router.post('/createupdateProfile',upload.single('photo'),createOrUpdateProfile);
 router.get('/checkCarrierProfileCompleteTruckHave/:userId', checkCarrierProfileCompleteTruckHave);
 
-router.post('/createupdateProfilePhoto', upload.single('photo'), createupdateProfilePhoto);
+//router.post('/createupdateProfilePhoto', upload.single('photo'), createupdateProfilePhoto);
 
 //shipper
 
 router.post('/shipperprofile', upload.single('photo'), createOrUpdateshipperProfile);
 router.get('/getshipperbyId/:shipperId',getshipperbyId)
+
+//bid
 router.get('/getallbidsfilter',getallbidsfilter);
+
+router.get('/getBidsByCarrierUserId/:userId',getBidsByCarrierUserId);
+
+//booking
 router.post('/addbooking', upload.array('photos', 10),createBooking);
 router.get('/getBookingsByUserId/:userId',getBookingsByUserId);
 
