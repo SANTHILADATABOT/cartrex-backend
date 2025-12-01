@@ -2,6 +2,7 @@ const twilio = require("twilio");
 const sgMail = require("@sendgrid/mail");
 const User = require('../models/User');
 
+// OTP GENERATION FUNCTION
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000);
 }
@@ -33,8 +34,8 @@ exports.sendOtp = async (req, res) => {
       await sgMail.send({
         to: email,
         from: process.env.FROM_EMAIL,
-        subject: "Your OTP",
-        text: `Your OTP is ${otp}`,
+        subject: "Your OTP Code",
+        text: `Your OTP Code is ${otp}`,
       });
     }
 

@@ -8,9 +8,12 @@ const AdminUser = require('../../models/AdminUsers');
 const twilio = require("twilio");
 const sgMail = require("@sendgrid/mail");
 
-const { generateToken, generateOTP } = require('../../utils/jwt');
+const { generateToken} = require('../../utils/jwt');
 const { sendEmail } = require('../../utils/emailService');
 const { encrypt, decrypt } = require('../../utils/encryption');
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
 global.otps = {}; // { email: otp }
 // Signup Controller
 
@@ -186,9 +189,10 @@ exports.login = async (req, res) => {
         });
       }
     }
-     let profileCompleted = false;
+    let profileCompleted = false;
     let shipperprofle = false;
     let HaveTruck = false;
+    
     const userId = account._id;
     const carrierProfile = await Carrier.findOne({ userId: userId });
       if (carrierProfile) {
@@ -224,6 +228,7 @@ exports.login = async (req, res) => {
     res.status(200).json({
       success: true,
       notVerified: true,
+      message: 'Carrier Login Sucessfully',
       token,
       data: {
         id: account._id,
@@ -304,31 +309,31 @@ exports.sendOtp = async (req, res) => {
     const data = req.body;
     const { type, phone, email} = data;
     const otp = generateOTP();
-    if (type === "sms") {
-      let phoneNumber = phone;
-      if (!phone.startsWith('+')) {
-        phoneNumber = '+91' + phone; // Adjust country code accordingly
-      }
+    // if (type === "sms") {
+    //   let phoneNumber = phone;
+    //   if (!phone.startsWith('+')) {
+    //     phoneNumber = '+91' + phone; // Adjust country code accordingly
+    //   }
 
-      const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+    //   const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-      await smsClient.messages.create({
-        body: `Your OTP is ${otp}`,
-        to: phoneNumber,
-        from: process.env.TWILIO_PHONE_NUMBER,
-      });
-    }
-    else if (type === 'email') {
-      console.log(process.env.SENDGRID_API_KEY)
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('type === email=>', sgMail);
-      await sgMail.send({
-        to: email,
-        from: process.env.FROM_EMAIL,
-        subject: "Your OTP",
-        text: `Your OTP is ${otp}`,
-      });
-    }
+    //   await smsClient.messages.create({
+    //     body: `Your OTP is ${otp}`,
+    //     to: phoneNumber,
+    //     from: process.env.TWILIO_PHONE_NUMBER,
+    //   });
+    // }
+    // else if (type === 'email') {
+    //   console.log(process.env.SENDGRID_API_KEY)
+    //   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    //   console.log('type === email=>', sgMail);
+    //   await sgMail.send({
+    //     to: email,
+    //     from: process.env.FROM_EMAIL,
+    //     subject: "Your OTP",
+    //     text: `Your OTP is ${otp}`,
+    //   });
+    // }
 
     global.otps[email] = otp; // Store OTP by email
 

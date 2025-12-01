@@ -4,10 +4,11 @@ const multer = require("multer");
 const path = require("path");
 const router = express.Router();
 const { signup, login, logout, verifyOtp, sendOtp, UserVerification, forgotPassword, resetPassword } = require('../../controllers/api/authController');
-const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspacedetails, getSpaceResult, addSpacesDetails, getSpacesByCarrierUserId, editSpacesDetails } = require('../../controllers/api/spaceController');
+const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspacedetails, getSpaceResult, getAllLocations, getcategorysubcategories, addSpacesDetails, getSpacesByCarrierUserId, editSpacesDetails } = require('../../controllers/api/spaceController');
 const { createupdateProfile, createupdateProfilePhoto,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
-const { createOrUpdateshipperProfile } = require('../../controllers/api/shipperController');
-const { createTruckProfile, uploadTruckPhotos, createTruckRoute } = require('../../controllers/api/TruckController');
+const { createOrUpdateshipperProfile,getshipperbyId,createBooking,getBookingsByUserId,getallbidsfilter } = require('../../controllers/api/shipperController');
+const {getReviewRouteDetails} = require('../../controllers/api/RouteController');
+const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails} = require('../../controllers/api/TruckController');
 const upload = multer({ storage: multer.memoryStorage() });
 //auth 
 router.post('/signup', signup);
@@ -30,6 +31,10 @@ router.post('/createupdateProfilePhoto', upload.single('photo'), createupdatePro
 //shipper
 
 router.post('/shipperprofile', upload.single('photo'), createOrUpdateshipperProfile);
+router.get('/getshipperbyId/:shipperId',getshipperbyId)
+router.get('/getallbidsfilter',getallbidsfilter);
+router.post('/addbooking', upload.array('photos', 10),createBooking);
+router.get('/getBookingsByUserId/:userId',getBookingsByUserId);
 
 //truck
 
@@ -47,10 +52,24 @@ router.post("/uploadtruckphotos",upload.fields([
 
 router.post("/createtruckroute", createTruckRoute);
 
+router.get("/getTruckDetails",getTruckDetails);
+
 //space
 
 router.get('/getSpaceResult', getSpaceResult);
 
+//post a space
+router.get('/getspacedetails/:userId',getspacedetails);
+router.get('/getAllLocations', getAllLocations);
+router.get("/getcategorysubcategories", getcategorysubcategories);
+
+//post a space view 
+router.post('/addSpacesDetails/:carrierId',addSpacesDetails);
+
+
+
+//route
+router.get('/getreviewroutedetails', getReviewRouteDetails);
 
 
 module.exports = router;

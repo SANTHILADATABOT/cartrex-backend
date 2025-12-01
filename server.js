@@ -8,6 +8,8 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const path = require("path");
 
+
+
 dotenv.config();
 
 const rateLimit = require('express-rate-limit');
@@ -40,6 +42,7 @@ const MongoStore = require('connect-mongo');
 const app = express();
 const server = http.createServer(app);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/upload", express.static(path.join(__dirname, "upload")));
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
@@ -57,7 +60,12 @@ const io = new Server(server, {
         'http://192.168.1.13:5173',
         'http://192.168.1.13:5174',
         "http://192.168.1.23:5173",
-        " http://192.168.1.23:5174/"
+        "http://192.168.1.2:5173",
+        " http://192.168.1.23:5174/",
+        " http://192.168.1.23:5174/",
+        " http://192.168.1.5:5174/",
+         "http://192.168.1.5:5173"
+
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
@@ -91,7 +99,12 @@ const allowedOrigins = [
   'http://192.168.1.13:5173',
   'http://192.168.1.13:5174',
  "http://192.168.1.23:5173",
- " http://192.168.1.23:5174/"
+  "http://192.168.1.2:5173",
+ " http://192.168.1.23:5174/",
+ "http://192.168.1.17:5173/",
+ " http://192.168.1.23:5174/",
+        " http://192.168.1.5:5174/",
+         "http://192.168.1.5:5173"
 ];
 
 app.use(cors({
@@ -234,6 +247,7 @@ const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
 const carrierRoutes =require('./routes/web/carriers');
+const shipperRoutes =require('./routes/web/shippers');
 const otpRoutes =require('./routes/web/otpRoutes');
 const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
@@ -277,6 +291,7 @@ app.use('/space',spaceRoutes);
 app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
+app.use('/shippers', shipperRoutes);
 app.use('/trucks' , truckRoutes);
 app.use('/otpRoutes' , otpRoutes);
 

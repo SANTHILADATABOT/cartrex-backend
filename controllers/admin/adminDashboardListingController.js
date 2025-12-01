@@ -21,7 +21,7 @@ exports.getallcompletedbookingsandbids = async (req, res) => {
 
     const completedBookings = await Booking.find({ status: "completed", deletstatus: 0 })
 
-      .populate("shipperId", "name email phone")
+      .populate("shipperId", " companyName name email phone")
       .populate("carrierId", "companyName phone")
       .populate("truckId", "nickname registrationNumber truckType")
       .populate("spaceId")
@@ -64,34 +64,41 @@ exports.getdashboardcounts = async (req, res) => {
       status: "active",
       deletstatus: 0
     });
+    const activeCarriers = await Carrier.countDocuments({
+      status: "active",
+      deletstatus: 0
+
+    });
+    const totalCarriers = await Carrier.countDocuments({ deletstatus: 0 });
+    
 
     const totalTrucks = await Truck.countDocuments({ deletstatus: 0 });
 
-  
+
     const totalBookings = await Booking.countDocuments({ deletstatus: 0 });
- 
-    
-   const shipperAgg = await Shipper.aggregate([
-      { $match: { deletstatus: 0 ,status: "active" , $expr: { $eq: [ { $year: "$createdAt" }, 2025 ] }  } },
+
+
+    const shipperAgg = await Shipper.aggregate([
+      { $match: { deletstatus: 0, status: "active", $expr: { $eq: [{ $year: "$createdAt" }, 2025] } } },
       { $group: { _id: { month: { $month: "$createdAt" } }, count: { $sum: 1 } } },
       { $sort: { "_id.month": 1 } }
     ]);
 
- 
+
     const carrierAgg = await Carrier.aggregate([
-      { $match: { deletstatus: 0, status: "active" , $expr: { $eq: [ { $year: "$createdAt" }, 2025 ] }  } },
+      { $match: { deletstatus: 0, status: "active", $expr: { $eq: [{ $year: "$createdAt" }, 2025] } } },
       { $group: { _id: { month: { $month: "$createdAt" } }, count: { $sum: 1 } } },
       { $sort: { "_id.month": 1 } }
     ]);
 
-  
+
     const shipperMap = {};
     shipperAgg.forEach(i => { shipperMap[i._id.month] = i.count });
 
     const carrierMap = {};
     carrierAgg.forEach(i => { carrierMap[i._id.month] = i.count });
 
-    
+
     const monthlyData = [];
 
     for (let m = 1; m <= 12; m++) {
@@ -101,7 +108,8 @@ exports.getdashboardcounts = async (req, res) => {
         carriers: carrierMap[m] || 0
       });
     }
-        // Current Year Range
+    const now = new Date();
+    // Current Year Range
     const startCurrent = new Date(now.getFullYear(), 0, 1);
     const endCurrent = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
 
@@ -148,11 +156,15 @@ exports.getdashboardcounts = async (req, res) => {
       success: true,
       message: "Counts of TotalShippers,ActiveShippers,TotalTrucks,TotalBookings fetched successfully",
       count:
-      {totalShippers,
-      activeShippers,
-      totalTrucks,
-      totalBookings},
-      Totalearning:{currentYearTotal,percentageChange},
+      {
+        totalShippers,
+        activeShippers,
+        totalCarriers,
+        activeCarriers,
+        totalTrucks,
+        totalBookings
+      },
+      Totalearning: { currentYearTotal, percentageChange },
       monthly_data: monthlyData
     });
 
