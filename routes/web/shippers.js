@@ -10,5 +10,7 @@ router.post('/profile', protect, authorize('shipper'), upload.single('photo'), s
 router.get('/profile', protect, authorize('shipper'), shipperController.getProfile);
 router.get('/', protect, authorize('admin'), shipperController.getAllShippers);
 router.get('/getShipperDetailsbyId/:userid', shipperController.getShipperDeatilsbyId);
+router.post('/profileShipper', upload.single('photo'), shipperController.createOrUpdateShipperProfile);
+router.post('/ShipperProfileUpdate', upload.single('photo'), shipperController.ShipperProfileUpdate);
 
 module.exports = router;
