@@ -212,7 +212,6 @@ exports.getTruckDetails = async (req, res) => {
         const truck = await Truck.findById(truckId)
             .populate({
                 path: "carrierId",
-                select: "companyName userId email phone"
             })
             .populate({
                 path: "truckType",

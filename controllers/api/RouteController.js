@@ -12,8 +12,7 @@ exports.getReviewRouteDetails = async (req, res) => {
                 select: "nickname registrationNumber "
             })
             .populate({
-                path: "carrierId",
-                select: "companyName email phone userId"
+                path: "carrierId"
             });
 
         if (!route) {

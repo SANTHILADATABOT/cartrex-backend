@@ -328,7 +328,6 @@ exports.getSpaceResult = async (req, res) => {
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
-        select: "userId companyName",
         populate: {
           path: "userId",
           select: "firstName lastName",

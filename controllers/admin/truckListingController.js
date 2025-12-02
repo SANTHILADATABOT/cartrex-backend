@@ -21,7 +21,6 @@ exports.getalltrucks = async (req, res) => {
     const trucks = await Truck.find(filter)
       .populate({
         path: "carrierId",
-        select: "companyName address city state zipCode country status userId",
         populate: {
           path: "userId",
           select: "firstName lastName email"
@@ -256,7 +255,6 @@ exports.gettruckbyId = async (req, res) => {
     const truck = await Truck.findOne({ _id: truckId, deletstatus: 0 })
    .populate({
         path: "carrierId",
-        select: "companyName address city state zipCode country status userId",
         populate: {
           path: "userId",
           select: "firstName lastName email"
