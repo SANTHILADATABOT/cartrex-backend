@@ -237,6 +237,7 @@ const otpRoutes =require('./routes/web/otpRoutes');
 const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
+const settingsRoutes =require('./routes/policyRoutes');
 
 // <!---------------------- Api Route------------------------------------------------------>
 const apiroute =require('./routes/Api/ApiRoutes');
@@ -266,6 +267,7 @@ app.use('/adminuserlist',adminUserlistRoutes);
 app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
+app.use('/settings',settingsRoutes);
 
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
