@@ -346,13 +346,15 @@ exports.signUpVerification = async (req, res) => {
   try {
     const data = req.body;
     const { email ,phone} = data;
-    const user = await User.findOne({
-      $or: [
-        { phone: phone },
-        { email: email }
-      ]
-    });
-    if (!user) return res.status(200).json({ success: false, message: 'Email or Phone number Already registered' });
+    console.log('data=>',data)
+    // const user = await User.findOne({
+    //   $or: [
+    //     // { phone: phone },
+    //     { email: email }
+    //   ]
+    // });
+    const user = await User.findOne({ email: email });
+    if (user) return res.status(200).json({ success: false, message: 'Email or Phone number Already registered' });
     res.status(200).json({
       success: true,
       message: "Valid email"
