@@ -326,18 +326,21 @@ exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
       const carrierProfile = await Carrier.findOne({ userId: userId });
       if (carrierProfile) {
         profileCompleted=true;
+        const trucks = await Truck.find({ carrierId: carrierProfile._id });
+        if (trucks || trucks.length > 0) {
+          HaveTruck = true;
+        }
       }
       const shipperProfile = await Shipper.findOne({ userId: userId });
       if (shipperProfile) {
         shipperprofle=true;
       }
-      const trucks = await Truck.find({ carrierId: carrierProfile._id });
-      if (trucks || trucks.length > 0) {
-        HaveTruck = true;
-      }
+     
       return res.status(200).json({
         success: true,
         data: {
+          user:user,
+        roleType:roleInfo.roleType,
          carrier:{HaveTruck,profileCompleted},
          shipper:{shipperprofle}
         }

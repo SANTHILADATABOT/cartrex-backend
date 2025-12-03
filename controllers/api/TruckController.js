@@ -19,7 +19,7 @@ exports.createTruckProfile = async (req, res) => {
             vinNumber,
             zipcode
         } = req.body;
-
+        console.log('=>',req.body)
 
         if (!truckType || !truckType.subcategoryId) { 
             return res.status(400).json({ success: false, message: "Truck type subcategoryId required" }); }
@@ -48,7 +48,8 @@ exports.createTruckProfile = async (req, res) => {
             carrierId: carrier._id,
             nickname,
             registrationNumber,
-            truckType:truckType.subcategoryId,
+            // truckType:truckType.subcategoryId,
+            truckType:truckType,
             hasWinch,
             capacity,
             mcDotNumber,
