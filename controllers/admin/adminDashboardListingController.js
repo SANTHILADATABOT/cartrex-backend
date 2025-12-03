@@ -783,6 +783,148 @@ const getBidsDashboardData = async (filter) => {
   };
 };
 
+const getEarningsDashboardData = async (filter) => {
+  let range, labels, groupType;
+
+  if (filter === "12months") {
+    range = getDateRangeLast12Months();
+    labels = buildLast12MonthsLabels(); // ["Jan","Feb",...]
+    groupType = "month";
+  } else {
+    range = getDateRangeLast30Days();
+    labels = buildLast30DaysLabels(); // ["01 Dec","02 Dec",...]
+    groupType = "day";
+  }
+
+  // ---------- CURRENT PERIOD TOTAL ----------
+  const currAgg = await Booking.aggregate([
+    {
+      $match: {
+        deletstatus: 0,
+        status: { $in: ["completed", "delivered"] },
+        createdAt: { $gte: range.start, $lte: range.end }
+      }
+    },
+    { $group: { _id: null, total: { $sum:{ $toDouble:"$bookValuetaxinc.taxValue" }} } }
+  ]);
+
+  const currAggBids = await Bid.aggregate([
+    {
+      $match: {
+        deletstatus: 0,
+        status: { $in: ["completed", "delivered"] },
+        createdAt: { $gte: range.start, $lte: range.end }
+      }
+    },
+    { $group: { _id: null, total: { $sum:{ $toDouble: "$bidValuetaxinc.taxValue"} } } }
+  ]);
+
+  const currEarnings =
+    (currAgg[0]?.total || 0) + (currAggBids[0]?.total || 0);
+
+  // ---------- PREVIOUS PERIOD TOTAL ----------
+  let prevStart = new Date(range.start);
+  let prevEnd = new Date(range.end);
+
+  if (filter === "12months") {
+    prevStart.setFullYear(prevStart.getFullYear() - 1);
+    prevEnd.setFullYear(prevEnd.getFullYear() - 1);
+  } else {
+    prevStart.setDate(prevStart.getDate() - 30);
+    prevEnd.setDate(prevEnd.getDate() - 30);
+  }
+
+  const prevAgg = await Booking.aggregate([
+    {
+      $match: {
+        deletstatus: 0,
+        status: { $in: ["completed", "delivered"] },
+        createdAt: { $gte: prevStart, $lte: prevEnd }
+      }
+    },
+    { $group: { _id: null, total: { $sum: { $toDouble:"$bookValuetaxinc.taxValue"} } } }
+  ]);
+
+  const prevAggBids = await Bid.aggregate([
+    {
+      $match: {
+        deletstatus: 0,
+        status: { $in: ["completed", "delivered"] },
+        createdAt: { $gte: prevStart, $lte: prevEnd }
+      }
+    },
+    { $group: { _id: null, total: { $sum:{ $toDouble: "$bidValuetaxinc.taxValue"} } } }
+  ]);
+
+  const prevEarnings =
+    (prevAgg[0]?.total || 0) + (prevAggBids[0]?.total || 0);
+
+  // ---------- Percentage ----------
+  const earningsPercent = calcPercent(currEarnings, prevEarnings);
+
+  // ---------- CHART AGGREGATION ----------
+  const earningsAgg = await Booking.aggregate([
+    {
+      $match: {
+        deletstatus: 0,
+        status: { $in: ["completed", "delivered"] },
+        createdAt: { $gte: range.start, $lte: range.end }
+      }
+    },
+    {
+      $group:
+        groupType === "month"
+          ? { _id: { month: { $month: "$createdAt" } }, earning: { $sum: { $toDouble:"$bookValuetaxinc.taxValue" }} }
+          : { _id: { day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } }, earning: { $sum: { $toDouble:"$bookValuetaxinc.taxValue"} } }
+    }
+  ]);
+
+  const earningsAggBids = await Bid.aggregate([
+    {
+      $match: {
+        deletstatus: 0,
+        status: { $in: ["completed", "delivered"] },
+        createdAt: { $gte: range.start, $lte: range.end }
+      }
+    },
+    {
+      $group:
+        groupType === "month"
+          ? { _id: { month: { $month: "$createdAt" } }, earning: { $sum: { $toDouble:"$bidValuetaxinc.taxValue" }} }
+          : { _id: { day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } }, earning: { $sum: { $toDouble:"$bidValuetaxinc.taxValue"} } }
+    }
+  ]);
+
+  // ---------- BUILD CHART DATA ----------
+  const chartData = labels.map(label => ({ label, earnings: 0 }));
+
+  if (groupType === "month") {
+    const monthShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    [...earningsAgg, ...earningsAggBids].forEach(i => {
+      const idx = labels.indexOf(monthShort[i._id.month - 1]);
+      if (idx !== -1) chartData[idx].earnings += i.earning;
+    });
+  } else {
+    [...earningsAgg, ...earningsAggBids].forEach(i => {
+      const label = new Date(i._id.day).toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+      const idx = labels.indexOf(label);
+      if (idx !== -1) chartData[idx].earnings += i.earning;
+    });
+  }
+
+  return {
+    labels,
+    chartData,
+    totals: {
+      totalearnings: currEarnings,
+      percentage: {
+        value: earningsPercent,
+        trend: earningsPercent > 0 ? "increase" : earningsPercent < 0 ? "decrease" : "no-change"
+      }
+    }
+  };
+};
 
 
 
@@ -791,7 +933,7 @@ exports.getDashboardCounts = async (req, res) => {
     const filter = req.body.filter; // { user, earnings, bookings, bids }
 
     const userData = await getUserDashboardData(filter.user);
-    // const earningsData = await getEarningsDashboardData(filter.earnings);
+    const earningsData = await getEarningsDashboardData(filter.earnings);
     const bookingsData = await getBookingDashboardData(filter.bookings);
     const bidsData = await getBidsDashboardData(filter.bids);
 
@@ -800,13 +942,14 @@ exports.getDashboardCounts = async (req, res) => {
       message: "Dashboard data fetched successfully",
       data: {
         users: userData,
-        // earnings: earningsData,
+        earnings: earningsData,
         bookings: bookingsData,
         bids: bidsData,
          totals: {
       userTotals: userData.totals,        
       bookingTotals: bookingsData.totals,
-      bidTotals:bidsData.totals
+      bidTotals:bidsData.totals,
+      earningsTotals:earningsData.totals
 
     }
       }
