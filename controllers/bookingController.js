@@ -10,6 +10,8 @@ const Carrier = require('../models/Carrier');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
+
+
 exports.createBooking = async (req, res) => {
   try {
     const data = req.body;
@@ -81,6 +83,7 @@ exports.createBooking = async (req, res) => {
 
     res.status(201).json({
       success: true,
+      message:"Bookings created Sucessfully",
       data: booking
     });
   } catch (error) {

@@ -1,9 +1,13 @@
+const path = require("path");
+const fs = require("fs");
 const Shipper = require('../../models/Shipper');
 const Carrier = require('../../models/Carrier');
 const User = require('../../models/User');
 const Booking = require('../../models/Booking');
 const Space = require('../../models/Space');
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
+
 
 
 // bookings 
@@ -78,6 +82,7 @@ exports.createBooking = async (req, res) => {
 
     res.status(201).json({
       success: true,
+      message:"Bookings created Sucessfully",
       data: booking
     });
   } catch (error) {
@@ -85,6 +90,8 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', test: error }); // , stack: error.stack
   }
 };
+
+
 exports.getBookingsByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -162,6 +169,54 @@ exports.getBookingsByUserId = async (req, res) => {
       success: false,
       message: "Server error while fetching bookings",
       error: error.message
+    });
+  }
+};
+
+exports.updateAcceptbookingstatus = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+    const  data  = req.body; 
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId:userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    const booking = await Booking.findOne({ _id: bookingId, carrierId: carrier._id });
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+    }
+    booking.addtionalfee  = data.addtionalfee;
+    booking.conformpickupDate = data.conformpickupDate;
+    booking.estimateDeliveryDate = data.estimateDeliveryDate;
+    booking.estimateDeliveryWindow = data.estimateDeliveryWindow;
+    booking.message = data.message;
+    booking.truckforship = data.truckforship;
+    booking.status = data.status;
+    booking.updatedAt = new Date();
+    booking.statusUpdatedetails = [{
+      updatedAt: new Date(),
+      status: data.status
+    }];
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated successfully",
+      data: booking,
+    });
+
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
     });
   }
 };

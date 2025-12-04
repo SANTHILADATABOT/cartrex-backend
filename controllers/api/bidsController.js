@@ -2,6 +2,7 @@ const Shipper = require('../../models/Shipper');
 const Carrier = require('../../models/Carrier');
 const User = require('../../models/User');
 const Bid = require('../../models/Bid');
+const mongoose = require('mongoose');
 const Space = require('../../models/Space')
 
 // bids 
@@ -130,5 +131,68 @@ exports.getallbidsfilter = async (req, res) => {
   } catch (error) {
     console.error("Error fetching bids:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.updateAcceptbidstatus = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+    const data = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    const bidsFound = await Bid.findOne({
+      _id: bidId,
+      "carrierRouteList.carrierId": carrier._id.toString(),
+    });
+
+    if (!bidsFound) {
+      return res.status(404).json({ success: false, message: "bidsFound not found for this carrier" });
+    }
+
+    const updatedBid = await Bid.findById(bidId);
+    updatedBid.addtionalfee  = data.addtionalfee;
+    updatedBid.conformpickupDate = data.conformpickupDate;
+    updatedBid.estimateDeliveryDate = data.estimateDeliveryDate;
+    updatedBid.estimateDeliveryWindow = data.estimateDeliveryWindow;
+    updatedBid.message = data.message;
+    updatedBid.truckforship = data.truckforship;
+    updatedBid.status = data.status;
+    if (!Array.isArray(updatedBid.statusUpdatedetails)) {
+      // Case 1: If it is an object (not array), convert to array
+      if (updatedBid.statusUpdatedetails && typeof updatedBid.statusUpdatedetails === "object") {
+        updatedBid.statusUpdatedetails = [updatedBid.statusUpdatedetails];
+      } 
+      // Case 2: null, undefined, string, empty, missing → set empty array
+      else {
+        updatedBid.statusUpdatedetails = [];
+      }
+    }
+    updatedBid.statusUpdatedetails.push({
+      updatedAt: new Date(),
+      status: data.status
+    });
+    updatedBid.updatedAt = new Date();
+    await updatedBid.save();
+    return res.status(200).json({
+      success: true,
+      message: "Bid status updated successfully",
+      data: updatedBid,
+    });
+
+  } catch (error) {
+    console.error("Error updating Bid status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating Bid status",
+      error: error.message,
+    });
   }
 };
