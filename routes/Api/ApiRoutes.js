@@ -12,8 +12,10 @@ const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails
 const {createBooking, 
       getBookingsByUserId, 
       updateAcceptbookingstatus} = require('../../controllers/api/bookingController');
-const {getallbidsfilter,getBidsByCarrierUserId, updateAcceptbidstatus} = require('../../controllers/api/bidsController');
+const {getallbidsfilter,getBidsByCarrierUserId, getBidsByShipperUserId ,updateAcceptbidstatus, createBid, editBidDetails } = require('../../controllers/api/bidsController');
 const upload = multer({ storage: multer.memoryStorage() });
+
+
 //auth 
 router.post('/signup', signup);
 router.post('/login', login);
@@ -41,7 +43,13 @@ router.get('/getshipperbyId/:shipperId',getshipperbyId)
 //bid
 router.get('/getallbidsfilter',getallbidsfilter);
 
+router.post('/getAddBid', upload.array('photos', 10), createBid);
+router.put('/editBidDetails/:bidId', upload.array('photos', 10),editBidDetails);
+
 router.get('/getBidsByCarrierUserId/:userId',getBidsByCarrierUserId);
+router.get('/getBidsByShipperUserId/:userId',getBidsByShipperUserId);
+
+
 
 router.put('/updateAcceptBidstatus/:userId/:bidId',updateAcceptbidstatus);
 

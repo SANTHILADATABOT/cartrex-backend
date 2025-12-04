@@ -198,7 +198,7 @@ exports.login = async (req, res) => {
       if (carrierProfile) {
         profileCompleted=true;
       const trucks = await Truck.find({ carrierId: carrierProfile._id });
-        if (trucks || trucks.length > 0) {
+        if (trucks & trucks.length > 0) {
           HaveTruck = true;
         }
       }
