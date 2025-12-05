@@ -600,9 +600,7 @@ exports.editSpacesDetails = async (req, res) => {
         });
       }
     }
-    }
-   
-    // Prepare update data
+        // Prepare update data
     const updatedData = {
       carrierId: data.carrierId ?? existingSpace.carrierId,
       truckId: data.selectedTruck ?? existingSpace.truckId,
@@ -648,18 +646,60 @@ exports.editSpacesDetails = async (req, res) => {
         },
       };
     }
-
     // Perform the update
     const updatedSpace = await Space.findByIdAndUpdate(spaceId, updatedData, {
       new: true, // returns the updated document
       runValidators: true,
     });
+    let route;
+      if (!data.selectedRoute) {
+        route = await Route.create({
+          carrierId: carrier._id,
+          truckId: data.selectedTruck,
+          origin: {
+            fullAddress: data.origin.location,
+            city: data.origin.city,
+            state: data.origin.state,
+            stateCode: data.origin.stateCode,
+            pickupWindow: data.pickupwindow,
+            pickupRadius: data.pickupradius,
+            zipcode: data.origin.zipcode,
+          },
+          destination: {
+            fullAddress: data.destination.location,
+            city: data.destination.city,
+            state: data.destination.state,
+            stateCode: data.destination.stateCode,
+            deliveryDate: data.deliveryDate,
+            deliveryWindow: data.deliverywindow,
+            deliveryRadius: data.deliveryradius,
+            zipcode: data.destination.zipcode,
+          },
+          createdBy: carrier.userId,
+          updatedBy: carrier.userId,
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
 
-    res.status(200).json({
+        updatedSpace.routeId = route._id;
+      }
+
+      // 8. Save updated updatedSpace
+      await updatedSpace.save();
+        res.status(200).json({
       success: true,
       message: "Space details updated successfully",
       data: updatedSpace,
     });
+
+    }
+   
+
+
+
+  
   } catch (error) {
     console.error("❌ Error updating space:", error);
     res.status(500).json({
