@@ -1,20 +1,73 @@
 import Complaint from "../../models/Complaint.js";
 
 import mongoose from "mongoose";
+// export const getAllComplaints = async (req, res) => {
+//   try {
+//     const complaints = await Complaint.find({ deletstatus: 0 })
+//       .populate("userId", "firstName lastName email")
+//     .populate("bookingId") 
+//       .select("_id userId bookingId customerName complaintType description priority status assignedTo resolution resolvedAt attachments raisedAt createdAt");
+
+//     res.status(200).json({
+//       success: true,
+//       count: complaints.length,
+//       data :complaints
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 export const getAllComplaints = async (req, res) => {
   try {
-    const complaints = await Complaint.find({ deletstatus: 0 })
-      .populate("userId", "firstName lastName email")
-    .populate("bookingId") 
-      .select("_id userId bookingId customerName complaintType description priority status assignedTo resolution resolvedAt attachments raisedAt createdAt");
+    const { status, shipper } = req.query;
 
-    res.status(200).json({
+    const filter = { deletstatus: 0 };
+
+    // 👇 Status filter
+    if (status) {
+      if (status === "all") {
+        filter.status = { $in: ["open", "pending", "resolved", "closed"] };
+      } else {
+        filter.status = status;
+      }
+    }
+
+    // 👇 Shipper filter (userId is shipper)
+    if (shipper && shipper !== "all") {
+      filter.customerid = shipper;
+    }
+console.log('filter=>',filter)
+    const complaints = await Complaint.find(filter)
+      .populate("userId", "firstName lastName email") 
+      .populate("bookingId") 
+      .populate("customerid") 
+      .select(
+        "_id userId bookingId  complaintType description priority status assignedTo resolution resolvedAt attachments raisedAt createdAt"
+      )
+      .sort({ createdAt: -1 });
+
+    if (!complaints.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No complaints found",
+        data: [],
+      });
+    }
+
+    return res.status(200).json({
       success: true,
       count: complaints.length,
-      data :complaints
+      message: "Complaints fetched successfully",
+      data: complaints,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error fetching complaints:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
