@@ -76,16 +76,11 @@ function getDateRangeLast30Days() {
 async function getUserStats(Model, start, end, filter) {
   const total = await Model.countDocuments({ deletstatus: 0 }); // total all-time
 
-  let active;
-  if (filter === "12months") {
-    active = await Model.countDocuments({ deletstatus: 0, status: "active" });
-  } else {
-    active = await Model.countDocuments({
-      deletstatus: 0,
-      status: "active",
-      createdAt: { $gte: start, $lte: end }
-    });
-  }
+  const active = await Model.countDocuments({
+    deletstatus: 0,
+    status: "active",
+    createdAt: { $gte: start, $lte: end }  // always respect the period
+  });
 
   const created = await Model.countDocuments({
     deletstatus: 0,
@@ -97,12 +92,18 @@ async function getUserStats(Model, start, end, filter) {
 
 
 
+
 //Percentage Calculation
-function calcPercent(curr, prev) {
-  if (prev === 0 && curr === 0) return 0;
-  if (prev === 0) return 100;
-  return Number((((curr - prev) / prev) * 100).toFixed(2));
-}
+// function calcPercent(curr, prev) {
+//   if (prev === 0 && curr === 0) return 0;
+//   if (prev === 0) return 100;
+//   return Number((((curr - prev) / prev) * 100).toFixed(2));
+// }
+const calcPercent = (current, previous) => {
+  if (previous === 0 && current > 0) return 100;
+  if (previous === 0 && current === 0) return 0;
+  return ((current - previous) / previous) * 100;
+};
 
 //Build Last 12 Months List
 function buildLast12MonthsLabels() {
@@ -350,10 +351,10 @@ const getBidsDashboardData = async (filter) => {
 
   // Current bids (ready_for_pickup only)
   const currBids = await Bid.countDocuments({
-    deletstatus: 0,
-    status: "ready_for_pickup",
-    createdAt: { $gte: range.start, $lte: range.end }
-  });
+  deletstatus: 0,
+  status: { $ne: "cancelled" }, // include all except 'cancelled'
+  createdAt: { $gte: range.start, $lte: range.end }
+});
 
   // Previous period (ready_for_pickup only)
   let prevStart = new Date(range.start);
