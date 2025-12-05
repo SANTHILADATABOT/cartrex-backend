@@ -382,11 +382,21 @@ exports.addSpacesDetails = async (req, res) => {
     const { carrierId } = req.params;
     const data = req.body;
     const carrier = await Carrier.findOne({ userId: carrierId });
-    if (!carrier) return res.status(404).json({ message: "Carrier not found" });
-   const spaceData = {
+    if (!carrier) return res.status(200).json({ message: "Carrier not found" });
+    if(data?.selectedTruck){
+        const truck =  await Truck.findOne({ _id: data?.selectedTruck, carrierId: carrier._id });
+        if (!truck) return res.status(200).json({ message: "Truck not found for this carrier" });
+        const routeCount = await Route.countDocuments({ truckId: truck._id });
+        if (routeCount >= 3) {
+          return res.status(200).json({
+            message: "You have reached the maximum number of routes for this truck, please choose another truck"
+          });
+        }
+    }
+
+    const spaceData = {
       carrierId: carrier._id,
       truckId: data?.selectedTruck,
-      routeId: data?.selectedRoute,
       userId: carrier.userId,
       availableSpaces: data?.availablespace,
       message: data?.message,
@@ -396,7 +406,9 @@ exports.addSpacesDetails = async (req, res) => {
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
     };
-
+    if (data?.selectedRoute) {
+      spaceData.routeId = data.selectedRoute;
+    }
     // Add origin info if available
     if (data?.origin) {
       spaceData.origin = {
@@ -406,7 +418,7 @@ exports.addSpacesDetails = async (req, res) => {
         stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
         pickupWindow: data.pickupwindow,
-        pickupRadius: data.pickupradius,
+        pickupRadius: data.pickupradius ?? 0,
         coordinates: {
           type: "Point",
           coordinates: [0, 0],
@@ -423,7 +435,7 @@ exports.addSpacesDetails = async (req, res) => {
         stateCode:data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
-        deliveryRadius: data.deliveryradius,
+        deliveryRadius: data.deliveryradius ?? 0,
         coordinates: {
           type: "Point",
           coordinates: [0, 0],
@@ -432,10 +444,63 @@ exports.addSpacesDetails = async (req, res) => {
     }
 
     const space = await Space.create(spaceData);
+    if(space && !data?.selectedRoute){
+        try {
+          const route = await Route.create({
+            carrierId: carrier._id,
+            truckId: data?.selectedTruck,
+            origin: {
+              fullAddress: data.origin.location,
+              // formattedAddress: origin.fullAddress,
+              city:data.origin.city,
+              state: data.origin.state,
+              stateCode: data.origin.stateCode,
+              // pickupDate: data.pickupdate,
+              pickupWindow: data.pickupwindow,
+              pickupRadius: data.pickupradius ?? 0,
+              zipcode: data.origin.zipcode,
+            },
+            destination: {
+              fullAddress: data.destination.location,
+              // formattedAddress: destination.fullAddress,
+              city: data.destination.city,
+              state: data.destination.state,
+              stateCode:data.destination.stateCode,
+              deliveryDate: data.deliveryDate,
+              deliveryWindow: data.deliverywindow,
+              deliveryRadius: data.deliveryradius ?? 0,
+              zipcode: data.destination.zipcode,
+            },
+            createdBy: req.body.createdBy,
+            updatedBy: req.body.createdBy,  
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
 
+          // Assign routeId to space
+          space.routeId = route._id;
+          await space.save();
+
+          return res.status(200).json({
+            success: true,
+            message: "Spaces and route details saved successfully",
+            data: space,
+          });
+        } catch (routeErr) {
+          // ❌ ROUTE CREATION FAILED → DELETE SPACE
+          await Space.findByIdAndDelete(space._id);
+
+          return res.status(500).json({
+            message: "Route creation failed. Space entry was rolled back.",
+            error: routeErr.message,
+          });
+        }
+    }
     res.status(200).json({
       sucess:"true",
-      message: "Origin and destination details saved successfully",
+      message: "Spaces and route details saved successfully",
       //carrier: { id: carrier._id, companyName: carrier.companyName },
       //spaceId: space._id,
       data:space,
@@ -520,8 +585,23 @@ exports.editSpacesDetails = async (req, res) => {
       if (!carrier) {
         return res.status(404).json({ success: false, message: "Carrier not found" });
       }
-    }
+       if (data?.selectedTruck) {
+      const truck = await Truck.findOne({
+        _id: data.selectedTruck,
+        carrierId: carrier._id,
+      });
+      if (!truck) return res.status(404).json({ message: "Truck not found for this carrier" });
 
+      const routeCount = await Route.countDocuments({ truckId: truck._id });
+
+      if (routeCount >= 3 && existingSpace.truckId?.toString() !== data.selectedTruck) {
+        return res.status(400).json({
+          message: "You have reached the maximum number of routes for this truck, please choose another truck",
+        });
+      }
+    }
+    }
+   
     // Prepare update data
     const updatedData = {
       carrierId: data.carrierId ?? existingSpace.carrierId,

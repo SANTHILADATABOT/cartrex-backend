@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   verifyuser:{type:String, enum:["verified","unverified"], default: "unverified"},
+  phoneverifyuser:{type:String, enum:["verified","unverified"], default: "unverified"},
   //  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

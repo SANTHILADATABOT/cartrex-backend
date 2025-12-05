@@ -11,7 +11,7 @@ const spaceSchema = new mongoose.Schema({
     stateCode: { type: String },
     pickupDate: { type: Date, required: true },
     pickupWindow: { type: String, required: true },
-    pickupRadius: { type: Number, required: true },
+    pickupRadius: { type: Number, default: 0 },
     coordinates: {
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: [Number]
@@ -24,7 +24,7 @@ const spaceSchema = new mongoose.Schema({
       stateCode: { type: String },
     deliveryDate: { type: Date, required: true },
     deliveryWindow: { type: String, required: true },
-    deliveryRadius: { type: Number, required: true },
+    deliveryRadius: { type: Number, default: 0},
     coordinates: {
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: [Number]
