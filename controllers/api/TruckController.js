@@ -233,8 +233,8 @@ exports.createTruckProfileAndRoute = async (req, res) => {
             pickupRadius,
 
             destinationCity,
-            destinationstate,
-            destinationstateCode,
+            destinationState,
+            destinationStateCode,
             destinationZipcode,
             destinationlocation,
             deliveryWindow,
@@ -308,8 +308,8 @@ exports.createTruckProfileAndRoute = async (req, res) => {
             destination: {
                 fullAddress: destinationlocation,
                 city: destinationCity,
-                state: destinationstate,
-                stateCode: destinationstateCode,
+                state: destinationState,
+                stateCode: destinationStateCode,
                 zipcode: destinationZipcode,
                 deliveryWindow,
                 deliveryRadius
@@ -343,7 +343,41 @@ exports.createTruckProfileAndRoute = async (req, res) => {
         });
     }
 };
+// edit view 
+exports.getTruckProfileAndRoute = async (req, res) => {
+    try {
+        const { truckId } = req.params;
 
+        const truck = await Truck.findById(truckId)
+            .populate("truckType", "name description");
+        
+        if (!truck) {
+            return res.status(404).json({
+                success: false,
+                message: "Truck not found"
+            });
+        }
+
+        const route = await Route.findOne({ truckId: truckId });
+       
+           return res.status(200).json({
+      success: true,
+      message: "Truck profile fetched successfully",
+      data: {
+        truck,
+        route: route || null,  // If no route found return null
+      },
+    });
+} catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+//update 
 exports.editTruckProfileAndRoute = async (req, res) => {
     try {
         const {

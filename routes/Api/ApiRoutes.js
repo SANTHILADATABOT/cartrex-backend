@@ -8,7 +8,7 @@ const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspace
 const { createOrUpdateProfile,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
 const { createOrUpdateshipperProfile, getshipperbyId} = require('../../controllers/api/shipperController');
 const {getReviewRouteDetails} = require('../../controllers/api/RouteController');
-const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails, createTruckProfileAndRoute, editTruckProfileAndRoute} = require('../../controllers/api/TruckController');
+const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails, createTruckProfileAndRoute,  getTruckProfileAndRoute ,editTruckProfileAndRoute} = require('../../controllers/api/TruckController');
 const {createBooking, 
       getBookingsByUserId, 
       updateAcceptbookingstatus} = require('../../controllers/api/bookingController');
@@ -85,6 +85,7 @@ router.put("/edittruckprofile",upload.fields([
         { name: "insurance", maxCount: 1 }
     ]),editTruckProfileAndRoute);
 
+router.get("/getTruckProfileAndRoute/:truckId", getTruckProfileAndRoute);
 
 router.get("/getTruckDetails",getTruckDetails);
 
