@@ -653,35 +653,38 @@ exports.editSpacesDetails = async (req, res) => {
     });
     let route;
       if (!data.selectedRoute) {
-        route = await Route.create({
-          carrierId: carrier._id,
-          truckId: data.selectedTruck,
-          origin: {
-            fullAddress: data.origin.location,
-            city: data.origin.city,
-            state: data.origin.state,
-            stateCode: data.origin.stateCode,
-            pickupWindow: data.pickupwindow,
-            pickupRadius: data.pickupradius,
-            zipcode: data.origin.zipcode,
-          },
-          destination: {
-            fullAddress: data.destination.location,
-            city: data.destination.city,
-            state: data.destination.state,
-            stateCode: data.destination.stateCode,
-            deliveryDate: data.deliveryDate,
-            deliveryWindow: data.deliverywindow,
-            deliveryRadius: data.deliveryradius,
-            zipcode: data.destination.zipcode,
-          },
-          createdBy: carrier.userId,
-          updatedBy: carrier.userId,
-          ipAddress: req.ip,
-          userAgent: req.headers["user-agent"],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+         route = await Route.create({
+            carrierId: carrier._id,
+            truckId: data?.selectedTruck,
+            origin: {
+              fullAddress: data.origin.location,
+              // formattedAddress: origin.fullAddress,
+              city:data.origin.city,
+              state: data.origin.state,
+              stateCode: data.origin.stateCode,
+              // pickupDate: data.pickupdate,
+              pickupWindow: data.pickupwindow,
+              pickupRadius: data.pickupradius ?? 0,
+              zipcode: data.origin.zipcode,
+            },
+            destination: {
+              fullAddress: data.destination.location,
+              // formattedAddress: destination.fullAddress,
+              city: data.destination.city,
+              state: data.destination.state,
+              stateCode:data.destination.stateCode,
+              deliveryDate: data.deliveryDate,
+              deliveryWindow: data.deliverywindow,
+              deliveryRadius: data.deliveryradius ?? 0,
+              zipcode: data.destination.zipcode,
+            },
+            createdBy: req.body.createdBy,
+            updatedBy: req.body.createdBy,  
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
 
         updatedSpace.routeId = route._id;
       }
