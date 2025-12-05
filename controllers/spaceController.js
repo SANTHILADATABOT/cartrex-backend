@@ -2,9 +2,6 @@ const mongoose = require('mongoose');
 const Truck = require('../models/Truck');
 const Route = require('../models/Route');
 const User = require('../models/User');
-
-
-
 const Space = require('../models/Space');
 const Carrier = require('../models/Carrier');
 const AdminRoles = require('../models/AdminRoles');
@@ -331,7 +328,6 @@ exports.getSpaceResult = async (req, res) => {
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
-        select: "userId companyName",
         populate: {
           path: "userId",
           select: "firstName lastName",

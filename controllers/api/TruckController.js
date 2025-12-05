@@ -19,7 +19,7 @@ exports.createTruckProfile = async (req, res) => {
             vinNumber,
             zipcode
         } = req.body;
-
+        console.log('=>',req.body)
 
         if (!truckType || !truckType.subcategoryId) { 
             return res.status(400).json({ success: false, message: "Truck type subcategoryId required" }); }
@@ -48,7 +48,8 @@ exports.createTruckProfile = async (req, res) => {
             carrierId: carrier._id,
             nickname,
             registrationNumber,
-            truckType:truckType.subcategoryId,
+            // truckType:truckType.subcategoryId,
+            truckType:truckType,
             hasWinch,
             capacity,
             mcDotNumber,
@@ -61,10 +62,16 @@ exports.createTruckProfile = async (req, res) => {
             updatedAt: new Date()
         });
 
+         const populatedTruck = await Truck.findById(truck._id)
+            .populate("truckType", "name  description");
+
         return res.status(201).json({
             success: true,
-            message: " Truck Profile created successfully",
-            data: truck
+            message: "Truck Profile created successfully",
+            data: {
+                ...populatedTruck._doc,       // includes all truck fields
+                truckType: populatedTruck.truckType // populated object
+            }
         });
 
     } catch (error) {
@@ -206,7 +213,6 @@ exports.getTruckDetails = async (req, res) => {
         const truck = await Truck.findById(truckId)
             .populate({
                 path: "carrierId",
-                select: "companyName userId email phone"
             })
             .populate({
                 path: "truckType",

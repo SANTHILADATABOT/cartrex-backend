@@ -1,5 +1,6 @@
 const Shipper = require('../../models/Shipper');
 const User = require('../../models/User');
+const Bid = require('../../models/Bid');
 const { uploadToS3 } = require('../../utils/s3Upload');
 
 exports.createOrUpdateshipperProfile = async (req, res) => {
@@ -119,5 +120,79 @@ exports.getAllShippers = async (req, res) => {
   } catch (error) {
     console.error('Get shippers error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+exports.getshipperbyId = async (req, res) => {
+  try {
+    const { shipperId } = req.params;
+
+    const shipper = await Shipper.findOne({ _id: shipperId, deletstatus: 0 })
+      .populate("userId", "firstName lastName email phone companyname role")
+      .populate("createdBy", "firstName lastName email")
+      .populate("updatedBy", "firstName lastName email");
+
+    if (!shipper) {
+      return res.status(404).json({
+        success: false,
+        message: "Shipper not found or deleted",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Shipper details fetched successfully",
+      data: shipper,
+    });
+
+  } catch (error) {
+    console.error("Error fetching shipper by ID:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// bids 
+
+
+exports.getallbidsfilter = async (req, res) => {
+  try {
+    // const { isActive } = req.query;
+    const data = req.query;
+    const filter = { deletstatus: 0 };
+    if (data?.deliveryLocation && data?.pickupLocation) {
+      filter["pickup.stateCode"] = data?.pickupLocation;
+      filter["delivery.stateCode"] = data?.deliveryLocation;
+    }
+    const bids = await Bid.find(filter)
+      .populate('shipperId', 'companyName dba')
+      .populate('carrierId', 'companyName dba')
+      .populate('routeId', 'routeName')
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(10);           
+
+    if (!bids.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No bids found",
+        data: []
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: bids.length,
+      message: "Bids fetched successfully",
+      data: bids
+    });
+
+  } catch (error) {
+    console.error("Error fetching bids:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

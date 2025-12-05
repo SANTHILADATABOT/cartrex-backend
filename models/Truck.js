@@ -4,7 +4,7 @@ const truckSchema = new mongoose.Schema({
   carrierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Carrier', required: true },
   nickname: { type: String, required: true },
   registrationNumber: { type: String, required: true, unique: true },
-   truckType: {
+  truckType: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "SubCategory", // must match your Subcategory model name
     required: true,
@@ -22,6 +22,7 @@ const truckSchema = new mongoose.Schema({
   insuranceExpiry: { type: String, required: true },
   insuranceValidated: { type: Boolean, default: false },
   coverPhoto: { type: String },
+  truckPhoto: { type: String },
   photos: [{ type: String }], 
   rating: { type: Number, default: 0, min: 0, max: 5 },
   status: { 

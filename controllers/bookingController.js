@@ -89,8 +89,6 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-
-
 exports.getBookings = async (req, res) => {
   try {
 
@@ -757,10 +755,6 @@ exports.updateBookingStatusCancel = async (req, res) => {
   }
 };
 
-
-
-
-
 exports.getBookingById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -820,8 +814,6 @@ exports.getBookingById = async (req, res) => {
     });
   }
 };
-
-
 
 exports.acceptBooking = async (req, res) => {
   try {

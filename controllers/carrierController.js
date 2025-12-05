@@ -5,6 +5,7 @@ const Carrier = require('../models/Carrier');
 const Shipper = require('../models/Shipper');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
+const Route = require('../models/Route');
 const Bid = require('../models/Bid');
 const Truck = require('../models/Truck');
 const Location =require('../models/Location');
@@ -387,10 +388,6 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
         message: "User ID is required",
       });
     }
-
-    /** ---------------------------------------------------
-     * 1. Get Carrier by userId
-     * --------------------------------------------------- */
     const carrier = await Carrier.findOne({ 
         userId: userid, 
         deletstatus: 0 
@@ -408,33 +405,27 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
 
     const carrierId = carrier._id;
 
-    /** ---------------------------------------------------
-     * 2. Get Trucks under this carrier
-     * --------------------------------------------------- */
     const trucks = await Truck.find({ 
       carrierId: carrierId, 
       deletstatus: 0 
     });
+    const truckIds = trucks.map(t => t._id);
 
-    /** ---------------------------------------------------
-     * 3. Get Bookings for this carrier
-     * --------------------------------------------------- */
+    const routes = await Route.find({
+      truckId: { $in: truckIds },
+      deletstatus: 0
+    });
+
     const bookings = await Booking.find({
       carrierId: carrierId,
       deletstatus: 0
     });
 
-    /** ---------------------------------------------------
-     * 4. Get Bids for this carrier
-     * --------------------------------------------------- */
     const bids = await Bid.find({
       carrierId: carrierId,
       deletstatus: 0
     });
 
-    /** ---------------------------------------------------
-     * 5. Count totals
-     * --------------------------------------------------- */
     const summary = {
       totalTrucks: trucks.length,
       totalBookings: bookings.length,
@@ -448,6 +439,7 @@ exports.getcarrierDeatilsbyId = async (req, res) => {
         trucks,
         bookings,
         bids,
+        routes,
         summary
       },
     });

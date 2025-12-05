@@ -121,36 +121,151 @@ const { uploadToS3 } = require('../../utils/s3Upload');
 //   }
 // };
 
-exports.createupdateProfile = async (req, res) => {
+// exports.createupdateProfile = async (req, res) => {
+//   try {
+//     const { userId, roleType, companyName, address, locationId, zipCode, country, city, state } = req.body;
+
+//     if (!userId) return res.status(400).json({ success: false, message: "userId is required" });
+//     if (!roleType) return res.status(400).json({ success: false, message: "roleType is required" });
+
+//     if (!["Carrier", "Shipper"].includes(roleType)) {
+//       return res.status(400).json({ success: false, message: "Invalid roleType" });
+//     }
+
+//     const location = await Location.findById(locationId);
+//     if (!location) {
+//       return res.status(404).json({ success: false, message: "Invalid locationId" });
+//     }
+
+//     const Model = roleType === "Carrier" ? Carrier : Shipper;
+//     let profile = await Model.findOne({ userId });
+
+//     if (profile) {
+//       profile.companyName = companyName;
+//       profile.address = address;
+//       profile.locationId = locationId;
+//       profile.zipCode = zipCode;
+//       profile.country = country;
+//       profile.city = city;
+//       profile.state = state;
+//       profile.updatedAt = new Date();
+//       await profile.save();
+//     } else {
+//       profile = await Model.create({
+//         userId,
+//         companyName,
+//         address,
+//         locationId,
+//         zipCode,
+//         country,
+//         city,
+//         state,
+//         photo: null
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: `${roleType} profile created successfully`,
+//       data: profile
+//     });
+
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+exports.createOrUpdateProfile = async (req, res) => {
   try {
-    const { userId, roleType, companyName, address, locationId, zipCode, country, city, state } = req.body;
+    console.log(" Incoming Request Body:", req.body);
+    console.log(" Incoming File:", req.file);
 
-    if (!userId) return res.status(400).json({ success: false, message: "userId is required" });
-    if (!roleType) return res.status(400).json({ success: false, message: "roleType is required" });
+    const { userId, roleType, companyName, address, locationId, zipCode, country,city,state,stateCode } = req.body;
 
-    if (!["Carrier", "Shipper"].includes(roleType)) {
-      return res.status(400).json({ success: false, message: "Invalid roleType" });
+    console.log("userId:", userId);
+    console.log(" roleType:", roleType);
+    console.log(" req.body:", req.body);
+
+    // Validate required fields
+    if (!userId) {
+      console.log(" ERROR: userId missing");
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+    if (!roleType) {
+      console.log(" ERROR: roleType missing");
+      return res.status(400).json({ success: false, message: "roleType is required" });
     }
 
+    if (!["Carrier", "Shipper"].includes(roleType)) {
+      console.log(" ERROR: Invalid roleType", roleType);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid roleType. Use Carrier or Shipper",
+      });
+    }
+
+    console.log(" Checking Location:", locationId);
     const location = await Location.findById(locationId);
+
+    console.log(" Location found:", location);
+
     if (!location) {
+      console.log(" ERROR: Invalid locationId");
       return res.status(404).json({ success: false, message: "Invalid locationId" });
     }
 
-    const Model = roleType === "Carrier" ? Carrier : Shipper;
-    let profile = await Model.findOne({ userId });
 
+    const Model = roleType === "Carrier" ? Carrier : Shipper;
+    console.log(" Using Model:", roleType);
+
+    let profile = await Model.findOne({ userId });
+    console.log(" Existing Profile:", profile);
+
+    let savedPhotoPath = null;
+   console.log(req.file,"req.file")
+   
+    if (req.file) {
+      const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
+      const dir = path.join(__dirname, "../upload/" + folderName);
+
+      console.log(" Upload Directory:", dir);
+
+      if (!fs.existsSync(dir)) {
+        console.log(" Creating folder:", dir);
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      const ext = path.extname(req.file.originalname);
+      const filename = `${roleType.toLowerCase()}_${userId}${ext}`;
+      const finalPath = path.join(dir, filename);
+
+      console.log(" Saving File To:", finalPath);
+
+      fs.writeFileSync(finalPath, req.file.buffer);
+      savedPhotoPath = path.join("upload", folderName, filename);
+
+      console.log(" Saved Photo Path:", savedPhotoPath);
+    }
     if (profile) {
-      profile.companyName = companyName;
-      profile.address = address;
-      profile.locationId = locationId;
-      profile.zipCode = zipCode;
-      profile.country = country;
-      profile.city = city;
-      profile.state = state;
+      console.log(" Updating Existing Profile");
+
+      profile.companyName = companyName || profile.companyName;
+      profile.address = address || profile.address;
+      profile.locationId = locationId || profile.locationId;
+      profile.zipCode = zipCode || profile.zipCode;
+      profile.country = country || profile.country;
+      profile.city = city || profile.city;
+      profile.state = state || profile.state;
+      profile.stateCode = stateCode || profile.stateCode;
+
+      if (savedPhotoPath) profile.photo = savedPhotoPath;
+
       profile.updatedAt = new Date();
       await profile.save();
-    } else {
+    } 
+    else {
+      console.log("➡ Creating New Profile");
+
       profile = await Model.create({
         userId,
         companyName,
@@ -160,20 +275,29 @@ exports.createupdateProfile = async (req, res) => {
         country,
         city,
         state,
-        photo: null
+        photo: savedPhotoPath || null
       });
     }
 
+    console.log(" SUCCESS: Profile Saved:", profile);
+
     return res.status(200).json({
       success: true,
-      message: `${roleType} profile created successfully`,
-      data: profile
+      message: `${roleType} profile created/updated successfully`,
+      data: profile,
     });
 
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error(" SERVER ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
+
 exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
   try{
     const {userId} = req.params;
@@ -202,18 +326,21 @@ exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
       const carrierProfile = await Carrier.findOne({ userId: userId });
       if (carrierProfile) {
         profileCompleted=true;
+        const trucks = await Truck.find({ carrierId: carrierProfile._id });
+        if (trucks || trucks.length > 0) {
+          HaveTruck = true;
+        }
       }
       const shipperProfile = await Shipper.findOne({ userId: userId });
       if (shipperProfile) {
         shipperprofle=true;
       }
-      const trucks = await Truck.find({ carrierId: carrierProfile._id });
-      if (trucks || trucks.length > 0) {
-        HaveTruck = true;
-      }
+     
       return res.status(200).json({
         success: true,
         data: {
+          user:user,
+        roleType:roleInfo.roleType,
          carrier:{HaveTruck,profileCompleted},
          shipper:{shipperprofle}
         }
@@ -226,51 +353,51 @@ exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
 
 }
 //upload profile photo 
-exports.createupdateProfilePhoto = async (req, res) => {
-  try {
-    const { userId, roleType } = req.body;
+// exports.createupdateProfilePhoto = async (req, res) => {
+//   try {
+//     const { userId, roleType } = req.body;
 
-    if (!userId) return res.status(400).json({ success: false, message: "userId is required" });
-    if (!roleType) return res.status(400).json({ success: false, message: "roleType is required" });
+//     if (!userId) return res.status(400).json({ success: false, message: "userId is required" });
+//     if (!roleType) return res.status(400).json({ success: false, message: "roleType is required" });
 
-    const Model = roleType === "Carrier" ? Carrier : Shipper;
+//     const Model = roleType === "Carrier" ? Carrier : Shipper;
 
-    const profile = await Model.findOne({ userId });
-    if (!profile) {
-      return res.status(404).json({ success: false, message: "Profile not found" });
-    }
+//     const profile = await Model.findOne({ userId });
+//     if (!profile) {
+//       return res.status(404).json({ success: false, message: "Profile not found" });
+//     }
 
-    let savedPhotoPath = null;
+//     let savedPhotoPath = null;
 
-    if (req.file) {
+//     if (req.file) {
 
-      const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
-      const dir = path.join(__dirname, "../upload/" + folderName);
+//       const folderName = roleType === "Carrier" ? "carrierProfiles" : "shipperProfiles";
+//       const dir = path.join(__dirname, "../upload/" + folderName);
 
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+//       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-      const ext = path.extname(req.file.originalname);
-      const filename = `${roleType.toLowerCase()}_${userId}${ext}`;
-      const finalPath = path.join(dir, filename);
+//       const ext = path.extname(req.file.originalname);
+//       const filename = `${roleType.toLowerCase()}_${userId}${ext}`;
+//       const finalPath = path.join(dir, filename);
 
-      fs.writeFileSync(finalPath, req.file.buffer);
-      savedPhotoPath = path.join("upload", folderName, filename);
+//       fs.writeFileSync(finalPath, req.file.buffer);
+//       savedPhotoPath = path.join("upload", folderName, filename);
 
-      profile.photo = savedPhotoPath;
-      profile.updatedAt = new Date();
-      await profile.save();
-    }
+//       profile.photo = savedPhotoPath;
+//       profile.updatedAt = new Date();
+//       await profile.save();
+//     }
 
-    return res.status(200).json({
-      success: true,
-      message: `${roleType} profile photo created/updated successfully`,
-      data: profile
-    });
+//     return res.status(200).json({
+//       success: true,
+//       message: `${roleType} profile photo created/updated successfully`,
+//       data: profile
+//     });
 
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 
 exports.getProfile = async (req, res) => {

@@ -524,12 +524,10 @@ exports.getBidsByCarrierUserId = async (req, res) => {
     const bids = await Bid.find(finalFilter)
       .populate({
         path: "shipperId",
-        select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
       .populate({
         path: "carrierId",
-        select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
       .populate({
@@ -646,12 +644,10 @@ exports.getBidsByFilter = async (req, res) => {
     const bids = await Bid.find(finalFilter)
       .populate({
         path: "shipperId",
-        select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
       .populate({
         path: "carrierId",
-        select: "companyName userId address",
         populate: { path: "userId", select: "firstName lastName" },
       })
       .lean();

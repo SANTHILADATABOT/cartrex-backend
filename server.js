@@ -8,6 +8,8 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const path = require("path");
 
+
+
 dotenv.config();
 
 const rateLimit = require('express-rate-limit');
@@ -55,10 +57,8 @@ const io = new Server(server, {
         'http://127.0.0.1:5173',
         'http://127.0.0.1:5174',
         'http://localhost:3000',
-        'http://192.168.1.13:5173',
-        'http://192.168.1.13:5174',
-        "http://192.168.1.23:5173",
-        " http://192.168.1.23:5174/"
+        'http://192.168.1.9:5000',
+
       ];
       
       if (!origin || allowedOrigins.includes(origin)) {
@@ -89,10 +89,7 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://127.0.0.1:5174',
   'http://localhost:5000',
-  'http://192.168.1.13:5173',
-  'http://192.168.1.13:5174',
- "http://192.168.1.23:5173",
- " http://192.168.1.23:5174/"
+  'http://192.168.1.9:5000',
 ];
 
 app.use(cors({
@@ -236,10 +233,12 @@ const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
 const bookingRoutes =require('./routes/web/bookings');
 const carrierRoutes =require('./routes/web/carriers');
+const shipperRoutes =require('./routes/web/shippers');
 const otpRoutes =require('./routes/web/otpRoutes');
 const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
+const settingsRoutes =require('./routes/policyRoutes');
 
 // <!---------------------- Api Route------------------------------------------------------>
 const apiroute =require('./routes/Api/ApiRoutes');
@@ -269,6 +268,7 @@ app.use('/adminuserlist',adminUserlistRoutes);
 app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
+app.use('/settings',settingsRoutes);
 app.use('/coplaintsanddisputes',complaintsRoutes)
 
 app.use("/uploads", uploadRoutes);
@@ -280,6 +280,7 @@ app.use('/space',spaceRoutes);
 app.use('/bid',bidRoutes);
 app.use('/bookings',bookingRoutes);
 app.use('/carriers', carrierRoutes);
+app.use('/shippers', shipperRoutes);
 app.use('/trucks' , truckRoutes);
 app.use('/otpRoutes' , otpRoutes);
 

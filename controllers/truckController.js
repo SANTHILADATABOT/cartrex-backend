@@ -65,18 +65,9 @@ const { uploadToS3 } = require('../utils/s3Upload');
 
 exports.createTruckProfile = async (req, res) => {
   try {
- 
-    const {userId } = req.body.params;
-    // const userId = '692060d4895dbb36b25caaef';
-
-    const carrier = await Carrier.findOne({ userId: userId });
-    console.log("req.body.userId",userId)
-    if (!carrier) {
-      return res.status(404).json({ success: false, message: "Carrier not found" });
-    }
-
+        const truckData = JSON.parse(req.body.truckData);
     const {
-      nickname, 
+      nickname,
       registrationNumber,
       truckType,
       hasWinch,
@@ -84,7 +75,6 @@ exports.createTruckProfile = async (req, res) => {
       mcDotNumber,
       vinNumber,
       insuranceExpiry,
-      zipcode,
       originCity,
       originStateCode,
       originZipcode,
@@ -98,68 +88,111 @@ exports.createTruckProfile = async (req, res) => {
       originState,
       destinationstate,
       destinationlocation,
-      originlocation
-    } = req.body.params;
+      originlocation,
+      userId
+    } = truckData;
 
-    const baseDir = path.join(__dirname, "../upload/trucks");
-    if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
-
-    let insurancePath = null;
-    let coverPhotoPath = null;
-    let photoPaths = [];
-
-    if (req.files?.insurance) {
-      const file = req.files.insurance[0];
-      const ext = path.extname(file.originalname);
-      const fileName = `insurance_${Date.now()}${ext}`;
-      const savePath = path.join(baseDir, fileName);
-
-      fs.writeFileSync(savePath, file.buffer);
-      insurancePath = path.join("upload", "trucks", fileName);
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
     }
 
-    if (req.files?.coverPhoto) {
-      const file = req.files.coverPhoto[0];
-      const ext = path.extname(file.originalname);
-      const fileName = `cover_${Date.now()}${ext}`;
-      const savePath = path.join(baseDir, fileName);
-
-      fs.writeFileSync(savePath, file.buffer);
-      coverPhotoPath = path.join("upload", "trucks", fileName);
-    }
-    if (req.files?.photos) {
-      req.files.photos.forEach((file, index) => {
-        const ext = path.extname(file.originalname);
-        const fileName = `photo_${Date.now()}_${index}${ext}`;
-        const savePath = path.join(baseDir, fileName);
-
-        fs.writeFileSync(savePath, file.buffer);
-        photoPaths.push(path.join("upload", "trucks", fileName));
-      });
-    }
-    console.log("BODY DATA:", req.body);
-
+    // 1️⃣ Create truck first (without images)
     const truck = await Truck.create({
       carrierId: carrier._id,
       nickname,
       registrationNumber,
       truckType,
-      hasWinch: hasWinch === "true",
+      hasWinch,
       capacity,
       mcDotNumber,
       vinNumber,
-      insurance: insurancePath,
       insuranceExpiry,
-      coverPhoto: coverPhotoPath,
-      photos: photoPaths,
       createdBy: req.body.createdBy,
       updatedBy: req.body.createdBy,
       ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers["user-agent"],
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      photos: []
     });
 
+    const truckId = truck._id.toString();
+
+    // 2️⃣ Create folder using truckId
+    const truckFolder = path.join(__dirname, "../upload/trucks", truckId);
+    if (!fs.existsSync(truckFolder)) fs.mkdirSync(truckFolder, { recursive: true });
+
+    let insurancePath = null;
+    let coverPhotoPath = null;
+    let truckPhotoPath = null;
+    let galleryPaths = [];
+
+    // 3️⃣ Save Insurance File
+    if (req.files?.insurance) {
+      const file = req.files.insurance[0];
+      const ext = path.extname(file.originalname);
+      const fileName = `insurance_${truckId}${ext}`;
+      const savePath = path.join(truckFolder, fileName);
+
+      fs.writeFileSync(savePath, file.buffer);
+      insurancePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+    }
+
+    // 4️⃣ Save Cover Photo
+    if (req.files?.coverPhoto) {
+      const file = req.files.coverPhoto[0];
+      const ext = path.extname(file.originalname);
+      const fileName = `cover_${truckId}${ext}`;
+      const savePath = path.join(truckFolder, fileName);
+
+      fs.writeFileSync(savePath, file.buffer);
+      coverPhotoPath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+    }
+
+    // 5️⃣ Save Main Truck Photo
+    if (req.files?.main) {
+      const file = req.files.main[0];
+      const ext = path.extname(file.originalname);
+      const fileName = `main_${truckId}${ext}`;
+      const savePath = path.join(truckFolder, fileName);
+
+      fs.writeFileSync(savePath, file.buffer);
+      truckPhotoPath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+    }
+    if (req.files?.photos) {
+  req.files.photos.forEach((file, index) => {
+    const ext = path.extname(file.originalname);
+    const fileName = `photo_${truckId}_${index}${ext}`;
+    const savePath = path.join(truckFolder, fileName);
+
+    fs.writeFileSync(savePath, file.buffer);
+
+    const cleanPath = path
+      .join("upload", "trucks", truckId, fileName)
+      .replace(/\\/g, "/");
+
+    galleryPaths.push(cleanPath);
+  });
+}
+    // 6️⃣ Save Gallery Photos
+    // if (req.files?.photos) {
+    //   req.files.photos.forEach((file, index) => {
+    //     const ext = path.extname(file.originalname);
+    //     const fileName = `photo_${truckId}_${index}${ext}`;
+    //     const savePath = path.join(truckFolder, fileName);
+
+    //     fs.writeFileSync(savePath, file.buffer);
+    //     galleryPaths.push(path.join("upload", "trucks", truckId, fileName)).replace(/\\/g, "/");
+    //   });
+    // }
+
+    // 7️⃣ Update truck with paths
+    truck.insurance = insurancePath;
+    truck.coverPhoto = coverPhotoPath;
+    truck.truckPhoto = truckPhotoPath;
+    truck.photos = galleryPaths;
+    await truck.save();
     const route = await Route.create({
       carrierId: carrier._id,
       truckId: truck._id,

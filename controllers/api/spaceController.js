@@ -4,6 +4,8 @@ const Route = require('../../models/Route');
 const User = require('../../models/User');
 const Space = require('../../models/Space');
 const Carrier = require('../../models/Carrier');
+const Location = require('../../models/Location');
+const Category = require("../../models/Category");
 const AdminRoles = require('../../models/AdminRoles');
 
 exports.createSpace = async (req, res) => {
@@ -165,6 +167,7 @@ exports.deleteSpace = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+//post a space screen 
 exports.getspacedetails = async (req, res) => {
   try {
     const { userId } =  req.params;
@@ -280,6 +283,44 @@ exports.getspacedetails = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+exports.getAllLocations = async (req, res) => {
+  try {
+    const locations = await Location.find({}, "city state stateCode zipcode")
+      .sort({ state: 1, city: 1 }); // optional sorting
+
+    return res.status(200).json({
+      success: true,
+      count: locations.length,
+      data: locations,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching locations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+exports.getcategorysubcategories = async (req, res) => {
+  try {
+    const data = await Category.find({ deleteStatus: 0 })
+      .populate({
+        path: 'subcategories',
+        match: { deleteStatus: 0 },
+      });
+
+    res.status(200).json({
+      success: true,
+      message: 'All categories with subcategories fetched successfully',
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+//find a space 
 exports.getSpaceResult = async (req, res) => {
   try {
     const {city,statecode}  =  req.query;
@@ -292,13 +333,19 @@ exports.getSpaceResult = async (req, res) => {
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
-        select: "userId companyName photo address city state stateCode zipCode country rating totalRatings totalBookings outstandingPayouts status updatedAt createdAt recentActivity updatedBy deletstatus createdBy ",
         populate: {
           path: "userId",
           select: "firstName lastName",
         },
       })
-      .populate("truckId")
+      .populate({
+        path: "truckId",
+        populate: {
+          path: "truckType",
+          model: "SubCategory",
+          select: "name price description",
+        },
+         })
       .populate("routeId")
       .limit(5)
       .lean();
@@ -343,6 +390,8 @@ exports.getSpaceResult = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+// post space view 
 exports.addSpacesDetails = async (req, res) => {
   try {
     const { carrierId } = req.params;
