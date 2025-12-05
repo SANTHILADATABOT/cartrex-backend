@@ -4,6 +4,6 @@ const DashboardListingController = require('../../controllers/admin/adminDashboa
 
 router.get('/getallcompletedbookingsandbids/completed', DashboardListingController.getallcompletedbookingsandbids);
 
-router.get('/getdashboardcounts/counts', DashboardListingController.getdashboardcounts);
+router.post('/getdashboardcounts/counts', DashboardListingController.getDashboardCounts);
 
 module.exports = router;
