@@ -370,8 +370,9 @@ const getBidsDashboardData = async (filter) => {
 
   const prevBids = await Bid.countDocuments({
     deletstatus: 0,
-    status: "ready_for_pickup",
+     status: { $ne: "cancelled" },
     createdAt: { $gte: prevStart, $lte: prevEnd }
+  
   });
 
   // Percentage change
@@ -382,7 +383,7 @@ const getBidsDashboardData = async (filter) => {
     {
       $match: {
         deletstatus: 0,
-        status: "ready_for_pickup",
+         status: { $ne: "cancelled" },
         createdAt: { $gte: range.start, $lte: range.end }
       }
     },
