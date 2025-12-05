@@ -226,6 +226,7 @@ const adminUserlistRoutes = require('./routes/admin/adminUserlistRoutes');
 const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const dashboardRoutes = require('./routes/dashboard');
+const complaintsRoutes = require('./routes/admin/adminComplaintRoutes')
 
 const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
@@ -268,6 +269,7 @@ app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
 app.use('/settings',settingsRoutes);
+app.use('/coplaintsanddisputes',complaintsRoutes)
 
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
