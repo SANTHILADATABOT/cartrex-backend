@@ -239,6 +239,7 @@ const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
 const settingsRoutes =require('./routes/policyRoutes');
+const homePagesettingsRoutes =require('./routes/admin/homepageSettingRoutes')
 
 // <!---------------------- Api Route------------------------------------------------------>
 const apiroute =require('./routes/Api/ApiRoutes');
@@ -269,6 +270,7 @@ app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
 app.use('/settings',settingsRoutes);
+app.use('/homePagesettings',homePagesettingsRoutes);
 app.use('/coplaintsanddisputes',complaintsRoutes)
 
 app.use("/uploads", uploadRoutes);
