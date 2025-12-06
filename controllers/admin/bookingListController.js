@@ -2,27 +2,28 @@ const Booking = require('../../models/Booking');
 const mongoose = require('mongoose');
 
 const User = require("../../models/User");
+const Truck = require("../../models/Truck")
 
 // ✅ GET all bookings (only active ones)
 
 exports.getallbookings = async (req, res) => {
   try {
-    const {status,carrier,shipper} = req.query;
-     const filter = {deletstatus: 0};
-      if (status) {
-        if (status === "all") {
-      
-         filter.status = { $in: ['confirmed','pending','in_progress','cancelled','completed'] }; // both
-        } else {
-          filter.status = status;
-        }
+    const { status, carrier, shipper } = req.query;
+    const filter = { deletstatus: 0 };
+    if (status) {
+      if (status === "all") {
+
+        filter.status = { $in: ['confirmed', 'pending', 'in_progress', 'cancelled', 'completed'] }; // both
+      } else {
+        filter.status = status;
       }
-      if (carrier && carrier !== "all") {
-        filter.carrierId = carrier;
-      }
-      if (shipper && shipper !== "all") {
-        filter.shipperId = shipper;
-      }
+    }
+    if (carrier && carrier !== "all") {
+      filter.carrierId = carrier;
+    }
+    if (shipper && shipper !== "all") {
+      filter.shipperId = shipper;
+    }
     const bookings = await Booking.find(filter)
       .populate({
         path: "carrierId",
@@ -38,12 +39,8 @@ exports.getallbookings = async (req, res) => {
           select: "firstName lastName email"
         }
       })
-      .populate({
-  path: "truckId",
-  select: "nickname"  
-})
-      
-    
+
+
       .sort({ createdAt: -1 });
 
     if (!bookings.length) {
@@ -92,6 +89,7 @@ exports.getbookingbyId = async (req, res) => {
           select: 'firstName lastName email phone'
         }
       });
+
 
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
@@ -148,8 +146,8 @@ exports.deleteSelectedBooking = async (req, res) => {
       });
     }
     const bookingData = await Booking.find({
-        _id: { $in: bookingId },
-          deletstatus: 0 
+      _id: { $in: bookingId },
+      deletstatus: 0
     });
     if (!bookingData.length) {
       return res.status(404).json({ success: false, message: "Booking not found or already deleted" });
@@ -294,7 +292,7 @@ exports.updatebooking = async (req, res) => {
     booking.carrierId = updateData.carrierId;
     booking.shipperId = updateData.shipperId;
     booking.truckId = updateData.truckId;
-    
+
     // ✅ Optional: track who updated and when
     booking.updatedAt = new Date();
     if (req.user?._id) booking.updatedBy = req.user._id;
