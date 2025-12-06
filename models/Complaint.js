@@ -4,7 +4,7 @@ const complaintSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   
-  customerName: String,
+  customerid: { type: mongoose.Schema.Types.ObjectId, ref: 'Shipper' },
   complaintType: String,
   description: { type: String, required: true },
   

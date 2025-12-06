@@ -7,5 +7,9 @@ router.get('/getcomplainbyid/:complaintId', adminComplaintsController.getComplai
 router.put("/updatecomplaintstatus/:complaintId", adminComplaintsController.updateComplaintStatus);
 router.put("/updatepriority/:complaintId", adminComplaintsController.updatePriority);
 
+router.put("/updateComplaint/:complaintId", adminComplaintsController.updateComplaint);
+
+router.delete("/deleteComplaint/:complaintId", adminComplaintsController.deleteComplaint);
+
 
 module.exports = router;
