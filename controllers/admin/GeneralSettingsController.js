@@ -1,4 +1,4 @@
-const Policy = require("../../models/Policy");
+// const Policy = require("../../models/Policy");
 
 // CREATE or UPDATE a policy
 exports.saveGeneral = async (req, res) => {
