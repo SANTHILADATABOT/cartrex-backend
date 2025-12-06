@@ -265,12 +265,14 @@ exports.createTruckProfileAndRoute = async (req, res) => {
         if (req.files?.insurance) {
             const file = req.files.insurance[0];
             const ext = path.extname(file.originalname);
-            const fileName = `insurance_${Date.now()}${ext}`;
+            const fileName = `insurance_${truckId}${ext}`;
             const savePath = path.join(baseDir, fileName);
 
             fs.writeFileSync(savePath, file.buffer);
-            insurancePath = path.join("upload", "trucks", fileName);
-        }
+            //insurancePath = path.join("upload", "trucks", fileName);
+            //insurancePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+            insurancePath = `upload/trucks/truckId/${fileName}`;
+        }    
 
         const truck = await Truck.create({
             carrierId: carrier._id,

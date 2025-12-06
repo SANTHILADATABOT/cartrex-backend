@@ -94,7 +94,7 @@ router.get("/getTruckDetails",getTruckDetails);
 router.get('/getSpaceResult', getSpaceResult);
 router.get('/getSpacesByCarrierUserId/:userId' , getSpacesByCarrierUserId)
 
-//post a space
+//post a space 
 router.get('/getspacedetails/:userId',getspacedetails);
 router.get('/getAllLocations', getAllLocations);
 router.get("/getcategorysubcategories", getcategorysubcategories);
