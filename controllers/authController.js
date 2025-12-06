@@ -26,7 +26,7 @@ exports.signup = async (req, res) => {
     if(!roleId){
       roleId ="68ff5689aa5d489915b8caaa";
     }
-    if (!email || !password || !confirmPassword || !firstName || !lastName || !phone || !roleId) {
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !roleId) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
 
@@ -38,15 +38,18 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid role ID' });
     }
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Email already registered' });
+    if (existingUser && existingUser.verifyuser === "verified") {
+      return res.status(200).json({ success: false, message: 'Email already registered', navigate:"/" });
+    }
+    else if (existingUser && existingUser.verifyuser !== "verified") {
+      return res.status(200).json({ success: false, message: 'Email already registered , but not verified .Please verify your email', navigate:"/forgotpassword",state:{data:email,step:"verification",process:"verification"} });
     }
     const user = await User.create({
       email,
       password: password,
       firstName,
       lastName,
-      phone,
+      // phone,
       role: roleDoc._id,
       isApproved: true, 
       isActive: true,

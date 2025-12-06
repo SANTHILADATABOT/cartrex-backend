@@ -264,6 +264,7 @@ exports.DeleteSpace = async (req, res) => {
     });
   }
 };
+
 exports.deleteSelectedSpace = async (req, res) => {
   try {
     const { spaceId } = req.body;

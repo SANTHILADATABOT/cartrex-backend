@@ -5,78 +5,146 @@ const Carrier = require('../../models/Carrier');
 const Route = require('../../models/Route');
 const { uploadToS3 } = require('../../utils/s3Upload');
 
-exports.createTruckProfile = async (req, res) => {
-    try {
-        const {
-            userId,
-            nickname,
-            registrationNumber,
-            truckType,
-            hasWinch,
-            capacity,
-            insuranceExpiry,
-            mcDotNumber,
-            vinNumber,
-            zipcode
-        } = req.body;
+// exports.createTruckProfile = async (req, res) => {
+//     try {
+//         const {
+//             userId,
+//             nickname,
+//             registrationNumber,
+//             truckType,
+//             hasWinch,
+//             capacity,
+//             //insuranceExpiry,
+//             mcDotNumber,
+//             vinNumber,
+//             zipcode
+//         } = req.body;
+//         console.log('=>',req.body)
+
+//         if (!truckType || !truckType.subcategoryId) { 
+//             return res.status(400).json({ success: false, message: "Truck type subcategoryId required" }); }
+
+//         const carrier = await Carrier.findOne({ userId });
+//         if (!carrier) {
+//             return res.status(404).json({ success: false, message: "Carrier not found" });
+//         }
+
+//         const baseDir = path.join(__dirname, "../upload/trucks");
+//         if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+//         let insurancePath = null;
+
+//         if (req.files?.insurance) {
+//             const file = req.files.insurance[0];
+//             const ext = path.extname(file.originalname);
+//             const fileName = `insurance_${Date.now()}${ext}`;
+//             const savePath = path.join(baseDir, fileName);
+
+//             fs.writeFileSync(savePath, file.buffer);
+//             insurancePath = path.join("upload", "trucks", fileName);
+//         }
+
+//         const truck = await Truck.create({
+//             carrierId: carrier._id,
+//             nickname,
+//             registrationNumber,
+//            truckType:truckType.subcategoryId,
+//             //truckType:truckType,
+//             hasWinch,
+//             capacity,
+//             mcDotNumber,
+//             vinNumber,
+//             zipcode,
+//             insurance: insurancePath,
+//             //insuranceExpiry,
+//             userAgent: req.headers['user-agent'],
+//             createdAt: new Date(),
+//             updatedAt: new Date()
+//         });
+
+//          const populatedTruck = await Truck.findById(truck._id)
+//             .populate("truckType", "name  description");
+
+//         return res.status(201).json({
+//             success: true,
+//             message: "Truck Profile created successfully",
+//             data: {
+//                 ...populatedTruck._doc,       // includes all truck fields
+//                 truckType: populatedTruck.truckType // populated object
+//             }
+//         });
+
+//     } catch (error) {
+//         return res.status(500).json({ success: false, message: "Server error", error: error.message });
+//     }
+// };
+
+// exports.createTruckRoute = async (req, res) => {
+//     try {
+//         const {
+//             truckId,
+//             userId,
+//             originCity,
+//             originState,
+//             originStateCode,
+//             originZipcode,
+//             originlocation,
+//             pickupWindow,
+//             pickupRadius,
+
+//             destinationCity,
+//             destinationstate,
+//             destinationstateCode,
+//             destinationZipcode,
+//             destinationlocation,
+//             deliveryWindow,
+//             deliveryRadius
+//         } = req.body;
 
 
-        if (!truckType || !truckType.subcategoryId) { 
-            return res.status(400).json({ success: false, message: "Truck type subcategoryId required" }); }
+//         const carrier = await Carrier.findOne({ userId });
+//         if (!carrier) return res.status(404).json({ success: false, message: "Carrier not found" });
 
-        const carrier = await Carrier.findOne({ userId });
-        if (!carrier) {
-            return res.status(404).json({ success: false, message: "Carrier not found" });
-        }
+//         const route = await Route.create({
+//             carrierId: carrier._id,
+//             truckId,
+//             origin: {
+//                 fullAddress: originlocation,
+//                 city: originCity,
+//                 state: originState,
+//                 stateCode: originStateCode,
+//                 zipcode: originZipcode,
+//                 pickupWindow,
+//                 pickupRadius
+//             },
+//             destination: {
+//                 fullAddress: destinationlocation,
+//                 city: destinationCity,
+//                 state: destinationstate,
+//                 stateCode: destinationstateCode,
+//                 zipcode: destinationZipcode,
+//                 deliveryWindow,
+//                 deliveryRadius
+//             },
+//             createdBy: req.body.createdBy,
+//             updatedBy: req.body.createdBy,
+//             ipAddress: req.ip,
+//             userAgent: req.headers['user-agent'],
+//             createdAt: new Date(),
+//             updatedAt: new Date()
+//         });
 
-        const baseDir = path.join(__dirname, "../upload/trucks");
-        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+//         return res.status(200).json({
+//             success: true,
+//             message: "Successfully created a Route for the Truck ",
+//             data: route
+//         });
 
-        let insurancePath = null;
+//     } catch (error) {
+//         return res.status(500).json({ success: false, message: "Server error", error: error.message });
+//     }
+// };
 
-        if (req.files?.insurance) {
-            const file = req.files.insurance[0];
-            const ext = path.extname(file.originalname);
-            const fileName = `insurance_${Date.now()}${ext}`;
-            const savePath = path.join(baseDir, fileName);
-
-            fs.writeFileSync(savePath, file.buffer);
-            insurancePath = path.join("upload", "trucks", fileName);
-        }
-
-        const truck = await Truck.create({
-            carrierId: carrier._id,
-            nickname,
-            registrationNumber,
-            truckType:truckType.subcategoryId,
-            hasWinch,
-            capacity,
-            mcDotNumber,
-            vinNumber,
-            zipcode,
-            insurance: insurancePath,
-            insuranceExpiry,
-            userAgent: req.headers['user-agent'],
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
-
-         const populatedTruck = await Truck.findById(truck._id)
-            .populate("truckType", "name  description");
-
-        return res.status(201).json({
-            success: true,
-            message: "Truck Profile created successfully",
-            data: {
-                ...populatedTruck._doc,       // includes all truck fields
-                truckType: populatedTruck.truckType // populated object
-            }
-        });
-
-    } catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error: error.message });
-    }
-};
 
 exports.uploadTruckPhotos = async (req, res) => {
     try {
@@ -139,11 +207,194 @@ exports.uploadTruckPhotos = async (req, res) => {
     }
 };
 
-exports.createTruckRoute = async (req, res) => {
+exports.createTruckProfileAndRoute = async (req, res) => {
     try {
         const {
+            // Truck fields
+            userId,
+            nickname,
+            registrationNumber,
+            truckType,
+            //insuranceExpiry,
+            hasWinch,
+            capacity,
+            mcDotNumber,
+            vinNumber,
+            zipcode,
+
+            // Route fields
+            truckId,
+            originCity,
+            originState,
+            originStateCode,
+            originZipcode,
+            originlocation,
+            pickupWindow,
+            pickupRadius,
+
+            destinationCity,
+            destinationState,
+            destinationStateCode,
+            destinationZipcode,
+            destinationlocation,
+            deliveryWindow,
+            deliveryRadius
+        } = req.body;
+
+        console.log("=>", req.body);
+
+        if (!truckType || !truckType.subcategoryId) {
+            return res.status(400).json({
+                success: false,
+                message: "Truck type subcategoryId required"
+            });
+        }
+
+        const carrier = await Carrier.findOne({ userId });
+        if (!carrier) {
+            return res.status(404).json({
+                success: false,
+                message: "Carrier not found"
+            });
+        }
+        const baseDir = path.join(__dirname, "../upload/trucks");
+        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+        let insurancePath = null;
+
+        if (req.files?.insurance) {
+            const file = req.files.insurance[0];
+            const ext = path.extname(file.originalname);
+            const fileName = `insurance_${Date.now()}${ext}`;
+            const savePath = path.join(baseDir, fileName);
+
+            fs.writeFileSync(savePath, file.buffer);
+            insurancePath = path.join("upload", "trucks", fileName);
+        }
+
+        const truck = await Truck.create({
+            carrierId: carrier._id,
+            nickname,
+            registrationNumber,
+            truckType: truckType.subcategoryId,
+            hasWinch,
+            //insuranceExpiry,
+            capacity,
+            mcDotNumber,
+            vinNumber,
+            zipcode,
+            insurance: insurancePath,
+            userAgent: req.headers["user-agent"],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+
+        const populatedTruck = await Truck.findById(truck._id)
+            .populate("truckType", "name description");
+
+        const route = await Route.create({
+            carrierId: carrier._id,
+            truckId: truck._id, 
+            origin: {
+                fullAddress: originlocation,
+                city: originCity,
+                state: originState,
+                stateCode: originStateCode,
+                zipcode: originZipcode,
+                pickupWindow,
+                pickupRadius
+            },
+
+            destination: {
+                fullAddress: destinationlocation,
+                city: destinationCity,
+                state: destinationState,
+                stateCode: destinationStateCode,
+                zipcode: destinationZipcode,
+                deliveryWindow,
+                deliveryRadius
+            },
+
+            createdBy: req.body.createdBy,
+            updatedBy: req.body.createdBy,
+            ipAddress: req.ip,
+            userAgent: req.headers["user-agent"],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Truck Profile And Route created successfully",
+            data: {
+                truck: {
+                    ...populatedTruck._doc,
+                    truckType: populatedTruck.truckType
+                },
+                route
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+// edit view 
+exports.getTruckProfileAndRoute = async (req, res) => {
+    try {
+        const { truckId } = req.params;
+
+        const truck = await Truck.findById(truckId)
+            .populate("truckType", "name description");
+        
+        if (!truck) {
+            return res.status(404).json({
+                success: false,
+                message: "Truck not found"
+            });
+        }
+
+        const route = await Route.findOne({ truckId: truckId });
+       
+           return res.status(200).json({
+      success: true,
+      message: "Truck profile fetched successfully",
+      data: {
+        truck,
+        route: route || null,  // If no route found return null
+      },
+    });
+} catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+//update 
+exports.editTruckProfileAndRoute = async (req, res) => {
+    try {
+        const {
+            // Truck fields
             truckId,
             userId,
+            nickname,
+            registrationNumber,
+            truckType,
+            hasWinch,
+            capacity,
+            mcDotNumber,
+            vinNumber,
+            zipcode,
+
+            // Route fields
+            routeId,
             originCity,
             originState,
             originStateCode,
@@ -161,49 +412,104 @@ exports.createTruckRoute = async (req, res) => {
             deliveryRadius
         } = req.body;
 
-
+        const truck = await Truck.findById(truckId);
+        if (!truck) {
+            return res.status(404).json({
+                success: false,
+                message: "Truck not found"
+            });
+        }
         const carrier = await Carrier.findOne({ userId });
-        if (!carrier) return res.status(404).json({ success: false, message: "Carrier not found" });
+        if (!carrier) {
+            return res.status(404).json({
+                success: false,
+                message: "Carrier not found"
+            });
+        }
+        let insurancePath = truck.insurance;
 
-        const route = await Route.create({
-            carrierId: carrier._id,
-            truckId,
-            origin: {
-                fullAddress: originlocation,
-                city: originCity,
-                state: originState,
-                stateCode: originStateCode,
-                zipcode: originZipcode,
-                pickupWindow,
-                pickupRadius
-            },
-            destination: {
-                fullAddress: destinationlocation,
-                city: destinationCity,
-                state: destinationstate,
-                stateCode: destinationstateCode,
-                zipcode: destinationZipcode,
-                deliveryWindow,
-                deliveryRadius
-            },
-            createdBy: req.body.createdBy,
-            updatedBy: req.body.createdBy,
-            ipAddress: req.ip,
-            userAgent: req.headers['user-agent'],
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+        if (req.files?.insurance) {
+            const baseDir = path.join(__dirname, "../upload/trucks");
+            if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+            const file = req.files.insurance[0];
+            const ext = path.extname(file.originalname);
+            const fileName = `insurance_${Date.now()}${ext}`;
+            const savePath = path.join(baseDir, fileName);
+
+            fs.writeFileSync(savePath, file.buffer);
+            insurancePath = path.join("upload", "trucks", fileName);
+        }
+
+        truck.nickname = nickname ?? truck.nickname;
+        truck.registrationNumber = registrationNumber ?? truck.registrationNumber;
+        truck.truckType = truckType?.subcategoryId ?? truck.truckType;
+        truck.hasWinch = hasWinch ?? truck.hasWinch;
+        truck.capacity = capacity ?? truck.capacity;
+        truck.mcDotNumber = mcDotNumber ?? truck.mcDotNumber;
+        truck.vinNumber = vinNumber ?? truck.vinNumber;
+        truck.zipcode = zipcode ?? truck.zipcode;
+        truck.insurance = insurancePath;
+        truck.updatedAt = new Date();
+
+        await truck.save();
+
+        const updatedTruck = await Truck.findById(truck._id)
+            .populate("truckType", "name description");
+
+        const route = await Route.findById(routeId);
+        if (!route) {
+            return res.status(404).json({
+                success: false,
+                message: "Route not found"
+            });
+        }
+        route.origin = {
+            fullAddress: originlocation ?? route.origin.fullAddress,
+            city: originCity ?? route.origin.city,
+            state: originState ?? route.origin.state,
+            stateCode: originStateCode ?? route.origin.stateCode,
+            zipcode: originZipcode ?? route.origin.zipcode,
+            pickupWindow: pickupWindow ?? route.origin.pickupWindow,
+            pickupRadius: pickupRadius ?? route.origin.pickupRadius
+        };
+
+        route.destination = {
+            fullAddress: destinationlocation ?? route.destination.fullAddress,
+            city: destinationCity ?? route.destination.city,
+            state: destinationstate ?? route.destination.state,
+            stateCode: destinationstateCode ?? route.destination.stateCode,
+            zipcode: destinationZipcode ?? route.destination.zipcode,
+            deliveryWindow: deliveryWindow ?? route.destination.deliveryWindow,
+            deliveryRadius: deliveryRadius ?? route.destination.deliveryRadius
+        };
+
+        route.updatedBy = req.body.updatedBy;
+        route.updatedAt = new Date();
+        route.userAgent = req.headers["user-agent"];
+        route.ipAddress = req.ip;
+
+        await route.save();
 
         return res.status(200).json({
             success: true,
-            message: "Successfully created a Route for the Truck ",
-            data: route
+            message: "Truck Profile & Route updated successfully",
+            data: {
+                truck: updatedTruck,
+                route
+            }
         });
 
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
     }
 };
+
+
 
 exports.getTruckDetails = async (req, res) => {
     try {

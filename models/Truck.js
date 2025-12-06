@@ -19,7 +19,7 @@ const truckSchema = new mongoose.Schema({
   mcDotNumber: { type: String},
   vinNumber: { type: String },
   insurance: { type: String }, 
-  insuranceExpiry: { type: String, required: true },
+  insuranceExpiry: { type: String },
   insuranceValidated: { type: Boolean, default: false },
   coverPhoto: { type: String },
   truckPhoto: { type: String },

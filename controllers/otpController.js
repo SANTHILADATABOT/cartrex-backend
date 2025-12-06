@@ -49,23 +49,60 @@ exports.sendOtp = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   const data = req.body;
-  const {step,otp,email} = data.data;
+  const {step,otp,email,phone} = data.data;
   // Compare with stored OTP (this is a simple demo)
   if (global.otps[email] && Number(otp) === Number(global.otps[email])) {
      const user = await User.findOne({email:email});
      if(step === "signup" || step === "verification"){
-        user.verifyuser = "verified";
+       user.verifyuser = "verified";
        user.lastLogin = new Date();
        await user.save();
         delete global.otps[email]; // Optional: clean up
         return res.json({ success: true, message: "OTP verified successfully!" });
      }
+     else if(!user.verifyuser === "verified"){
+      return res.json({ success: true, message: "User Not verified!" });
+     }
      else if(step === "forget" && user.verifyuser === "verified"){
         delete global.otps[email]; // Optional: clean up
         return res.json({ success: true, message: "OTP verified successfully!" });
+     }
+     else if(step === "verifyphonenumber" && user.verifyuser === "verified"){
+        user.phoneverifyuser = "verified";
+        user.phone = phone;
+        user.lastLogin = new Date();
+        await user.save();
+        delete global.otps[email]; // Optional: clean up
+        return res.json({ success: true, message: "OTP verified successfully!",data:{
+          user
+        } });
      }
        
   }
   
   return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
 };
+
+exports.phoneverification = async (req, res) => {
+  const data = req.body;
+  const {phone,email,type} = data.data;
+  const existingUser = await User.findOne({ phone });
+  if (existingUser) {
+    return res.status(200).json({ success: false, message: 'Phone Number already registered' });
+  }
+  const otp = generateOTP();
+  if (type === "sms") {
+    let phoneNumber = phone;
+    if (!phone.startsWith('+')) {
+      phoneNumber = '+91' + phone; // Adjust country code accordingly
+    }
+    const smsClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+    await smsClient.messages.create({
+      body: `Your OTP is ${otp}`,
+      to: phoneNumber,
+      from: process.env.TWILIO_PHONE_NUMBER,
+    });
+  }
+  global.otps[email] = otp; // Store OTP by email
+  res.json({ success: true, message: "OTP sent to your mobile number!",otp:otp });
+}

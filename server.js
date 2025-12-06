@@ -89,7 +89,7 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://127.0.0.1:5174',
   'http://localhost:5000',
-  'http://192.168.1.9:5000',
+  'http://192.168.1.26:5000',
 ];
 
 app.use(cors({
@@ -226,6 +226,7 @@ const adminUserlistRoutes = require('./routes/admin/adminUserlistRoutes');
 const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const dashboardRoutes = require('./routes/dashboard');
+const complaintsRoutes = require('./routes/admin/adminComplaintRoutes')
 
 const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
@@ -238,6 +239,7 @@ const truckRoutes = require('./routes/web/trucks');
 const locationRoutes =require('./routes/admin/locationListRoutes');
 const reviewRoutes =require('./routes/reviewRoutes');
 const settingsRoutes =require('./routes/policyRoutes');
+const homePagesettingsRoutes =require('./routes/admin/homepageSettingRoutes')
 
 // <!---------------------- Api Route------------------------------------------------------>
 const apiroute =require('./routes/Api/ApiRoutes');
@@ -268,6 +270,8 @@ app.use('/masterRoleRoutes',masterRoleRoutes);
 app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
 app.use('/settings',settingsRoutes);
+app.use('/homePagesettings',homePagesettingsRoutes);
+app.use('/coplaintsanddisputes',complaintsRoutes)
 
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
