@@ -342,7 +342,7 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
-exports.signUpVerification = async (req, res) => {
+exports.signUpVerification = async (req, res) => { 
   try {
     const data = req.body;
     const { email ,phone} = data;

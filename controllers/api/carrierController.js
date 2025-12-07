@@ -242,7 +242,8 @@ exports.createOrUpdateProfile = async (req, res) => {
       console.log(" Saving File To:", finalPath);
 
       fs.writeFileSync(finalPath, req.file.buffer);
-      savedPhotoPath = path.join("upload", folderName, filename);
+      savedPhotoPath = path.join("upload", folderName, filename).replace(/\\/g, "/");
+
 
       console.log(" Saved Photo Path:", savedPhotoPath);
     }
