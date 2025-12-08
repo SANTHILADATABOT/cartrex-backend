@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { getKeys, updateKeys } = require("../../controllers/admin/homePageSettingsController");
 const GeneralSettingsController = require("../../controllers/admin/GeneralSettingsController")
+const homepageSettingsController = require("../../controllers/admin/homePageSettingsController");
 
 const { protect, authorize } = require("../../middleware/auth");
 const multer = require("multer");
@@ -21,6 +22,9 @@ router.post(
   GeneralSettingsController.saveGeneral
 );
 router.get("/getgeneral", GeneralSettingsController.getGeneral);
+
+router.get('/getfootertext',homepageSettingsController.getSettings);
+router.put('/updatefootertext',homepageSettingsController.updateSettings);
 
 // authorize("admin"),
 module.exports = router;
