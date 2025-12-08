@@ -8,8 +8,6 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const path = require("path");
 
-
-
 dotenv.config();
 
 const rateLimit = require('express-rate-limit');
@@ -142,7 +140,7 @@ const adminLimiter = rateLimit({
 
 // Apply rate limiting
 app.use('/api/', generalLimiter);
-app.use('/auth/', authLimiter);
+// app.use('/auth/', authLimiter);
 
 // Database connection
 const MONGO_URI = process.env.MONGODB_URI;
@@ -227,7 +225,6 @@ const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const dashboardRoutes = require('./routes/dashboard');
 const complaintsRoutes = require('./routes/admin/adminComplaintRoutes')
-
 const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
@@ -253,7 +250,7 @@ app.use('/auth', authLimiter, authRoutes); // Authentication routes
 
 // Admin routes (with admin rate limiting)
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/admin',adminLimiter, adminRoutes);          // → /admin/api/*
 app.use('/admindashboardlisting',dashboardlistRoutes);
@@ -272,10 +269,8 @@ app.use('/review',reviewRoutes);
 app.use('/settings',settingsRoutes);
 app.use('/homePagesettings',homePagesettingsRoutes);
 app.use('/coplaintsanddisputes',complaintsRoutes)
-
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
-
 // Web application routes
 app.use('/api/web', webRoutes);
 app.use('/space',spaceRoutes);

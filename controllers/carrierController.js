@@ -127,10 +127,10 @@ exports.createOrUpdateProfile = async (req, res) => {
       });
     }
 
-    const location = await Location.findById(locationId);
-    if (!location) {
-      return res.status(404).json({ success: false, message: "Invalid locationId" });
-    }
+    // const location = await Location.findById(locationId);
+    // if (!location) {
+    //   return res.status(404).json({ success: false, message: "Invalid locationId" });
+    // }
 
     // ------------------------ USER UPDATE ------------------------
     const user = await User.findOne({ deletstatus: 0, _id: userId });

@@ -1,5 +1,5 @@
 
-const Location = require('../../models/Location');
+const Location = require('../../models/LocationNew');
 exports.getAllLocations = async (req, res) => {
   try {
     const locations = await Location.find({}, "city state stateCode zipcode")

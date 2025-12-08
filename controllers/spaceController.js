@@ -499,7 +499,7 @@ exports.addSpacesDetails = async (req, res) => {
         }
     }
     res.status(200).json({
-      sucess:"true",
+      success:"true",
       message: "Spaces and route details saved successfully",
       //carrier: { id: carrier._id, companyName: carrier.companyName },
       //spaceId: space._id,

@@ -205,14 +205,14 @@ exports.createOrUpdateProfile = async (req, res) => {
     }
 
     console.log(" Checking Location:", locationId);
-    const location = await Location.findById(locationId);
+    // const location = await Location.findById(locationId);
 
-    console.log(" Location found:", location);
+    // console.log(" Location found:", location);
 
-    if (!location) {
-      console.log(" ERROR: Invalid locationId");
-      return res.status(404).json({ success: false, message: "Invalid locationId" });
-    }
+    // if (!location) {
+    //   console.log(" ERROR: Invalid locationId");
+    //   return res.status(404).json({ success: false, message: "Invalid locationId" });
+    // }
 
 
     const Model = roleType === "Carrier" ? Carrier : Shipper;

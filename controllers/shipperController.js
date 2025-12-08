@@ -293,10 +293,10 @@ exports.createOrUpdateProfile = async (req, res) => {
   try {
     const { companyName, address, locationId, zipCode, country } = req.body;
     const userId = req.body.userId;
-    const location = await Location.findById(locationId);
-    if (!location) {
-      return res.status(404).json({ success: false, message: "Invalid locationId" });
-    }
+    // const location = await Location.findById(locationId);
+    // if (!location) {
+    //   return res.status(404).json({ success: false, message: "Invalid locationId" });
+    // }
 
     let shipper = await Shipper.findOne({ userId });
     let savedPhotoPath = null;

@@ -5,6 +5,7 @@ const User = require('../../models/User');
 const Space = require('../../models/Space');
 const Carrier = require('../../models/Carrier');
 const Location = require('../../models/Location');
+const LocationNew = require('../../models/LocationNew');
 const Category = require("../../models/Category");
 const AdminRoles = require('../../models/AdminRoles');
 
@@ -286,7 +287,7 @@ exports.getspacedetails = async (req, res) => {
 
 exports.getAllLocations = async (req, res) => {
   try {
-    const locations = await Location.find({}, "city state stateCode zipcode")
+    const locations = await LocationNew.find({}, "city state stateCode zipcode")
       .sort({ state: 1, city: 1 }); // optional sorting
 
     return res.status(200).json({
