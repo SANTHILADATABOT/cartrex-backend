@@ -123,6 +123,8 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
+         console.log("account- req.body", req.body)
+
     if (!email || !password || !role) {
       return res.status(200).json({
         success: false,
@@ -144,24 +146,32 @@ exports.login = async (req, res) => {
     if (!account) {
       return res.status(200).json({ success: false, notVerified:true,message: 'Invalid credentials1' });
     }
-
+ console.log("account",account)
     // ✅ Compare bcrypt password
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) {
       return res.status(200).json({ success: false,notVerified:true, message: 'Invalid credentials2' });
     }
     
-    
+     
+   
+if (account.approvalStatus!== "approved" && !account.isActive) {
+  return res.status(200).json({
+    success: false,
+  notVerified: false,
+    message: "Your account is not approved yet. Please wait for admin approval."
+  });
+}
 
 
     // Check if active
-    if (!account.isActive) {
-      return res.status(200).json({
-        success: false,
-        notVerified: true,
-        message: 'Account is deactivated',
-      });
-    }
+    // if (!account.isActive) {
+    //   return res.status(200).json({
+    //     success: false,
+    //     notVerified: true,
+    //     message: 'Account is deactivated',
+    //   });
+    // }
     // ✅ Fetch role info
     const roleInfo = await AdminRole.findOne({
       _id: account.role ?? account.roleId,      // assuming user.role stores AdminRole id
@@ -189,6 +199,9 @@ exports.login = async (req, res) => {
         });
       }
     }
+
+
+
     let profileCompleted = false;
     let shipperprofle = false;
     let HaveTruck = false;
@@ -218,6 +231,7 @@ exports.login = async (req, res) => {
       lastName: account.lastName,
       isApproved: account.isApproved,
       profileCompleted: profileCompleted,
+      approvalStatus:account.approvalStatus
     };
     await req.session.save();
     // ✅ Generate token
@@ -241,6 +255,7 @@ exports.login = async (req, res) => {
         profileCompleted: profileCompleted,
         HaveTruck:HaveTruck,
         sessionData: req.session.users,
+         approvalStatus:account.approvalStatus
       },
     });
   } catch (error) {

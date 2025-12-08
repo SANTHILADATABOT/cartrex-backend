@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema({
   ref: "AdminRole",
   required: true
 },
+approvalStatus: {
+  type: String,
+  enum: ["pending", "approved"],
+  default: "pending"
+},
+
   isApproved: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   mfaEnabled: { type: Boolean, default: false },
