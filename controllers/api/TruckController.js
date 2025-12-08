@@ -149,40 +149,46 @@ const { uploadToS3 } = require('../../utils/s3Upload');
 exports.uploadTruckPhotos = async (req, res) => {
     try {
         const { truckId } = req.body;
-        const baseDir = path.join(__dirname, "../upload/trucks");
-        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+        const truckFolder = path.join(__dirname, "../upload/trucks", truckId);
+        if (!fs.existsSync(truckFolder)) fs.mkdirSync(truckFolder, { recursive: true });
 
         let truckProfilePath = null;
         let coverPhotoPath = null;
         let photoPaths = [];
 
-
-
         if (req.files?.truckProfile) {
             const file = req.files.truckProfile[0];
             const ext = path.extname(file.originalname);
-            const filename = `truckProfile_${Date.now()}${ext}`;
+            const fileName = `truckProfile_${truckId}${ext}`;
+            const savePath = path.join(truckFolder, fileName);
 
-            fs.writeFileSync(path.join(baseDir, filename), file.buffer);
-            truckProfilePath = `upload/trucks/${filename}`;
+            fs.writeFileSync(savePath, file.buffer);
+            truckProfilePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
         }
 
         if (req.files?.coverPhoto) {
             const file = req.files.coverPhoto[0];
             const ext = path.extname(file.originalname);
-            const filename = `cover_${Date.now()}${ext}`;
+            const fileName = `cover_${truckId}${ext}`;
+            const savePath = path.join(truckFolder, fileName);
 
-            fs.writeFileSync(path.join(baseDir, filename), file.buffer);
-            coverPhotoPath = `upload/trucks/${filename}`;
+            fs.writeFileSync(savePath, file.buffer);
+            coverPhotoPath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
         }
 
         if (req.files?.photos) {
             req.files.photos.forEach((file, idx) => {
                 const ext = path.extname(file.originalname);
-                const filename = `photo_${Date.now()}_${idx}${ext}`;
+                const fileName = `photo_${truckId}_${idx}${ext}`;
+                const savePath = path.join(truckFolder, fileName);
 
-                fs.writeFileSync(path.join(baseDir, filename), file.buffer);
-                photoPaths.push(`upload/trucks/${filename}`);
+                fs.writeFileSync(savePath, file.buffer);
+
+                const cleanPath = path
+                    .join("upload", "trucks", truckId, fileName)
+                    .replace(/\\/g, "/");
+
+                photoPaths.push(cleanPath);
             });
         }
 
@@ -272,7 +278,7 @@ exports.createTruckProfileAndRoute = async (req, res) => {
             //insurancePath = path.join("upload", "trucks", fileName);
             //insurancePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
             insurancePath = `upload/trucks/truckId/${fileName}`;
-        }    
+        }
 
         const truck = await Truck.create({
             carrierId: carrier._id,
@@ -296,7 +302,7 @@ exports.createTruckProfileAndRoute = async (req, res) => {
 
         const route = await Route.create({
             carrierId: carrier._id,
-            truckId: truck._id, 
+            truckId: truck._id,
             origin: {
                 fullAddress: originlocation,
                 city: originCity,
@@ -352,7 +358,7 @@ exports.getTruckProfileAndRoute = async (req, res) => {
 
         const truck = await Truck.findById(truckId)
             .populate("truckType", "name description");
-        
+
         if (!truck) {
             return res.status(404).json({
                 success: false,
@@ -361,16 +367,16 @@ exports.getTruckProfileAndRoute = async (req, res) => {
         }
 
         const route = await Route.findOne({ truckId: truckId });
-       
-           return res.status(200).json({
-      success: true,
-      message: "Truck profile fetched successfully",
-      data: {
-        truck,
-        route: route || null,  // If no route found return null
-      },
-    });
-} catch (error) {
+
+        return res.status(200).json({
+            success: true,
+            message: "Truck profile fetched successfully",
+            data: {
+                truck,
+                route: route || null,  // If no route found return null
+            },
+        });
+    } catch (error) {
         return res.status(500).json({
             success: false,
             message: "Server error",
@@ -549,7 +555,7 @@ exports.getTruckDetails = async (req, res) => {
                 insurance: truck.insurance ? path.basename(truck.insurance) : null,
                 insuranceExpiry: truck.insuranceExpiry,
                 userAgent: truck.userAgent,
-                
+
                 // Photos from second API
                 truckProfile: truck.truckProfile,
                 coverPhoto: truck.coverPhoto,
