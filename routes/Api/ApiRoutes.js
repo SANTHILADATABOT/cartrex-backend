@@ -4,7 +4,12 @@ const multer = require("multer");
 const path = require("path");
 const router = express.Router();
 const { signup, login, logout, verifyOtp, sendOtp, UserVerification, forgotPassword, resetPassword ,signUpVerification} = require('../../controllers/api/authController');
-const { createSpace, searchSpaces, getSpaces, updateSpace, deleteSpace, getspacedetails, getSpaceResult, getAllLocations, getcategorysubcategories, addSpacesDetails, getSpacesByCarrierUserId, editSpacesDetails } = require('../../controllers/api/spaceController');
+const { createSpace,
+     searchSpaces,
+      getSpaces, updateSpace, deleteSpace, getspacedetails, 
+      getSpaceResult, getAllLocations, getcategorysubcategories, 
+      addSpacesDetails, getSpacesByCarrierUserId, 
+      editSpacesDetails } = require('../../controllers/api/spaceController');
 const { createOrUpdateProfile,checkCarrierProfileCompleteTruckHave } = require('../../controllers/api/carrierController');
 const { createOrUpdateshipperProfile, getshipperbyId} = require('../../controllers/api/shipperController');
 const {getReviewRouteDetails} = require('../../controllers/api/RouteController');
@@ -56,7 +61,7 @@ router.put('/updateAcceptBidstatus/:userId/:bidId',updateAcceptbidstatus);
 //booking
 router.post('/addbooking', upload.array('photos', 10),createBooking);
 
-router.get('/getBookingsByUserId/:userId',getBookingsByUserId);
+router.get('/getBookingsByShipperUserId/:userId',getBookingsByUserId);
 
 //update Accept booking status for carrier 
 router.put('/updateAcceptbookingstatus/:userId/:bookingId',updateAcceptbookingstatus);

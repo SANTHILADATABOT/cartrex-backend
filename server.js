@@ -39,6 +39,7 @@ const MongoStore = require('connect-mongo');
 
 const app = express();
 const server = http.createServer(app);
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/upload", express.static(path.join(__dirname, "upload")));
 // Initialize Socket.io
