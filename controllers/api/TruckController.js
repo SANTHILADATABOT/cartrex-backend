@@ -149,8 +149,17 @@ const { uploadToS3 } = require('../../utils/s3Upload');
 exports.uploadTruckPhotos = async (req, res) => {
     try {
         const { truckId } = req.body;
+
+        if (!truckId) {
+            return res.status(400).json({
+                success: false,
+                message: "truckId is required"
+            });
+        }
         const truckFolder = path.join(__dirname, "../upload/trucks", truckId);
-        if (!fs.existsSync(truckFolder)) fs.mkdirSync(truckFolder, { recursive: true });
+        if (!fs.existsSync(truckFolder)) {
+            fs.mkdirSync(truckFolder, { recursive: true });
+        }
 
         let truckProfilePath = null;
         let coverPhotoPath = null;
@@ -202,6 +211,7 @@ exports.uploadTruckPhotos = async (req, res) => {
             { new: true }
         );
 
+
         return res.status(200).json({
             success: true,
             message: "Truck photos uploaded successfully",
@@ -229,7 +239,7 @@ exports.createTruckProfileAndRoute = async (req, res) => {
             zipcode,
 
             // Route fields
-            truckId,
+            //truckId,
             originCity,
             originState,
             originStateCode,
@@ -263,23 +273,17 @@ exports.createTruckProfileAndRoute = async (req, res) => {
                 message: "Carrier not found"
             });
         }
-        const baseDir = path.join(__dirname, "../upload/trucks");
-        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+        // validation for user only have max 3 trucks 
+        const existingTrucks = await Truck.countDocuments({ carrierId: carrier._id });
 
-        let insurancePath = null;
-
-        if (req.files?.insurance) {
-            const file = req.files.insurance[0];
-            const ext = path.extname(file.originalname);
-            const fileName = `insurance_${truckId}${ext}`;
-            const savePath = path.join(baseDir, fileName);
-
-            fs.writeFileSync(savePath, file.buffer);
-            //insurancePath = path.join("upload", "trucks", fileName);
-            //insurancePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
-            insurancePath = `upload/trucks/truckId/${fileName}`;
+        if (existingTrucks >= 3) {
+            return res.status(400).json({
+                success: false,
+                message: "You can only create a maximum of 3 trucks."
+            });
         }
 
+        let insurancePath = null;
         const truck = await Truck.create({
             carrierId: carrier._id,
             nickname,
@@ -291,14 +295,58 @@ exports.createTruckProfileAndRoute = async (req, res) => {
             mcDotNumber,
             vinNumber,
             zipcode,
-            insurance: insurancePath,
             userAgent: req.headers["user-agent"],
             createdAt: new Date(),
             updatedAt: new Date()
         });
 
-        const populatedTruck = await Truck.findById(truck._id)
-            .populate("truckType", "name description");
+        const truckId = truck._id.toString();
+        const baseDir = path.join(__dirname, "../upload/trucks", truckId);
+        if (!fs.existsSync(baseDir)) {
+            fs.mkdirSync(baseDir, { recursive: true });
+        }
+        if (req.files?.insurance) {
+          const file = req.files.insurance[0];
+            const ext = path.extname(file.originalname).toLowerCase();
+            if (ext !== ".pdf") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Only PDF files are allowed for insurance document"
+                });
+            }
+        //     const file = req.files.insurance[0];
+        //     const ext = path.extname(file.originalname);
+        //     const fileName = `insurance_${truckId}${ext}`;
+        //     const savePath = path.join(baseDir, fileName);
+
+        //     fs.writeFileSync(savePath, file.buffer);
+        //     insurancePath = path
+        //         .join("upload", "trucks", truckId, fileName)
+        //         .replace(/\\/g, "/");
+        // }
+        // truck.insurance = insurancePath;
+        // await truck.save();
+        
+        const cleanFileName = file.originalname.replace(/\s+/g, "_").toLowerCase();
+        const savePath = path.join(baseDir, cleanFileName);
+        fs.writeFileSync(savePath, file.buffer);
+        insurancePath = path
+                .join("upload", "trucks", truckId, cleanFileName)
+                .replace(/\\/g, "/");
+        }
+
+        truck.insurance = insurancePath;
+        await truck.save();
+
+        // validation for A truck have max 3 routes 
+        const existingRoutes = await Route.countDocuments({ truckId: truck._id });
+
+        if (existingRoutes >= 3) {
+            return res.status(400).json({
+                success: false,
+                message: "This truck can only have a maximum of 3 routes."
+            });
+        }
 
         const route = await Route.create({
             carrierId: carrier._id,
@@ -331,6 +379,9 @@ exports.createTruckProfileAndRoute = async (req, res) => {
             updatedAt: new Date()
         });
 
+        const populatedTruck = await Truck.findById(truck._id)
+            .populate("truckType", "name description");
+
         return res.status(201).json({
             success: true,
             message: "Truck Profile And Route created successfully",
@@ -351,7 +402,12 @@ exports.createTruckProfileAndRoute = async (req, res) => {
         });
     }
 };
-// edit view 
+
+
+//edit view 
+
+
+
 exports.getTruckProfileAndRoute = async (req, res) => {
     try {
         const { truckId } = req.params;

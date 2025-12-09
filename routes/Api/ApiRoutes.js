@@ -106,6 +106,8 @@ router.get("/getcategorysubcategories", getcategorysubcategories);
 
 //post a space view 
 router.post('/addSpacesDetails/:carrierId',addSpacesDetails);
+router.post('/editSpacesDetails/:spaceId',editSpacesDetails);
+router.delete('/deleteSpace/:spaceId',deleteSpace);
 
 
 

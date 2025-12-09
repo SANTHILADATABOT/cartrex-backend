@@ -395,8 +395,9 @@ exports.getSpaceResult = async (req, res) => {
 exports.addSpacesDetails = async (req, res) => {
   try {
     const { carrierId } = req.params;
+
     const data = req.body;
-    const carrier = await Carrier.findOne({ userId: carrierId });
+    const carrier = await Carrier.findById(carrierId);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
    const spaceData = {
       carrierId: carrier._id,
