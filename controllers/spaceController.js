@@ -387,7 +387,7 @@ exports.addSpacesDetails = async (req, res) => {
         const truck =  await Truck.findOne({ _id: data?.selectedTruck, carrierId: carrier._id });
         if (!truck) return res.status(200).json({ message: "Truck not found for this carrier" });
         const routeCount = await Route.countDocuments({ truckId: truck._id });
-        if (routeCount >= 3) {
+        if (routeCount >= 3 && !data?.selectedRoute) {
           return res.status(200).json({
             message: "You have reached the maximum number of routes for this truck, please choose another truck"
           });
@@ -580,8 +580,8 @@ exports.editSpacesDetails = async (req, res) => {
     }
 
     // If carrier ID is sent, validate carrier
-    if (data.carrierId) {
-      const carrier = await Carrier.findById(data.carrierId);
+    if (data.carrierUserId) {
+      const carrier = await Carrier.findById(data.carrierUserId);
       if (!carrier) {
         return res.status(404).json({ success: false, message: "Carrier not found" });
       }
@@ -602,7 +602,7 @@ exports.editSpacesDetails = async (req, res) => {
     }
         // Prepare update data
     const updatedData = {
-      carrierId: data.carrierId ?? existingSpace.carrierId,
+      carrierId: data.carrierUserId ?? existingSpace.carrierId,
       truckId: data.selectedTruck ?? existingSpace.truckId,
       availableSpaces: data.availablespace ?? existingSpace.availableSpaces,
       message: data.message ?? existingSpace.message,
@@ -698,11 +698,8 @@ exports.editSpacesDetails = async (req, res) => {
     });
 
     }
-   
+    return res.status(404).json({ success: false, message: "Carrier not found" });
 
-
-
-  
   } catch (error) {
     console.error("❌ Error updating space:", error);
     res.status(500).json({

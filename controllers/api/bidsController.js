@@ -76,6 +76,7 @@ exports.getBidsByCarrierUserId = async (req, res) => {
       })
       .populate({
         path: "truckforship",
+        populate: { path: 'carrierId'}
       })
       .lean();
 
@@ -137,6 +138,7 @@ exports.getBidsByShipperUserId = async (req, res) => {
       })
       .populate({
         path: "truckforship",
+        populate: { path: 'carrierId'}
       })
       .populate('routeId', 'origin destination status')
       .lean();
