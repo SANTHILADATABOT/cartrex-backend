@@ -155,23 +155,23 @@ exports.login = async (req, res) => {
     
      
    
-if (account.approvalStatus!== "approved" && !account.isActive) {
-  return res.status(200).json({
-    success: false,
-  notVerified: false,
-    message: "Your account is not approved yet. Please wait for admin approval."
-  });
-}
+// if (account.approvalStatus!== "approved") {
+//   return res.status(200).json({
+//     success: false,
+//   notVerified: false,
+//     message: "Your account is not approved yet. Please wait for admin approval."
+//   });
+// }
 
 
     // Check if active
-    // if (!account.isActive) {
-    //   return res.status(200).json({
-    //     success: false,
-    //     notVerified: true,
-    //     message: 'Account is deactivated',
-    //   });
-    // }
+    if (!account.isActive) {
+      return res.status(200).json({
+        success: false,
+        notVerified: true,
+        message: 'Account is deactivated',
+      });
+    }
     // ✅ Fetch role info
     const roleInfo = await AdminRole.findOne({
       _id: account.role ?? account.roleId,      // assuming user.role stores AdminRole id
