@@ -15,7 +15,9 @@ const bidSchema = new mongoose.Schema({
   bidValuetaxinc: {
     taxValue: { type: String },
     tax: { type: String },
-    total: { type: String }
+    total: { type: String },
+    price:{type: String},
+    oldprice:{type: String},
   },
   bidId: { type: String,  },
   vehicleDetails: {
@@ -37,7 +39,6 @@ const bidSchema = new mongoose.Schema({
   transportType: { type: String, trim: true },
   vinNumber: { type: String, trim: true },
   lotNumber: { type: String, trim: true },
-
   pickup: {
     city: { type: String },
     state: { type: String }, 
@@ -46,7 +47,6 @@ const bidSchema = new mongoose.Schema({
     pickupDate: { type: Date },
     pickupLocationType: { type: String, trim: true },
   },
-
   delivery: {
     city: { type: String },
     state: { type: String },
@@ -58,7 +58,6 @@ const bidSchema = new mongoose.Schema({
     whatIsBeingShippedId: { type: String},
     additionalComments: { type: String}
   },
-
   timing: { 
     type: String, 
     enum: ['good_till_cancelled', '1_week','24 hours'], 

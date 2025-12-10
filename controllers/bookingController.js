@@ -75,7 +75,7 @@ exports.createBooking = async (req, res) => {
       await booking.save();
     }
 
-    space.bookedSpaces += 1;
+    space.bookedSpaces += booking.vehicleDetails.quantity;
     if (space.bookedSpaces >= space.availableSpaces) {
       space.status = 'booked';
     }
@@ -364,6 +364,7 @@ exports.updateAcceptbookingstatus = async (req, res) => {
       updatedAt: new Date(),
       status: data.status
     }];
+    booking.bookValuetaxinc = data.bookValuetaxinc
     await booking.save();
 
     return res.status(200).json({
@@ -406,7 +407,7 @@ exports.updateJobbookingCompletedstatus = async (req, res) => {
     }
 
     // ✅ Step 1: Update booking status
-    booking.status = "completed";
+    booking.status = "confirmed";
     booking.updatedAt = new Date();
 
     // ✅ Step 2: Handle image upload
@@ -467,7 +468,7 @@ exports.updateJobBidCompletedstatus = async (req, res) => {
     }
 
     // ✅ Step 1: Update BidData status
-    BidData.status = "completed";
+    BidData.status = "confirmed";
     BidData.updatedAt = new Date();
 
     // ✅ Step 2: Handle image upload

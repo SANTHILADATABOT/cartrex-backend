@@ -12,6 +12,7 @@ const bookingSchema = new mongoose.Schema({
     tax: { type: String },
     total: { type: String },
     price:{type: String},
+    oldprice:{type: String},
   },
   vehicleDetails: {
     licenseNumber: { type: String, trim: true },

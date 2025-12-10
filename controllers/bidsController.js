@@ -363,6 +363,7 @@ exports.updateAcceptbidstatus = async (req, res) => {
     updatedBid.estimateDeliveryWindow = data.estimateDeliveryWindow;
     updatedBid.message = data.message;
     updatedBid.truckforship = data.truckforship;
+    updatedBid.bidValuetaxinc = data.bidValuetaxinc;
     updatedBid.status = data.status;
     if (!Array.isArray(updatedBid.statusUpdatedetails)) {
       // Case 1: If it is an object (not array), convert to array

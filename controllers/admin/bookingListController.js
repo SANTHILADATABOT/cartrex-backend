@@ -39,9 +39,9 @@ exports.getallbookings = async (req, res) => {
           select: "firstName lastName email"
         }
       })
-
-
-      .sort({ createdAt: -1 });
+      .populate({
+        path: "truckId"
+      }).sort({ createdAt: -1 });
 
     if (!bookings.length) {
       return res.status(200).json({
