@@ -11,7 +11,7 @@ const AdminRoles = require('../../models/AdminRoles');
 exports.createSpace = async (req, res) => {
   try {
     const carrier = await Carrier.findOne({ userId: req.user._id });
-    
+
     const {
       truckId,
       routeId,
@@ -96,7 +96,7 @@ exports.searchSpaces = async (req, res) => {
 exports.getSpaces = async (req, res) => {
   try {
     const carrier = await Carrier.findOne({ userId: req.user._id });
-    
+
     const spaces = await Space.find({ carrierId: carrier._id })
       .populate('truckId')
       .populate('routeId')
@@ -155,11 +155,16 @@ exports.deleteSpace = async (req, res) => {
     space.deletedAt = new Date();
     space.deletedipAddress = req.ip;
     space.userAgent = req.headers['user-agent'];
-    
+
     await space.save();
     return res.status(200).json({
       success: true,
       message: 'Space listing marked as deleted successfully',
+      data: {
+        "deletstatus":
+          space.deletstatus
+      }
+
     });
 
   } catch (error) {
@@ -170,20 +175,20 @@ exports.deleteSpace = async (req, res) => {
 //post a space screen 
 exports.getspacedetails = async (req, res) => {
   try {
-    const { userId } =  req.params;
+    const { userId } = req.params;
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
-    const UserData = await User.findOne({_id : userId});
+    const UserData = await User.findOne({ _id: userId });
     if (!UserData) {
       return res.status(400).json({ message: "User not found" });
     }
-    const roleData = await AdminRoles.findOne({_id :UserData.role});
+    const roleData = await AdminRoles.findOne({ _id: UserData.role });
     if (!roleData) {
       return res.status(400).json({ message: "Role not found" });
     }
-    if(roleData.roleType === "Carrier"){
-      const carrier = await Carrier.findOne({ userId : userId });
+    if (roleData.roleType === "Carrier") {
+      const carrier = await Carrier.findOne({ userId: userId });
       if (!carrier) {
         return res.status(404).json({ message: "Carrier not found for this user" });
       }
@@ -195,19 +200,19 @@ exports.getspacedetails = async (req, res) => {
         carrierId: carrier._id,
         companyName: carrier.companyName,
         trucks: trucks.map(truck => ({
-        _id: truck._id,
-        nickname: truck.nickname,
-        truckType: truck.truckType,
-        routes: routes.filter(r => r.truckId.toString() === truck._id.toString()),
-        truckdata:truck,
+          _id: truck._id,
+          nickname: truck.nickname,
+          truckType: truck.truckType,
+          routes: routes.filter(r => r.truckId.toString() === truck._id.toString()),
+          truckdata: truck,
         })),
-       
+
         availableSpaces
       };
-      return res.status(200).json({success: true, message: "Space Details Fetched Sucessfully",data:result});
+      return res.status(200).json({ success: true, message: "Space Details Fetched Sucessfully", data: result });
     }
-    else if(roleData.roleType === "Shipper"){
-        // 1. Find all carrier users
+    else if (roleData.roleType === "Shipper") {
+      // 1. Find all carrier users
       const carrierUsers = await User.find({
         role: "68ff5689aa5d489915b8caa8",
         deletstatus: 0
@@ -264,7 +269,7 @@ exports.getspacedetails = async (req, res) => {
             routes: routes.filter(
               r => r.truckId.toString() === truck._id.toString()
             ),
-            truckdata:truck,
+            truckdata: truck,
           })),
         availableSpaces,
       }));
@@ -275,7 +280,7 @@ exports.getspacedetails = async (req, res) => {
         data: result,
       });
     }
-    
+
 
 
   } catch (error) {
@@ -323,13 +328,34 @@ exports.getcategorysubcategories = async (req, res) => {
 //find a space 
 exports.getSpaceResult = async (req, res) => {
   try {
-    const {city,statecode}  =  req.query;
+    const {
+      city,
+      statecode,
+      minPrice,
+      maxPrice,
+      truckType,   // truck type id
+      sortBy ,
+      variantId       // priceLowToHigh | priceHighToLow
+    } = req.query;
     const filter = { deletstatus: 0 };
+
+
     if (city && statecode) {
       filter["origin.city"] = city;
       filter["origin.stateCode"] = statecode;
     }
-    
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    if (truckType) {
+      filter.truckType = new mongoose.Types.ObjectId(truckType);
+    }
+
+
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
@@ -345,10 +371,22 @@ exports.getSpaceResult = async (req, res) => {
           model: "SubCategory",
           select: "name price description",
         },
-         })
+      })
       .populate("routeId")
       .limit(5)
       .lean();
+      
+
+    // Filter: Only show available spaces
+    spaces = spaces.filter(s => s.availableSpaces > s.bookedSpaces);
+
+    // Sorting
+    if (sortBy === "priceLowToHigh") {
+      spaces.sort((a, b) => a.price - b.price);
+    }
+    if (sortBy === "priceHighToLow") {
+      spaces.sort((a, b) => b.price - a.price);
+    }
 
     const carrierIds = [
       ...new Set(spaces.map((s) => s.carrierId?._id?.toString()).filter(Boolean)),
@@ -369,13 +407,36 @@ exports.getSpaceResult = async (req, res) => {
       truckCountMap[tc._id.toString()] = tc.totalTrucks;
     });
     spaces = spaces.filter(space => {
-        return space.availableSpaces > space.bookedSpaces;
+      return space.availableSpaces > space.bookedSpaces;
     });
-    spaces = spaces.map((space) => {
+
+    spaces = spaces.map(space => {
+      // default askPrice = null
+      space.askPrice = null;
+
+      // check if rateCard exists
+      if (space.rateCard && Array.isArray(space.rateCard) && variantId) {
+
+        for (const rateItem of space.rateCard) {
+
+          if (rateItem.variants && Array.isArray(rateItem.variants)) {
+
+            const matchedVariant = rateItem.variants.find(v => v._id.toString() === variantId);
+
+            if (matchedVariant) {
+              space.askPrice = matchedVariant.price;  // SET askPrice from variant price
+              break;
+            }
+          }
+        }
+      }
+
       if (space.carrierId && space.carrierId._id) {
         space.carrierId.noOfTrucks =
           truckCountMap[space.carrierId._id.toString()] || 0;
       }
+
+
       return space;
     });
     res.status(200).json({
@@ -399,7 +460,7 @@ exports.addSpacesDetails = async (req, res) => {
     const data = req.body;
     const carrier = await Carrier.findById(carrierId);
     if (!carrier) return res.status(404).json({ message: "Carrier not found" });
-   const spaceData = {
+    const spaceData = {
       carrierId: carrier._id,
       truckId: data?.selectedTruck,
       routeId: data?.selectedRoute,
@@ -417,7 +478,7 @@ exports.addSpacesDetails = async (req, res) => {
     if (data?.origin) {
       spaceData.origin = {
         location: data.origin.location,
-        city:data.origin.city,
+        city: data.origin.city,
         state: data.origin.state,
         stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
@@ -436,7 +497,7 @@ exports.addSpacesDetails = async (req, res) => {
         location: data.destination.location,
         city: data.destination.city,
         state: data.destination.state,
-        stateCode:data.destination.stateCode,
+        stateCode: data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,
@@ -450,11 +511,11 @@ exports.addSpacesDetails = async (req, res) => {
     const space = await Space.create(spaceData);
 
     res.status(200).json({
-      sucess:"true",
+      sucess: "true",
       message: "Origin and destination details saved successfully",
       //carrier: { id: carrier._id, companyName: carrier.companyName },
       //spaceId: space._id,
-      data:space,
+      data: space,
     });
   } catch (error) {
     console.error("Error saving origin and destination:", error);
@@ -472,11 +533,11 @@ exports.getSpacesByCarrierUserId = async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     // if (user.role !== 'carrier') return res.status(400).json({ success: false, message: 'User is not a carrier' });
 
-  
+
     const carrier = await Carrier.findOne({ userId: userId, deletstatus: 0 });
     if (!carrier) return res.status(404).json({ success: false, message: 'Carrier not found' });
 
-  
+
     const trucks = await Truck.find({ carrierId: carrier._id, deletstatus: 0 }).select('_id');
     const truckIds = trucks.map(t => t._id);
 
@@ -490,7 +551,7 @@ exports.getSpacesByCarrierUserId = async (req, res) => {
       deletstatus: 0
     }).select('_id');
     const routeIds = routes.map(r => r._id);
-   
+
 
     if (!routeIds.length) {
       return res.status(200).json({ success: true, message: 'No routes found for this carrier', data: [] });
@@ -503,12 +564,12 @@ exports.getSpacesByCarrierUserId = async (req, res) => {
     }).populate('userId')
       .populate('carrierId')
       .populate('truckId')
-      .populate('routeId')                
+      .populate('routeId')
       .lean();
-       
+
     return res.status(200).json({
       success: true,
-      count: spaces.length, 
+      count: spaces.length,
       message: spaces.length ? 'Spaces found' : 'No spaces found for this carrier',
       data: spaces
     });
@@ -555,7 +616,7 @@ exports.editSpacesDetails = async (req, res) => {
     if (data.origin) {
       updatedData.origin = {
         location: data.origin.location,
-        city:data.origin.city,
+        city: data.origin.city,
         state: data.origin.state,
         stateCode: data.origin.stateCode,
         pickupDate: data.pickupdate,
@@ -574,7 +635,7 @@ exports.editSpacesDetails = async (req, res) => {
         location: data.destination.location,
         city: data.destination.city,
         state: data.destination.state,
-        stateCode:data.destination.stateCode,
+        stateCode: data.destination.stateCode,
         deliveryDate: data.deliveryDate,
         deliveryWindow: data.deliverywindow,
         deliveryRadius: data.deliveryradius,

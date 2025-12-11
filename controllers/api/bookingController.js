@@ -173,6 +173,63 @@ exports.getBookingsByUserId = async (req, res) => {
   }
 };
 
+
+exports.filterBookings = async (req, res) => {
+  try {
+    let { minPrice, maxPrice, truckType } = req.query;
+
+    minPrice = Number(minPrice);
+    maxPrice = Number(maxPrice);
+    const filter = { deletstatus: 0 };
+    if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+      filter["bookValuetaxinc.price"] = {
+        $gte: minPrice,
+        $lte: maxPrice
+      };
+    }
+
+    let bookings = await Booking.find(filter)
+      .populate({
+        path: "truckId",
+        populate: {
+          path: "truckType",
+          select: "name"
+        }
+      })
+      .populate({
+        path: "carrierId",
+        select: "companyName"
+      })
+      .populate({
+        path: "spaceId",
+        select: "price"
+      })
+      .lean();
+      
+    if (truckType) {
+      bookings = bookings.filter(b =>
+        b.truckId?.truckType?.name?.toLowerCase() === truckType.toLowerCase()
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Filtered bookings fetched successfully",
+      count: bookings.length,
+      data: bookings
+    });
+
+  } catch (error) {
+    console.error("Booking Filter Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error
+    });
+  }
+};
+
+
 exports.updateAcceptbookingstatus = async (req, res) => {
   try {
     const { userId, bookingId } = req.params;

@@ -156,7 +156,7 @@ exports.uploadTruckPhotos = async (req, res) => {
                 message: "truckId is required"
             });
         }
-        const truckFolder = path.join(__dirname, "../upload/trucks", truckId);
+        const truckFolder = path.join(__dirname, "../../upload/trucks", truckId);
         if (!fs.existsSync(truckFolder)) {
             fs.mkdirSync(truckFolder, { recursive: true });
         }
@@ -172,7 +172,8 @@ exports.uploadTruckPhotos = async (req, res) => {
             const savePath = path.join(truckFolder, fileName);
 
             fs.writeFileSync(savePath, file.buffer);
-            truckProfilePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+            //truckProfilePath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+            truckProfilePath = `upload/trucks/${truckId}/${fileName}`;
         }
 
         if (req.files?.coverPhoto) {
@@ -182,7 +183,8 @@ exports.uploadTruckPhotos = async (req, res) => {
             const savePath = path.join(truckFolder, fileName);
 
             fs.writeFileSync(savePath, file.buffer);
-            coverPhotoPath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+            //coverPhotoPath = path.join("upload", "trucks", truckId, fileName).replace(/\\/g, "/");
+            coverPhotoPath = `upload/trucks/${truckId}/${fileName}`;
         }
 
         if (req.files?.photos) {
@@ -193,11 +195,12 @@ exports.uploadTruckPhotos = async (req, res) => {
 
                 fs.writeFileSync(savePath, file.buffer);
 
-                const cleanPath = path
-                    .join("upload", "trucks", truckId, fileName)
-                    .replace(/\\/g, "/");
+                // const cleanPath = path
+                //     .join("upload", "trucks", truckId, fileName)
+                //     .replace(/\\/g, "/");
 
-                photoPaths.push(cleanPath);
+                // photoPaths.push(cleanPath);
+                 photoPaths.push(`upload/trucks/${truckId}/${fileName}`);
             });
         }
 
@@ -301,10 +304,9 @@ exports.createTruckProfileAndRoute = async (req, res) => {
         });
 
         const truckId = truck._id.toString();
-        const baseDir = path.join(__dirname, "../upload/trucks", truckId);
-        if (!fs.existsSync(baseDir)) {
-            fs.mkdirSync(baseDir, { recursive: true });
-        }
+        const baseDir = path.join(__dirname, "../../upload/trucks", truckId);
+        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+        
         if (req.files?.insurance) {
           const file = req.files.insurance[0];
             const ext = path.extname(file.originalname).toLowerCase();
@@ -330,9 +332,10 @@ exports.createTruckProfileAndRoute = async (req, res) => {
         const cleanFileName = file.originalname.replace(/\s+/g, "_").toLowerCase();
         const savePath = path.join(baseDir, cleanFileName);
         fs.writeFileSync(savePath, file.buffer);
-        insurancePath = path
-                .join("upload", "trucks", truckId, cleanFileName)
-                .replace(/\\/g, "/");
+        // insurancePath = path
+        //         .join("upload", "trucks", truckId, cleanFileName)
+        //         .replace(/\\/g, "/");
+        insurancePath = `upload/trucks/${truckId}/${cleanFileName}`;
         }
 
         truck.insurance = insurancePath;
