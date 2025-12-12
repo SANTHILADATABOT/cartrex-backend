@@ -9,7 +9,136 @@ const { sendEmail } = require('../utils/emailService');
 // const SMSService = require('../utils/smsService');
 const { encrypt, decrypt } = require('../utils/encryption');
 // Signup Controller
+const jwt = require("jsonwebtoken");
 
+exports.ssoLogin = async (req, res) => {
+  try {
+    const { email, firstName, lastName, provider, providerId, picture, roleId } =
+      req.body;
+
+    if (!email) {
+      return res.status(200).json({ success: false,notVerified:false, message: "Email missing" });
+    }
+
+    let user = await User.findOne({ email });
+
+    // =======================
+    // CASE 1 — NEW USER (SSO Signup)
+    // =======================
+    if (!user) {
+       return res.status(200).json({ success: false,notVerified:false, message: "User Not found please registered your account" });
+      const randomPassword = await bcrypt.hash(
+        Math.random().toString(36).slice(-8),
+        12
+      );
+
+      user = await User.create({
+        email,
+        firstName,
+        lastName,
+        password: randomPassword,
+        role: roleId,            // Carrier or Shipper roleId (ObjectId)
+        ssoProvider: provider,
+        ssoId: providerId,
+        verifyuser: "verified",  // SSO users are trusted
+        profileCompleted: false,
+        isApproved: false,       // Admin must approve after signup?
+        createdAt: new Date(),
+        audit: {
+          createdAt: new Date(),
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+        }
+      });
+    } else {
+      // =======================
+      // CASE 2 — EXISTING USER (SSO Login)
+      // =======================
+      user.ssoProvider = provider;
+      user.ssoId = providerId;
+      user.lastLogin = new Date();
+      user.updatedAt = new Date();
+      user.ipAddress = req.ip;
+      user.userAgent = req.headers["user-agent"];
+      await user.save();
+    }
+
+    // CHECK USER IS VERIFIED OR NOT
+    if (user.verifyuser === "unverified") {
+      return res.json({
+        success: false,
+        notVerified: true,
+        message: "User account not verified",
+        navigate:"/forgotpassword",state:{data:email,step:"verification",process:"verification"} 
+      });
+    }
+
+    // CHECK ACCOUNT APPROVAL
+    if (!user.isApproved) {
+      return res.json({
+        notVerified:false,
+        success: false,
+        message: "Your account is pending approval"
+      });
+    }
+        // ✅ Fetch role info
+    const roleInfo = await AdminRole.findOne({
+      _id: user.role,      // assuming user.role stores AdminRole id
+      isActive: "active"
+    });
+
+    if (!roleInfo) {
+      return res.status(200).json({
+        success: false,
+        notVerified:true,
+        message: 'Role is inactive or not found',
+      });
+    }
+        // ✅ Create session
+    req.session.users = {
+      _id: user._id,
+      email: user.email,
+      roleId: roleInfo._id,
+      roleName: roleInfo.roleName,
+      roleType: roleInfo.roleType,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isApproved: user.isApproved,
+      profileCompleted: user.profileCompleted,
+    };
+    await req.session.save();
+    // CREATE JWT
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      success: true,
+      token,
+      notVerified:false,
+      user,
+      data2: req.session.users,
+      data: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: roleInfo.roleType,
+        isApproved: user.isApproved,
+        profileCompleted: user.profileCompleted,
+      },
+    });
+
+  } catch (err) {
+    console.error("SSO Login Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
 exports.signup = async (req, res) => {
   try {
     const { 

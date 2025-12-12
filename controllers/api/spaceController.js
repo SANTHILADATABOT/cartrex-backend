@@ -324,13 +324,22 @@ exports.getcategorysubcategories = async (req, res) => {
 //find a space 
 exports.getSpaceResult = async (req, res) => {
   try {
-    const {city,statecode}  =  req.query;
+    const { selectedVehiclecat,selectedVehiclesub,selectdeliverycity ,selectpickupcity ,selectdeliverystateCode,selectpickupstateCode}  =  req.query;
     const filter = { deletstatus: 0 };
-    if (city && statecode) {
-      filter["origin.city"] = city;
-      filter["origin.stateCode"] = statecode;
+    if (selectedVehiclecat && selectedVehiclesub && selectdeliverycity && selectpickupcity && selectpickupstateCode && selectdeliverystateCode) {
+      filter.rateCard = {
+        $elemMatch: {
+          vehicleType: selectedVehiclecat,
+          variants: {
+            $elemMatch: { name: selectedVehiclesub }
+          }
+        }
+      };
+      filter["origin.city"] = selectpickupcity;
+      filter["origin.stateCode"] = selectpickupstateCode;
+      filter["destination.city"] = selectdeliverycity;
+      filter["destination.stateCode"] = selectdeliverystateCode;
     }
-    
     let spaces = await Space.find(filter)
       .populate({
         path: "carrierId",
@@ -339,16 +348,8 @@ exports.getSpaceResult = async (req, res) => {
           select: "firstName lastName",
         },
       })
-      .populate({
-        path: "truckId",
-        populate: {
-          path: "truckType",
-          model: "SubCategory",
-          select: "name price description",
-        },
-         })
+      .populate("truckId")
       .populate("routeId")
-      .limit(5)
       .lean();
 
     const carrierIds = [

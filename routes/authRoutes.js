@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const auth0Middleware = require('../middleware/auth0Middleware');
 const passport = require('passport');
 const { generateToken, generateOTP } = require('../utils/jwt');
 
@@ -14,6 +15,7 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/logout', authController.logout);
 
 // Google SSO example
+router.post("/sso-login", authController.ssoLogin);
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get(
   '/google/callback',

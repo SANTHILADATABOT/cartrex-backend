@@ -21,7 +21,7 @@ const auditSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true ,select: false },
+  password: { type: String,select: false },
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, trim: true },
   phone: { type: String},
@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   mfaEnabled: { type: Boolean, default: false },
   profileCompleted: { type: Boolean, default: false },
-  ssoProvider: { type: String, enum: ['google', 'apple', 'microsoft', 'onelogin', null], default: null },
+  ssoProvider: { type: String, enum: ['google-oauth2', 'apple', 'microsoft', 'onelogin','windowslive', null], default: null },
   ssoId: { type: String },
   lastLogin: { type: Date },
   createdAt: { type: Date, default: Date.now },
