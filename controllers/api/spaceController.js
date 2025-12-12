@@ -334,8 +334,7 @@ exports.getSpaceResult = async (req, res) => {
       minPrice,
       maxPrice,
       truckType,   // truck type id
-      sortBy ,
-      variantId       // priceLowToHigh | priceHighToLow
+      sortBy  // priceLowToHigh | priceHighToLow 
     } = req.query;
     const filter = { deletstatus: 0 };
 
@@ -375,7 +374,7 @@ exports.getSpaceResult = async (req, res) => {
       .populate("routeId")
       .limit(5)
       .lean();
-      
+
 
     // Filter: Only show available spaces
     spaces = spaces.filter(s => s.availableSpaces > s.bookedSpaces);
@@ -411,31 +410,25 @@ exports.getSpaceResult = async (req, res) => {
     });
 
     spaces = spaces.map(space => {
-      // default askPrice = null
-      space.askPrice = null;
+      if (space.carrierId && space.carrierId._id) {
+        space.carrierId.noOfTrucks =
+          truckCountMap[space.carrierId._id.toString()] || 0;
+      }
+      let askPrice = 0;
+      if (req.query.selectedVehiclesub) {
+        const variantId = req.query.selectedVehiclesub.trim();
 
-      // check if rateCard exists
-      if (space.rateCard && Array.isArray(space.rateCard) && variantId) {
-
-        for (const rateItem of space.rateCard) {
-
-          if (rateItem.variants && Array.isArray(rateItem.variants)) {
-
-            const matchedVariant = rateItem.variants.find(v => v._id.toString() === variantId);
-
-            if (matchedVariant) {
-              space.askPrice = matchedVariant.price;  // SET askPrice from variant price
+        for (const rc of space.rateCard) {
+          for (const v of rc.variants) {
+            if (v.name === variantId) {
+              askPrice = v.price;
               break;
             }
           }
         }
       }
 
-      if (space.carrierId && space.carrierId._id) {
-        space.carrierId.noOfTrucks =
-          truckCountMap[space.carrierId._id.toString()] || 0;
-      }
-
+      space.askPrice = askPrice;
 
       return space;
     });

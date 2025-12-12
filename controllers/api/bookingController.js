@@ -277,3 +277,63 @@ exports.updateAcceptbookingstatus = async (req, res) => {
     });
   }
 };
+
+exports.updatebookingstatus = async (req, res) => {
+  try {
+    const { userId, bookingId } = req.params;
+    const { status } = req.body; 
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bookingId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+
+    const booking = await Booking.findOne({ _id: bookingId, carrierId: carrier._id });
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found for this carrier" });
+    }
+
+    booking.status = status;
+    booking.updatedAt = new Date();
+    if (!Array.isArray(booking.statusUpdatedetails)) {
+
+      // Case 1: If it is an object (not array), convert to array
+      if (booking.statusUpdatedetails && typeof booking.statusUpdatedetails === "object") {
+        booking.statusUpdatedetails = [booking.statusUpdatedetails];
+      } 
+      // Case 2: null, undefined, string, empty, missing → set empty array
+      else {
+        booking.statusUpdatedetails = [];
+      }
+    }
+    booking.statusUpdatedetails.push({
+      updatedAt: new Date(),
+      status: status
+    });
+    if (status === "in_progress") {
+      booking.statusUpdatedetails.push({
+        updatedAt: new Date(),
+        status: "Reach"
+      });
+    }
+    await booking.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking status updated successfully",
+      data: booking,
+    });
+
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating booking status",
+      error: error.message,
+    });
+  }
+};
