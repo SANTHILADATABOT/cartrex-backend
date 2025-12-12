@@ -194,14 +194,17 @@ exports.login = async (req, res) => {
         });
     }
 
-    if (account.approvalStatus !== "approved") {
-      return res.status(200).json({
-        success: false,
-        notVerified: false,
-        message:
-          "Your account is not approved yet. Please wait for admin approval.",
-      });
-    }
+   if (role !== "admin") {
+  if (account.approvalStatus !== "approved") {
+    return res.status(200).json({
+      success: false,
+      notVerified: false,
+      message:
+        "Your account is not approved yet. Please wait for admin approval.",
+    });
+  }
+}
+
     // Check if active
     if (!account.isActive) {
       return res.status(200).json({

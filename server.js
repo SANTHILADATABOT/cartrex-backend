@@ -229,6 +229,8 @@ const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const dashboardRoutes = require('./routes/dashboard');
 const complaintsRoutes = require('./routes/admin/adminComplaintRoutes')
+const notificationType=require('./routes/admin/notificationTypeRoutes')
+const notificationContent=require('./routes/admin/notificationContentRoute')
 
 const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
@@ -273,10 +275,11 @@ app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
 app.use('/settings',settingsRoutes);
 app.use('/homePagesettings',homePagesettingsRoutes);
-app.use('/coplaintsanddisputes',complaintsRoutes)
-
+app.use('/coplaintsanddisputes',complaintsRoutes);
+app.use('/notificationType',notificationType);
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use('/notificationContent',notificationContent);
 
 // Web application routes
 app.use('/api/web', webRoutes);
