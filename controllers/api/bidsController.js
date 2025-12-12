@@ -436,3 +436,62 @@ exports.updateAcceptbidstatus = async (req, res) => {
     });
   }
 };
+
+exports.updatebidstatus = async (req, res) => {
+  try {
+    const { userId, bidId } = req.params;
+    const { status } = req.body; 
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(bidId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId or bidId" });
+    }
+
+    const carrier = await Carrier.findOne({ userId });
+    if (!carrier) {
+      return res.status(404).json({ success: false, message: "Carrier not found" });
+    }
+    const bidData = await Bid.findOne({ _id: bidId, "carrierRouteList.carrierId": carrier._id, });
+    if (!bidData) {
+      return res.status(404).json({ success: false, message: "Bid not found for this carrier" });
+    }
+
+    bidData.status = status;
+    bidData.updatedAt = new Date();
+    if (!Array.isArray(bidData.statusUpdatedetails)) {
+
+      // Case 1: If it is an object (not array), convert to array
+      if (bidData.statusUpdatedetails && typeof bidData.statusUpdatedetails === "object") {
+        bidData.statusUpdatedetails = [bidData.statusUpdatedetails];
+      } 
+      // Case 2: null, undefined, string, empty, missing → set empty array
+      else {
+        bidData.statusUpdatedetails = [];
+      }
+    }
+    bidData.statusUpdatedetails.push({
+      updatedAt: new Date(),
+      status: status
+    });
+    if (status === "in_progress") {
+      bidData.statusUpdatedetails.push({
+        updatedAt: new Date(),
+        status: "Reach"
+      });
+    }
+    await bidData.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bid status updated successfully",
+      data: bidData,
+    });
+
+  } catch (error) {
+    console.error("Error updating Bid status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating Bid status",
+      error: error.message,
+    });
+  }
+};

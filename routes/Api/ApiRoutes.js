@@ -17,8 +17,9 @@ const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails
 const {createBooking, 
       getBookingsByUserId, 
       updateAcceptbookingstatus,
+      updatebookingstatus,
     filterBookings} = require('../../controllers/api/bookingController');
-const {getallbidsfilter,getBidsByCarrierUserId, getBidsByShipperUserId ,updateAcceptbidstatus, createBid, editBidDetails } = require('../../controllers/api/bidsController');
+const {getallbidsfilter,getBidsByCarrierUserId, getBidsByShipperUserId ,updateAcceptbidstatus, createBid, editBidDetails , updatebidstatus} = require('../../controllers/api/bidsController');
 const upload = multer({ storage: multer.memoryStorage() });
 
 
@@ -53,7 +54,11 @@ router.post('/getAddBid', upload.array('photos', 10), createBid);
 router.put('/editBidDetails/:bidId', upload.array('photos', 10),editBidDetails);
 
 router.get('/getBidsByCarrierUserId/:userId',getBidsByCarrierUserId);
+
 router.get('/getBidsByShipperUserId/:userId',getBidsByShipperUserId);
+
+router.put('/updatebidstatus/:userId/:bidId',updatebidstatus);
+
 
 
 
@@ -64,7 +69,9 @@ router.post('/addbooking', upload.array('photos', 10),createBooking);
 
 router.get('/getBookingsByShipperUserId/:userId',getBookingsByUserId);
 
-router.get('/filterBookings',filterBookings)
+router.get('/filterBookings',filterBookings);
+
+router.put('/updatebookingstatus/:userId/:bookingId',updatebookingstatus);
 
 //update Accept booking status for carrier 
 router.put('/updateAcceptbookingstatus/:userId/:bookingId',updateAcceptbookingstatus);
