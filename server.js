@@ -42,6 +42,10 @@ const server = http.createServer(app);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/upload", express.static(path.join(__dirname, "upload")));
+
+// console.log("Static upload folder:", path.join(__dirname, "controllers", "upload"));
+// app.use("/upload", express.static(path.join(__dirname, "controllers", "upload")));
+
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {

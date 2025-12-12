@@ -16,7 +16,8 @@ const {getReviewRouteDetails} = require('../../controllers/api/RouteController')
 const { createTruckProfile, uploadTruckPhotos, createTruckRoute ,getTruckDetails, createTruckProfileAndRoute,  getTruckProfileAndRoute ,editTruckProfileAndRoute} = require('../../controllers/api/TruckController');
 const {createBooking, 
       getBookingsByUserId, 
-      updateAcceptbookingstatus} = require('../../controllers/api/bookingController');
+      updateAcceptbookingstatus,
+    filterBookings} = require('../../controllers/api/bookingController');
 const {getallbidsfilter,getBidsByCarrierUserId, getBidsByShipperUserId ,updateAcceptbidstatus, createBid, editBidDetails } = require('../../controllers/api/bidsController');
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -63,6 +64,8 @@ router.post('/addbooking', upload.array('photos', 10),createBooking);
 
 router.get('/getBookingsByShipperUserId/:userId',getBookingsByUserId);
 
+router.get('/filterBookings',filterBookings)
+
 //update Accept booking status for carrier 
 router.put('/updateAcceptbookingstatus/:userId/:bookingId',updateAcceptbookingstatus);
 
@@ -106,6 +109,8 @@ router.get("/getcategorysubcategories", getcategorysubcategories);
 
 //post a space view 
 router.post('/addSpacesDetails/:carrierId',addSpacesDetails);
+router.post('/editSpacesDetails/:spaceId',editSpacesDetails);
+router.delete('/deleteSpace/:spaceId',deleteSpace);
 
 
 

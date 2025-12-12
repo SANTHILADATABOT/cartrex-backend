@@ -324,6 +324,7 @@ exports.checkCarrierProfileCompleteTruckHave = async (req, res) =>{
     let profileCompleted = false;
     let shipperprofle = false;
     let HaveTruck = false;
+
       const carrierProfile = await Carrier.findOne({ userId: userId });
       if (carrierProfile) {
         profileCompleted=true;
