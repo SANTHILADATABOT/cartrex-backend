@@ -1,6 +1,9 @@
-import Complaint from "../../models/Complaint.js";
+// import Complaint from "../../models/Complaint.js";
+const Complaint = require("../../models/Complaint");
 
-import mongoose from "mongoose";
+
+// import mongoose from "mongoose";
+const mongoose = require("mongoose");
 // export const getAllComplaints = async (req, res) => {
 //   try {
 //     const complaints = await Complaint.find({ deletstatus: 0 })
@@ -18,7 +21,7 @@ import mongoose from "mongoose";
 //   }
 // };
 
-export const getAllComplaints = async (req, res) => {
+exports.getAllComplaints = async (req, res) => {
   try {
     const { status, shipper } = req.query;
 
@@ -72,7 +75,7 @@ console.log('filter=>',filter)
 };
 
 
-export const getComplaintById = async (req, res) => {
+exports.getComplaintById = async (req, res) => {
   try {
     const { complaintId } = req.params;
 
@@ -119,7 +122,7 @@ export const getComplaintById = async (req, res) => {
 
 
 
-export const updateComplaintStatus = async (req, res) => {
+exports.updateComplaintStatus = async (req, res) => {
   try {
     const { complaintId } = req.params;
     const { status } = req.body; 
@@ -168,7 +171,7 @@ export const updateComplaintStatus = async (req, res) => {
 };
 
 
-export const updatePriority = async (req, res) => {
+exports.updatePriority = async (req, res) => {
   try {
     const { priority } = req.body;
     const { complaintId } = req.params; 
@@ -278,7 +281,7 @@ export const updatePriority = async (req, res) => {
 //   }
 // };
 
-export const updateComplaint = async (req, res) => {
+exports.updateComplaint = async (req, res) => {
   try {
     const { complaintId } = req.params; 
     const data = req.body;          
@@ -331,7 +334,7 @@ export const updateComplaint = async (req, res) => {
   }
 };
 
-export const deleteComplaint = async (req, res) => {
+exports.deleteComplaint = async (req, res) => {
   try {
     const { complaintId } = req.params;
 

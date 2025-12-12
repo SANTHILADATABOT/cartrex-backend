@@ -58,6 +58,8 @@ const io = new Server(server, {
         'http://localhost:3000',
         'http://192.168.1.9:5173',
         'http://192.168.1.9:5174',
+        'http://192.168.1.9:5000',
+        'http://192.168.1.15:5173'
 
       ];
       
@@ -91,7 +93,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://192.168.1.26:5000',
   'http://192.168.1.9:5173',
-  'http://192.168.1.9:5174'
+  'http://192.168.1.9:5174',
+  'http://192.168.1.15:5173'
 ];
 
 app.use(cors({
@@ -229,6 +232,9 @@ const masterRoleRoutes = require('./routes/admin/masterRoleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const dashboardRoutes = require('./routes/dashboard');
 const complaintsRoutes = require('./routes/admin/adminComplaintRoutes')
+const notificationType=require('./routes/admin/notificationTypeRoutes')
+const notificationContent=require('./routes/admin/notificationContentRoute')
+
 const webRoutes = require('./routes/web');
 const spaceRoutes = require('./routes/web/spaces');
 const bidRoutes = require('./routes/web/bid');
@@ -272,9 +278,12 @@ app.use('/location',locationRoutes);
 app.use('/review',reviewRoutes);
 app.use('/settings',settingsRoutes);
 app.use('/homePagesettings',homePagesettingsRoutes);
-app.use('/coplaintsanddisputes',complaintsRoutes)
+app.use('/coplaintsanddisputes',complaintsRoutes);
+app.use('/notificationType',notificationType);
 app.use("/uploads", uploadRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use('/notificationContent',notificationContent);
+
 // Web application routes
 app.use('/api/web', webRoutes);
 app.use('/space',spaceRoutes);

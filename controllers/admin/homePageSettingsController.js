@@ -59,3 +59,43 @@ exports.updateKeys = async (req, res) => {
 };
 
 
+// GET the  footer values 
+exports.getSettings = async (req, res) => {
+  try {
+    let settings = await HomepageSettings.findOne();
+
+    // If no settings exist, create default
+    if (!settings) {
+      settings = await HomepageSettings.create({});
+    }
+
+    res.status(200).json({ success: true, data: settings });
+  } catch (error) {
+    console.error('Error fetching homepage settings:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// UPDATE footer values
+exports.updateSettings = async (req, res) => {
+  try {
+    const { footerText, footerLinks } = req.body;
+
+    let settings = await HomepageSettings.findOne();
+
+    if (!settings) {
+      settings = await HomepageSettings.create({ footerText, footerLinks });
+    } else {
+      settings.footerText = footerText;
+      settings.footerLinks = footerLinks;
+      settings.updatedAt = new Date();
+      await settings.save();
+    }
+
+    res.status(200).json({ success: true, data: settings });
+  } catch (error) {
+    console.error('Error updating homepage settings:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
