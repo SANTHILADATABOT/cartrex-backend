@@ -13,7 +13,7 @@ const jwt = require("jsonwebtoken");
 
 exports.ssoLogin = async (req, res) => {
   try {
-    const { email, firstName, lastName, provider, providerId, picture, roleId } =
+    const { email, firstName, lastName, provider, providerId, picture, roleId ,roleType} =
       req.body;
 
     if (!email) {
@@ -26,12 +26,27 @@ exports.ssoLogin = async (req, res) => {
     // CASE 1 — NEW USER (SSO Signup)
     // =======================
     if (!user) {
-       return res.status(200).json({ success: false,notVerified:false, message: "User Not found please registered your account" });
+      //  return res.status(200).json({ success: false,notVerified:false, message: "User Not found please registered your account" });
+       if(!roleId){
+         return res.status(200).json({ success: false,notVerified:false, message: "Role Not found " });
+       }
       const randomPassword = await bcrypt.hash(
         Math.random().toString(36).slice(-8),
         12
       );
+      // ✅ Fetch role info
+      const roleInfo = await AdminRole.findOne({
+        _id: roleId,      // assuming user.role stores AdminRole id
+        isActive: "active"
+      });
 
+      if (!roleInfo) {
+        return res.status(200).json({
+          success: false,
+          notVerified:true,
+          message: 'Role is inactive or not found',
+        });
+      }
       user = await User.create({
         email,
         firstName,
@@ -50,6 +65,58 @@ exports.ssoLogin = async (req, res) => {
           userAgent: req.headers["user-agent"],
         }
       });
+      let navigation = "";
+      if (roleInfo.roleType === "Carrier") {
+        await Carrier.create({
+          userId: user._id,
+          createdBy: user._id,
+          status: "active",
+        });
+        navigation = {
+          path: "/signupform",
+          state: { roleId:"68ff5689aa5d489915b8caa8",step: 4 }
+        };
+      } else if (roleInfo.roleType === "Shipper") {
+        await Shipper.create({
+          userId: user._id,
+          createdBy: user._id,
+        });
+        navigation = {
+          path: "/shippersignupform",
+          state: {  roleId:"68ff5689aa5d489915b8caaa",step: 3 }
+        };
+      }
+        const token = generateToken(user._id);
+        // ✅ Create session
+        req.session.users = {
+          _id: user._id,
+          email: user.email,
+          roleId: roleInfo._id,
+          roleName: roleInfo.roleName,
+          roleType: roleInfo.roleType,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isApproved: user.isApproved,
+          profileCompleted: user.profileCompleted,
+        };
+        await req.session.save();
+        
+        res.status(200).json({
+          success: true,
+          message: "User registered successfully",
+          token,
+          navigate:navigation,
+          user: {
+            id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: roleInfo.roleType,
+            isApproved: user.isApproved,
+            profileCompleted: user.profileCompleted,
+          },
+          data2: req.session.users,
+        });
     } else {
       // =======================
       // CASE 2 — EXISTING USER (SSO Login)
