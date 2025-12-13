@@ -323,13 +323,22 @@ exports.login = async (req, res) => {
         });
     }
 
-   if (role !== "admin") {
+//    if (role !== "admin") {
+//   if (account.approvalStatus !== "approved") {
+//     return res.status(200).json({
+//       success: false,
+//       notVerified: false,
+//       message:
+//         "Your account is not approved yet. Please wait for admin approval.",
+//     });
+//   }
+// }
+if (role === "Carrier") {
   if (account.approvalStatus !== "approved") {
     return res.status(200).json({
       success: false,
       notVerified: false,
-      message:
-        "Your account is not approved yet. Please wait for admin approval.",
+      message: "Your account is not approved yet. Please wait for admin approval.",
     });
   }
 }
